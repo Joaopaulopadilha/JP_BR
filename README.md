@@ -7,7 +7,7 @@
 
 > Uma linguagem de programação moderna em português que compila para C++ nativo, oferecendo **sintaxe intuitiva** e **performance excepcional**.
 
-[Website](https://seu-usuario.github.io/jplang) • [Documentação](https://github.com/seu-usuario/jplang/wiki) • [Exemplos](./exemplos) • [Download](https://github.com/seu-usuario/jplang/releases)
+[Website](jplang.org) • [Download](https://github.com/Joaopaulopadilha/JP_BR/releases/tag/v1.0)
 
 ---
 
@@ -28,7 +28,7 @@
 
 ### Windows
 
-1. Baixe a [última versão]([https://github.com/seu-usuario/jplang/releases](https://github.com/Joaopaulopadilha/JP_BR/releases/tag/v1.0))
+1. Baixe a [última versão]([https://github.com/Joaopaulopadilha/JP_BR/releases/tag/v1.0])
 2. Extraia o arquivo `.zip`
 3. Adicione ao PATH (opcional) ou use diretamente
 
