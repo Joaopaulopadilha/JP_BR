@@ -28,7 +28,7 @@
 
 ### Windows
 
-1. Baixe a [última versão](https://github.com/seu-usuario/jplang/releases)
+1. Baixe a [última versão]([https://github.com/seu-usuario/jplang/releases](https://github.com/Joaopaulopadilha/JP_BR/releases/tag/v1.0))
 2. Extraia o arquivo `.zip`
 3. Adicione ao PATH (opcional) ou use diretamente
 
