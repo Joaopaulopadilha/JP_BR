@@ -18,7 +18,8 @@ O objetivo é quebrar a barreira do idioma no aprendizado de lógica de programa
 
 ## 📦 Instalação
 
-Baixe a versão mais recente para Windows ou Linux na aba [Releases](https://github.com/SEU_USUARIO/SEU_REPO/releases).
+Baixe a versão mais recente para Windows ou Linux na aba [Releases](https://github.com/Joaopaulopadilha/JP_BR/releases/).
+
 
 1. Baixe o executável `jp.exe`.
 2. Adicione ao seu PATH (opcional).
