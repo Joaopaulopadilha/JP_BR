@@ -1,0 +1,12 @@
+$espanol
+funcion saludar(nombre):
+    salida("Hola, {nombre}!")
+
+nombre = entrada("Tu nombre: ")
+saludar(nombre)
+
+valor = int("42")
+salida("Tipo: ", tipo(valor))
+salida_rojo("Error!")
+salidal_verde("Sin salto de ")
+salida("linea")

@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
+#include <filesystem>
 
 // Forward declarations
 struct ASTNode;
@@ -28,11 +29,12 @@ enum class ImportType {
 // Informação de módulo importado
 struct ModuleInfo {
     std::string name;           // Nome do módulo (tempo, teclado, etc)
-    std::string path;           // Caminho do arquivo .jp
+    std::string path;           // Caminho do arquivo .jp ou .jpd
     std::string alias;          // Alias (se houver)
     std::vector<std::string> selectedFuncs; // Funções selecionadas (se importação seletiva)
     bool isLoaded;              // Se já foi compilado
     bool isParsed;              // Se já foi parseado (classes registradas)
+    bool isNativeDirect;        // Se é DLL importada diretamente (sem interface .jp)
 };
 
 // Tabela global de módulos importados
@@ -102,13 +104,48 @@ struct ImportStmt : public ASTNode {
         info.selectedFuncs = selectedItems;
         info.isLoaded = false;
         info.isParsed = false;
+        info.isNativeDirect = false;
         
         // Determina o caminho baseado no tipo
         if (type == ImportType::FILE) {
             info.path = moduleName;
         } else {
-            // Módulo de biblioteca: bibliotecas/nome/nome.jp
-            info.path = "bibliotecas/" + moduleName + "/" + moduleName + ".jp";
+            // Módulo de biblioteca: tenta bibliotecas/nome/nome.jp primeiro
+            std::string jpPath = "bibliotecas/" + moduleName + "/" + moduleName + ".jp";
+            
+            // Verifica se o .jp existe (relativo ao baseDir ou diretório atual)
+            bool jpExists = false;
+            if (std::filesystem::exists(std::filesystem::path(importBaseDir) / jpPath)) {
+                jpExists = true;
+            } else if (std::filesystem::exists(jpPath)) {
+                jpExists = true;
+            }
+            
+            if (jpExists) {
+                info.path = jpPath;
+            } else {
+                // Fallback: procura a DLL direto (.jpd)
+                #ifdef _WIN32
+                std::string jpdPath = "bibliotecas/" + moduleName + "/" + moduleName + ".jpd";
+                #else
+                std::string jpdPath = "bibliotecas/" + moduleName + "/lib" + moduleName + ".jpd";
+                #endif
+                
+                bool jpdExists = false;
+                if (std::filesystem::exists(std::filesystem::path(importBaseDir) / jpdPath)) {
+                    jpdExists = true;
+                } else if (std::filesystem::exists(jpdPath)) {
+                    jpdExists = true;
+                }
+                
+                if (jpdExists) {
+                    info.path = jpdPath;
+                    info.isNativeDirect = true;
+                } else {
+                    // Nenhum encontrado, usa o path .jp padrão (erro será dado depois)
+                    info.path = jpPath;
+                }
+            }
         }
         
         // Usa alias ou nome como chave
@@ -126,7 +163,28 @@ struct ImportStmt : public ASTNode {
             aliasToModule[alias] = moduleName;
         }
         
-        // NOVO: Chama callback para parsing eager (se definido)
+        // Se é DLL direta, não precisa parsear .jp
+        // O módulo será tratado como biblioteca nativa pura
+        if (info.isNativeDirect) {
+            moduleTable[key].isParsed = true;
+            moduleTable[key].isLoaded = true;
+            
+            // Se é importação seletiva (de X importar func1, func2),
+            // registra as funções na nativeFuncTable vinculadas a esta DLL
+            if (type == ImportType::SELECTIVE && !selectedItems.empty()) {
+                for (const auto& funcName : selectedItems) {
+                    NativeFuncInfo nfi;
+                    nfi.dllPath = info.path;
+                    nfi.funcName = funcName;
+                    nfi.fullName = funcName;
+                    nfi.numArgs = -1;
+                    nativeFuncTable[funcName] = nfi; // Sobrescreve se já existir
+                }
+            }
+            return;
+        }
+        
+        // Chama callback para parsing eager (se definido)
         // O callback é definido pelo import_processor.hpp após incluir Parser
         if (onModuleRegistered) {
             onModuleRegistered(info.path);

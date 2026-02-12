@@ -1,0 +1,12 @@
+$english
+function greet(name):
+    output("Hello, {name}!")
+
+name = input("Your name: ")
+greet(name)
+
+value = int("42")
+output("Type: ", type(value))
+output_red("Error!")
+outputl_green("No line ")
+output("break")

@@ -1,3 +1,0 @@
-#exibir janela simples
-
-cvn.exibir("janela", 300, 300)

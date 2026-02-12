@@ -9,6 +9,7 @@
 namespace ParserNativo {
 
     // nativo "caminho/arquivo.jpd" importar func1(n), func2(n), ...
+    // ou: nativo "caminho/arquivo.jpd" importar func1, func2, ...  (sem aridade)
     inline std::unique_ptr<NativeImportStmt> parseNativeImport(Parser& p) {
         p.consume(TokenType::NATIVO, "Esperado 'nativo'");
         
@@ -20,7 +21,7 @@ namespace ParserNativo {
         
         auto importStmt = std::make_unique<NativeImportStmt>(dllPath);
         
-        // Lista de funções: nome(numArgs), nome2(numArgs2), ...
+        // Lista de funções: nome(numArgs) ou nome, nome2, ...
         do {
             // Se tem vírgula, consome
             if (importStmt->functions.size() > 0) {
@@ -31,11 +32,14 @@ namespace ParserNativo {
             Token funcToken = p.consume(TokenType::ID, "Esperado nome da funcao");
             std::string funcName = funcToken.value;
             
-            // Número de argumentos
-            p.consume(TokenType::LPAREN, "Esperado '(' apos nome da funcao");
-            Token numArgsToken = p.consume(TokenType::NUMBER_INT, "Esperado numero de argumentos");
-            int numArgs = std::stoi(numArgsToken.value);
-            p.consume(TokenType::RPAREN, "Esperado ')' apos numero de argumentos");
+            // Número de argumentos (opcional)
+            int numArgs = -1; // -1 = aridade resolvida na chamada
+            if (p.peek().type == TokenType::LPAREN) {
+                p.consume(TokenType::LPAREN, "");
+                Token numArgsToken = p.consume(TokenType::NUMBER_INT, "Esperado numero de argumentos");
+                numArgs = std::stoi(numArgsToken.value);
+                p.consume(TokenType::RPAREN, "Esperado ')' apos numero de argumentos");
+            }
             
             importStmt->addFunction(funcName, numArgs);
             

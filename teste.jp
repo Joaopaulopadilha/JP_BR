@@ -1,0 +1,6 @@
+importar janela
+
+janela = janela("app", 600, 600)
+loop:
+    exibir(janela)
+saida(janela)

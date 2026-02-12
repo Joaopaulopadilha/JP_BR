@@ -1,0 +1,83 @@
+{
+    "idioma": "portugues",
+    "palavras": {
+        "verdadeiro": "TRUE",
+        "falso": "FALSE",
+        "se": "SE",
+        "senao": "SENAO",
+        "ou_se": "OU_SE",
+        "e": "AND",
+        "ou": "OR",
+        "loop": "LOOP",
+        "enquanto": "ENQUANTO",
+        "repetir": "REPETIR",
+        "para": "PARA",
+        "em": "EM",
+        "intervalo": "INTERVALO",
+        "parar": "PARAR",
+        "continuar": "CONTINUAR",
+        "funcao": "FUNCAO",
+        "retorna": "RETORNA",
+        "classe": "CLASSE",
+        "auto": "AUTO",
+        "int": "TYPE_INT",
+        "float": "TYPE_FLOAT",
+        "str": "TYPE_STR",
+        "bool": "TYPE_BOOL",
+        "nativo": "NATIVO",
+        "importar": "IMPORTAR",
+        "de": "DE",
+        "como": "COMO"
+    },
+    "builtins": {
+        "entrada": "entrada",
+        "inteiro": "inteiro",
+        "int": "inteiro",
+        "decimal": "decimal",
+        "dec": "decimal",
+        "texto": "texto",
+        "booleano": "booleano",
+        "bool": "booleano",
+        "tipo": "tipo"
+    },
+    "saida": {
+        "prefixo": "saida",
+        "sufixo_sem_quebra": "l",
+        "cores": {
+            "_amarelo": "YELLOW",
+            "_vermelho": "RED",
+            "_azul": "BLUE",
+            "_verde": "GREEN"
+        }
+    },
+    "tipos": {
+        "inteiro": "inteiro",
+        "decimal": "decimal",
+        "texto": "texto",
+        "booleano": "booleano",
+        "lista": "lista",
+        "objeto": "objeto",
+        "ponteiro": "ponteiro",
+        "nulo": "nulo"
+    },
+    "erros": {
+        "linha": "Linha {num}",
+        "encontrado": "Encontrado: '{valor}'",
+        "esperado": "Esperado '{valor}'",
+        "esperado_apos_args": "Esperado ')' apos argumentos",
+        "esperado_apos_indice": "Esperado ']' apos indice",
+        "esperado_apos_lista": "Esperado ']' apos elementos da lista",
+        "esperado_nome_atributo": "Esperado nome do atributo",
+        "esperado_nome_membro": "Esperado nome do membro",
+        "esperado_comando_saida": "Esperado comando de saida",
+        "builtin_espera_args": "{funcao}() espera {num} argumento(s)",
+        "expressao_invalida": "Expressao invalida: {valor}",
+        "comando_desconhecido": "Comando desconhecido ou inesperado: {valor}",
+        "indentacao_invalida": "Erro de indentacao invalida",
+        "caractere_inesperado": "Caractere inesperado: {valor}",
+        "arquivo_nao_encontrado": "Arquivo nao encontrado: {valor}",
+        "divisao_por_zero": "Divisao por zero",
+        "funcao_nao_definida": "Funcao nao definida: {valor}",
+        "funcao_colisao": "Funcao '{funcao}' encontrada em: {libs}. Usando: {usada}"
+    }
+}

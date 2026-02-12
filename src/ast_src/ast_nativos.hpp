@@ -38,7 +38,7 @@ struct NativeImportStmt : public ASTNode {
         NativeFuncInfo info;
         info.dllPath = dllPath;
         info.funcName = name;
-        info.fullName = "jp_" + name; // Nome completo na DLL
+        info.fullName = name; // Nome na DLL (tentará com e sem prefixo jp_)
         info.numArgs = numArgs;
         
         nativeFuncTable[name] = info;

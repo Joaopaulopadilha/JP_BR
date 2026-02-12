@@ -8,6 +8,7 @@
 #include "../parser.hpp"
 #include "../ast_src/ast_listas.hpp"
 #include "../ast_src/ast_builtins.hpp"
+#include "../lang_loader.hpp"
 #include <string>
 
 namespace ParserExpr {
@@ -365,11 +366,56 @@ namespace ParserExpr {
             
             while (p.peek().type == TokenType::DOT) {
                 p.consume(TokenType::DOT, "");
-                Token memberToken = p.consume(TokenType::ID, "Esperado nome do atributo");
+                Token memberToken = p.consume(TokenType::ID, langErro("esperado_nome_atributo"));
                 expr = std::make_unique<MemberAccessExpr>(std::move(expr), memberToken.value);
             }
             
             return expr;
+        }
+        
+        // Tokens de tipo usados como função builtin: int("42"), float(x), str(42), bool(1)
+        if ((token.type == TokenType::TYPE_INT || token.type == TokenType::TYPE_FLOAT ||
+             token.type == TokenType::TYPE_STR || token.type == TokenType::TYPE_BOOL) &&
+            p.peek(1).type == TokenType::LPAREN) {
+            std::string name = token.value;
+            p.consume(token.type, "");
+            p.consume(TokenType::LPAREN, "");
+            
+            std::vector<std::unique_ptr<ASTNode>> args;
+            if (p.peek().type != TokenType::RPAREN) {
+                args.push_back(parse(p));
+                while (p.peek().type == TokenType::COMMA) {
+                    p.consume(TokenType::COMMA, "");
+                    args.push_back(parse(p));
+                }
+            }
+            p.consume(TokenType::RPAREN, langErro("esperado_apos_args"));
+            
+            // Consulta mapa de builtins
+            auto itBuiltin = langBuiltins.find(name);
+            if (itBuiltin != langBuiltins.end()) {
+                std::string interno = itBuiltin->second;
+                
+                if (interno == "inteiro") {
+                    if (args.size() != 1) p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                    return std::make_unique<ToIntExpr>(std::move(args[0]));
+                }
+                if (interno == "decimal") {
+                    if (args.size() != 1) p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                    return std::make_unique<ToFloatExpr>(std::move(args[0]));
+                }
+                if (interno == "texto") {
+                    if (args.size() != 1) p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                    return std::make_unique<ToStringExpr>(std::move(args[0]));
+                }
+                if (interno == "booleano") {
+                    if (args.size() != 1) p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                    return std::make_unique<ToBoolExpr>(std::move(args[0]));
+                }
+            }
+            
+            // Fallback: trata como chamada de função normal
+            return std::make_unique<FuncCallExpr>(name, std::move(args));
         }
         
         if (token.type == TokenType::ID) {
@@ -391,61 +437,76 @@ namespace ParserExpr {
                     }
                 }
                 
-                p.consume(TokenType::RPAREN, "Esperado ')' apos argumentos");
+                p.consume(TokenType::RPAREN, langErro("esperado_apos_args"));
                 
-                // === FUNÇÕES BUILT-IN ===
+                // === FUNÇÕES BUILT-IN (via mapa de idioma) ===
                 
-                // entrada(prompt) - lê entrada do usuário
-                if (name == "entrada") {
-                    if (args.size() != 1) {
-                        p.error("entrada() espera 1 argumento (prompt)");
+                auto itBuiltin = langBuiltins.find(name);
+                if (itBuiltin != langBuiltins.end()) {
+                    std::string interno = itBuiltin->second;
+                    
+                    // entrada(prompt) - lê entrada do usuário
+                    if (interno == "entrada") {
+                        if (args.size() != 1) {
+                            p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                        }
+                        return std::make_unique<InputExpr>(std::move(args[0]));
                     }
-                    return std::make_unique<InputExpr>(std::move(args[0]));
+                    
+                    // inteiro(valor) - converte para inteiro
+                    if (interno == "inteiro") {
+                        if (args.size() != 1) {
+                            p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                        }
+                        return std::make_unique<ToIntExpr>(std::move(args[0]));
+                    }
+                    
+                    // decimal(valor) - converte para decimal/float
+                    if (interno == "decimal") {
+                        if (args.size() != 1) {
+                            p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                        }
+                        return std::make_unique<ToFloatExpr>(std::move(args[0]));
+                    }
+                    
+                    // texto(valor) - converte para string
+                    if (interno == "texto") {
+                        if (args.size() != 1) {
+                            p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                        }
+                        return std::make_unique<ToStringExpr>(std::move(args[0]));
+                    }
+                    
+                    // booleano(valor) - converte para booleano
+                    if (interno == "booleano") {
+                        if (args.size() != 1) {
+                            p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                        }
+                        return std::make_unique<ToBoolExpr>(std::move(args[0]));
+                    }
+                    
+                    // tipo(valor) - retorna o tipo do valor como string
+                    if (interno == "tipo") {
+                        if (args.size() != 1) {
+                            p.error(langErro("builtin_espera_args", {{"funcao", name}, {"num", "1"}}));
+                        }
+                        return std::make_unique<TypeOfExpr>(std::move(args[0]));
+                    }
                 }
                 
-                // inteiro(valor) / int(valor) - converte para inteiro
-                if (name == "inteiro" || name == "int") {
-                    if (args.size() != 1) {
-                        p.error(name + "() espera 1 argumento");
-                    }
-                    return std::make_unique<ToIntExpr>(std::move(args[0]));
-                }
-                
-                // decimal(valor) / dec(valor) - converte para decimal/float
-                if (name == "decimal" || name == "dec") {
-                    if (args.size() != 1) {
-                        p.error(name + "() espera 1 argumento");
-                    }
-                    return std::make_unique<ToFloatExpr>(std::move(args[0]));
-                }
-                
-                // texto(valor) - converte para string
-                if (name == "texto") {
-                    if (args.size() != 1) {
-                        p.error("texto() espera 1 argumento");
-                    }
-                    return std::make_unique<ToStringExpr>(std::move(args[0]));
-                }
-                
-                // booleano(valor) / bool(valor) - converte para booleano
-                if (name == "booleano" || name == "bool") {
-                    if (args.size() != 1) {
-                        p.error(name + "() espera 1 argumento");
-                    }
-                    return std::make_unique<ToBoolExpr>(std::move(args[0]));
-                }
-                
-                // tipo(valor) - retorna o tipo do valor como string
-                if (name == "tipo") {
-                    if (args.size() != 1) {
-                        p.error("tipo() espera 1 argumento");
-                    }
-                    return std::make_unique<TypeOfExpr>(std::move(args[0]));
-                }
-                
-                // Verifica se é função nativa
+                // Verifica se é função nativa registrada
                 if (nativeFuncTable.find(name) != nativeFuncTable.end()) {
                     return std::make_unique<NativeCallExpr>(name, std::move(args));
+                }
+                
+                // Lazy resolution: se não é função do usuário conhecida,
+                // mas há bibliotecas nativas diretas carregadas, trata como nativa
+                if (functionTable.find(name) == functionTable.end()) {
+                    for (const auto& [key, info] : moduleTable) {
+                        if (info.isNativeDirect) {
+                            return std::make_unique<NativeCallExpr>(name, std::move(args));
+                        }
+                    }
                 }
                 
                 return std::make_unique<FuncCallExpr>(name, std::move(args));
@@ -455,7 +516,7 @@ namespace ParserExpr {
             if (p.peek().type == TokenType::LBRACKET) {
                 p.consume(TokenType::LBRACKET, "");
                 auto index = parse(p);
-                p.consume(TokenType::RBRACKET, "Esperado ']' apos indice");
+                p.consume(TokenType::RBRACKET, langErro("esperado_apos_indice"));
                 
                 // Cria a expressão de acesso à lista
                 std::unique_ptr<ASTNode> expr = std::make_unique<ListAccessExpr>(
@@ -464,7 +525,7 @@ namespace ParserExpr {
                 // Verifica se há acesso a membro/método após o ]
                 while (p.peek().type == TokenType::DOT) {
                     p.consume(TokenType::DOT, "");
-                    Token memberToken = p.consumeMemberName("Esperado nome do membro");
+                    Token memberToken = p.consumeMemberName(langErro("esperado_nome_membro"));
                     
                     if (p.peek().type == TokenType::LPAREN) {
                         // É uma chamada de método: lista[0].metodo()
@@ -479,7 +540,7 @@ namespace ParserExpr {
                             }
                         }
                         
-                        p.consume(TokenType::RPAREN, "Esperado ')'");
+                        p.consume(TokenType::RPAREN, langErro("esperado", {{"valor", ")"}}));
                         expr = std::make_unique<MethodCallExpr>(std::move(expr), memberToken.value, std::move(args));
                     } else {
                         // É um acesso a atributo: lista[0].atributo
@@ -493,7 +554,7 @@ namespace ParserExpr {
             // Acesso a membro ou método: nome.algo
             if (p.peek().type == TokenType::DOT) {
                 p.consume(TokenType::DOT, "");
-                Token memberToken = p.consumeMemberName("Esperado nome do membro");
+                Token memberToken = p.consumeMemberName(langErro("esperado_nome_membro"));
                 std::string memberName = memberToken.value;
                 
                 bool isModuleOrClass = (name[0] >= 'A' && name[0] <= 'Z') ||
@@ -514,7 +575,7 @@ namespace ParserExpr {
                         }
                     }
                     
-                    p.consume(TokenType::RPAREN, "Esperado ')' apos argumentos");
+                    p.consume(TokenType::RPAREN, langErro("esperado_apos_args"));
                     return std::make_unique<MethodCallExpr>(name, memberName, std::move(args));
                 }
                 
@@ -539,7 +600,7 @@ namespace ParserExpr {
                             }
                         }
                         
-                        p.consume(TokenType::RPAREN, "Esperado ')' apos argumentos");
+                        p.consume(TokenType::RPAREN, langErro("esperado_apos_args"));
                         return listMethod;
                     }
                 }
@@ -558,7 +619,7 @@ namespace ParserExpr {
                         }
                     }
                     
-                    p.consume(TokenType::RPAREN, "Esperado ')' apos argumentos");
+                    p.consume(TokenType::RPAREN, langErro("esperado_apos_args"));
                     auto objExpr = std::make_unique<VarExpr>(name);
                     return std::make_unique<MethodCallExpr>(std::move(objExpr), memberName, std::move(args));
                 }
@@ -568,7 +629,7 @@ namespace ParserExpr {
                 
                 while (p.peek().type == TokenType::DOT) {
                     p.consume(TokenType::DOT, "");
-                    Token nextMember = p.consumeMemberName("Esperado nome do membro");
+                    Token nextMember = p.consumeMemberName(langErro("esperado_nome_membro"));
                     
                     if (p.peek().type == TokenType::LPAREN) {
                         p.consume(TokenType::LPAREN, "");
@@ -582,7 +643,7 @@ namespace ParserExpr {
                             }
                         }
                         
-                        p.consume(TokenType::RPAREN, "Esperado ')'");
+                        p.consume(TokenType::RPAREN, langErro("esperado", {{"valor", ")"}}));
                         expr = std::make_unique<MethodCallExpr>(std::move(expr), nextMember.value, std::move(args));
                     } else {
                         expr = std::make_unique<MemberAccessExpr>(std::move(expr), nextMember.value);
@@ -623,7 +684,7 @@ namespace ParserExpr {
         if (token.type == TokenType::LPAREN) {
             p.consume(TokenType::LPAREN, "");
             auto expr = parse(p);
-            p.consume(TokenType::RPAREN, "Esperado ')'");
+            p.consume(TokenType::RPAREN, langErro("esperado", {{"valor", ")"}}));
             return expr;
         }
         
@@ -644,11 +705,11 @@ namespace ParserExpr {
                 list->addElement(parse(p));
             }
             
-            p.consume(TokenType::RBRACKET, "Esperado ']' apos elementos da lista");
+            p.consume(TokenType::RBRACKET, langErro("esperado_apos_lista"));
             return list;
         }
 
-        p.error("Expressao invalida: " + token.value);
+        p.error(langErro("expressao_invalida", {{"valor", token.value}}));
         return nullptr;
     }
 

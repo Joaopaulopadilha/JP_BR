@@ -1,0 +1,4 @@
+importar time
+importar teste
+
+saida(sleep(1000))

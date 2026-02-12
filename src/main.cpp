@@ -8,6 +8,7 @@
 #include <filesystem>
 
 // INCLUDES OBRIGATÓRIOS
+#include "lang_loader.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "opcodes.hpp"
@@ -61,9 +62,11 @@ void mostrarAjuda() {
     std::cout << "  jp debug <arquivo.jp>        Executa e gera debug/opcodes\n";
     std::cout << "\nOpcoes:\n";
     std::cout << "  -w                           Modo janela (sem console)\n";
+    std::cout << "  -o                           Build otimizado (usa GCC/MinGW)\n";
     std::cout << "\nExemplos:\n";
     std::cout << "  jp meu_programa.jp           Compila e executa\n";
     std::cout << "  jp build meu_programa.jp     Gera output/meu_programa/meu_programa.exe\n";
+    std::cout << "  jp build meu_programa.jp -o  Gera executavel otimizado com GCC\n";
     std::cout << "  jp debug meu_programa.jp     Executa + gera debug/meu_programa.jpdbg\n";
 }
 
@@ -81,6 +84,7 @@ int main(int argc, char* argv[]) {
     bool modoBuild = (arg1 == "compilar" || arg1 == "build");
     bool modoDebug = (arg1 == "debug");
     bool modoJanela = false;
+    bool modoOtimizado = false;
     std::string caminhoArquivo;
 
     if (modoBuild || modoDebug) {
@@ -88,6 +92,8 @@ int main(int argc, char* argv[]) {
             std::string arg = argv[i];
             if (arg == "-w") {
                 modoJanela = true;
+            } else if (arg == "-o") {
+                modoOtimizado = true;
             } else if (caminhoArquivo.empty()) {
                 caminhoArquivo = arg;
             }
@@ -128,6 +134,29 @@ int main(int argc, char* argv[]) {
         classMethodTable.clear();
         nativeFuncTable.clear();
 
+        // Detecta e carrega idioma
+        std::string idioma = LangLoader::detectarIdioma(source);
+        bool temDiretiva = !source.empty() && source[0] == '$';
+        
+        if (!idioma.empty() && idioma != "portugues") {
+            if (!LangLoader::carregar(idioma, exePath.string())) {
+                std::cerr << "[JP] Idioma nao encontrado: " << idioma << ". Usando portugues." << std::endl;
+                LangLoader::carregarPadrao();
+            }
+        } else {
+            LangLoader::carregarPadrao();
+        }
+        
+        // Remove a primeira linha se era diretiva de idioma ($english, $portugues, etc.)
+        if (temDiretiva) {
+            size_t pos = source.find('\n');
+            if (pos != std::string::npos) {
+                source = source.substr(pos + 1);
+            } else {
+                source.clear();
+            }
+        }
+
         // Tokeniza
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
@@ -160,7 +189,7 @@ int main(int argc, char* argv[]) {
                 std::cout << "[JP] Modo: Janela (sem console)" << std::endl;
             }
 
-            if (!compilador.compilar(code, nomeBase, modoJanela)) {
+            if (!compilador.compilar(code, nomeBase, modoJanela, modoOtimizado)) {
                 return 1;
             }
         } else {

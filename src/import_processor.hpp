@@ -15,6 +15,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "ast.hpp"
+#include "lang_loader.hpp"
 
 namespace fs = std::filesystem;
 
@@ -52,6 +53,29 @@ public:
             return;
         }
         
+        // === SAVE/RESTORE DE IDIOMA ===
+        // Detecta o idioma do módulo e troca temporariamente
+        LangSnapshot snapshot = langSalvarEstado();
+        
+        std::string idiomaModulo = LangLoader::detectarIdioma(source);
+        if (!idiomaModulo.empty() && idiomaModulo != langIdioma) {
+            if (!LangLoader::carregar(idiomaModulo, baseDir)) {
+                LangLoader::carregarPadrao();
+            }
+        } else if (idiomaModulo.empty() || idiomaModulo == "portugues") {
+            LangLoader::carregarPadrao();
+        }
+        
+        // Remove a diretiva de idioma ($idioma) se presente
+        if (!source.empty() && source[0] == '$') {
+            size_t pos = source.find('\n');
+            if (pos != std::string::npos) {
+                source = source.substr(pos + 1);
+            } else {
+                source.clear();
+            }
+        }
+        
         // Tokeniza
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
@@ -59,6 +83,9 @@ public:
         // Parseia - isso registra classes, funções nativas, etc.
         Parser parser(tokens);
         auto ast = parser.parse();
+        
+        // Restaura o idioma anterior
+        langRestaurarEstado(snapshot);
     }
     
     // Processa todas as importações pendentes (compila os módulos)
@@ -89,6 +116,29 @@ public:
             throw std::runtime_error("Arquivo nao encontrado: " + fullPath);
         }
         
+        // === SAVE/RESTORE DE IDIOMA ===
+        // Detecta o idioma do módulo e troca temporariamente
+        LangSnapshot snapshot = langSalvarEstado();
+        
+        std::string idiomaModulo = LangLoader::detectarIdioma(source);
+        if (!idiomaModulo.empty() && idiomaModulo != langIdioma) {
+            if (!LangLoader::carregar(idiomaModulo, baseDir)) {
+                LangLoader::carregarPadrao();
+            }
+        } else if (idiomaModulo.empty() || idiomaModulo == "portugues") {
+            LangLoader::carregarPadrao();
+        }
+        
+        // Remove a diretiva de idioma ($idioma) se presente
+        if (!source.empty() && source[0] == '$') {
+            size_t pos = source.find('\n');
+            if (pos != std::string::npos) {
+                source = source.substr(pos + 1);
+            } else {
+                source.clear();
+            }
+        }
+        
         // Tokeniza
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
@@ -96,6 +146,9 @@ public:
         // Parseia
         Parser parser(tokens);
         auto ast = parser.parse();
+        
+        // Restaura o idioma anterior
+        langRestaurarEstado(snapshot);
         
         // Processa importações recursivamente do módulo carregado
         processImports(bytecode);

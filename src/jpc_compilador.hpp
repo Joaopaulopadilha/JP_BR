@@ -17,9 +17,18 @@
 #include <algorithm>
 
 #include "opcodes.hpp"
+#include "lang_loader.hpp"
+
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <dlfcn.h>
+#endif
+
 #include "ast_src/ast_importar.hpp"  // Para acessar moduleTable e importBaseDir
 #include "ast_src/ast_funcoes.hpp"   // Para acessar functionTable
 #include "ast_src/ast_classes.hpp"   // Para acessar classMethodTable
+#include "ast_src/ast_nativos.hpp"   // Para acessar nativeFuncTable
 #include "jpc_src/jpc_runtime.hpp"
 #include "jpc_src/jpc_gerador.hpp"
 
@@ -85,8 +94,20 @@ public:
         
         // CORREÇÃO: Usa APENAS módulos que são bibliotecas nativas (não arquivos .jp)
         for (const auto& [key, info] : moduleTable) {
-            if (isNativeLibrary(info.name, info.path)) {
+            if (info.isNativeDirect) {
+                // DLL importada diretamente (sem interface .jp)
                 bibliotecasUsadas.insert(info.name);
+            } else if (isNativeLibrary(info.name, info.path)) {
+                bibliotecasUsadas.insert(info.name);
+            }
+        }
+        
+        // Também coleta bibliotecas de importações nativas diretas (nativo "path" importar ...)
+        for (const auto& [funcName, funcInfo] : nativeFuncTable) {
+            if (!funcInfo.dllPath.empty()) {
+                fs::path p(funcInfo.dllPath);
+                std::string libName = p.stem().string();
+                bibliotecasUsadas.insert(libName);
             }
         }
         
@@ -150,6 +171,8 @@ public:
         for (auto& [funcName, addr] : funcoesUsuario) {
             if (functionTable.find(funcName) != functionTable.end()) {
                 addr = (size_t)functionTable[funcName].address;
+            } else {
+                throw std::runtime_error(langErro("funcao_nao_definida", {{"valor", funcName}}));
             }
         }
         
@@ -165,6 +188,115 @@ public:
                     if (methods.find(methodName) != methods.end()) {
                         addr = (size_t)methods[methodName].address;
                     }
+                }
+            }
+        }
+        
+        // === VALIDAÇÃO EM COMPILE TIME ===
+        // Verifica se funções nativas existem nas DLLs antes de gerar código
+        if (!nativasMap.empty() && !bibliotecasUsadas.empty()) {
+            // Coleta os paths reais das DLLs para carregar direto
+            std::map<std::string, std::string> libPaths; // nome -> path real
+            
+            // De moduleTable (importar direto sem .jp)
+            for (const auto& [key, info] : moduleTable) {
+                if (info.isNativeDirect) {
+                    // Resolve path completo
+                    std::string fullPath;
+                    fs::path rel = fs::path(importBaseDir) / info.path;
+                    if (fs::exists(rel)) fullPath = rel.string();
+                    else if (fs::exists(info.path)) fullPath = info.path;
+                    if (!fullPath.empty()) libPaths[info.name] = fullPath;
+                }
+            }
+            
+            // De nativeFuncTable (nativo "path" importar ...)
+            for (const auto& [funcName, funcInfo] : nativeFuncTable) {
+                if (!funcInfo.dllPath.empty()) {
+                    fs::path p(funcInfo.dllPath);
+                    std::string libName = p.stem().string();
+                    if (libPaths.find(libName) == libPaths.end()) {
+                        // Tenta resolver o path
+                        fs::path rel = fs::path(importBaseDir) / funcInfo.dllPath;
+                        if (fs::exists(rel)) libPaths[libName] = rel.string();
+                        else if (fs::exists(funcInfo.dllPath)) libPaths[libName] = funcInfo.dllPath;
+                    }
+                }
+            }
+            
+            // De bibliotecas com wrapper .jp (path padrão)
+            for (const auto& bib : bibliotecasUsadas) {
+                if (libPaths.find(bib) == libPaths.end()) {
+                    #ifdef _WIN32
+                    std::vector<std::string> tentativas = {
+                        (fs::path(importBaseDir) / "bibliotecas" / bib / (bib + ".jpd")).string(),
+                        (fs::path("bibliotecas") / bib / (bib + ".jpd")).string()
+                    };
+                    #else
+                    std::vector<std::string> tentativas = {
+                        (fs::path(importBaseDir) / "bibliotecas" / bib / ("lib" + bib + ".jpd")).string(),
+                        (fs::path("bibliotecas") / bib / ("lib" + bib + ".jpd")).string()
+                    };
+                    #endif
+                    for (const auto& t : tentativas) {
+                        if (fs::exists(t)) { libPaths[bib] = t; break; }
+                    }
+                }
+            }
+            
+            // Valida cada função nativa e detecta colisões entre bibliotecas
+            for (const auto& [nome, aridade] : nativasMap) {
+                // Se a função já está na nativeFuncTable (declarada explicitamente), pula validação
+                if (nativeFuncTable.find(nome) != nativeFuncTable.end()) {
+                    continue;
+                }
+                
+                // Varre TODAS as DLLs para encontrar a função e detectar colisões
+                std::vector<std::string> libsEncontradas;
+                
+                for (const auto& [libName, libPath] : libPaths) {
+                    bool achou = false;
+                    #ifdef _WIN32
+                    HMODULE handle = LoadLibraryA(libPath.c_str());
+                    if (handle) {
+                        if (GetProcAddress(handle, nome.c_str()) ||
+                            GetProcAddress(handle, ("jp_" + nome).c_str())) {
+                            achou = true;
+                        }
+                        FreeLibrary(handle);
+                    }
+                    #else
+                    void* handle = dlopen(libPath.c_str(), RTLD_LAZY);
+                    if (handle) {
+                        if (dlsym(handle, nome.c_str()) ||
+                            dlsym(handle, ("jp_" + nome).c_str())) {
+                            achou = true;
+                        }
+                        dlclose(handle);
+                    }
+                    #endif
+                    if (achou) {
+                        libsEncontradas.push_back(libName);
+                    }
+                }
+                
+                if (libsEncontradas.empty()) {
+                    throw std::runtime_error(langErro("funcao_nao_definida", {{"valor", nome}}));
+                }
+                
+                // Aviso de colisão em amarelo
+                if (libsEncontradas.size() > 1) {
+                    std::string libs;
+                    for (size_t i = 0; i < libsEncontradas.size(); i++) {
+                        if (i > 0) libs += ", ";
+                        libs += libsEncontradas[i];
+                    }
+                    std::string msg = langErro("funcao_colisao", {
+                        {"funcao", nome},
+                        {"libs", libs},
+                        {"usada", libsEncontradas[0]}
+                    });
+                    std::cerr << "\033[33m[JP] " << msg << "\033[0m" << std::endl;
                 }
             }
         }
@@ -224,8 +356,20 @@ public:
             out << "\n";
 
             for (const auto& [nome, aridade] : nativasMap) {
-                for (const auto& bib : bibliotecasUsadas) {
-                    out << "    if (!fn_" << nome << ") fn_" << nome << " = jp_obter_funcao(&lib_" << bib << ", \"jp_" << nome << "\");\n";
+                // Verifica se a função tem DLL específica (importação seletiva)
+                auto itNativa = nativeFuncTable.find(nome);
+                if (itNativa != nativeFuncTable.end() && !itNativa->second.dllPath.empty()) {
+                    // Importação explícita: busca apenas na DLL especificada
+                    std::string libName = fs::path(itNativa->second.dllPath).stem().string();
+                    out << "    fn_" << nome << " = jp_obter_funcao(&lib_" << libName << ", \"jp_" << nome << "\");\n";
+                    out << "    if (!fn_" << nome << ") fn_" << nome << " = jp_obter_funcao(&lib_" << libName << ", \"" << nome << "\");\n";
+                } else {
+                    // Importação genérica: busca em todas as bibliotecas
+                    // Prioridade: jp_ primeiro (C puro), depois sem prefixo (fallback)
+                    for (const auto& bib : bibliotecasUsadas) {
+                        out << "    if (!fn_" << nome << ") fn_" << nome << " = jp_obter_funcao(&lib_" << bib << ", \"jp_" << nome << "\");\n";
+                        out << "    if (!fn_" << nome << ") fn_" << nome << " = jp_obter_funcao(&lib_" << bib << ", \"" << nome << "\");\n";
+                    }
                 }
             }
             out << "    return 1;\n";
@@ -240,6 +384,29 @@ public:
 
         // === HELPERS E LISTAS ===
         out << JPCRuntime::HELPERS;
+        
+        // === FUNÇÃO tipo_de (gerada com nomes do idioma) ===
+        {
+            auto getTypeName = [](const std::string& interno) -> std::string {
+                auto it = langTipos.find(interno);
+                if (it != langTipos.end()) return it->second;
+                return interno;
+            };
+            
+            out << "JPValor tipo_de(JPValor v) {\n";
+            out << "    switch (v.tipo) {\n";
+            out << "        case JP_TIPO_INT:    return jp_string(\"" << getTypeName("inteiro") << "\");\n";
+            out << "        case JP_TIPO_DOUBLE: return jp_string(\"" << getTypeName("decimal") << "\");\n";
+            out << "        case JP_TIPO_STRING: return jp_string(\"" << getTypeName("texto") << "\");\n";
+            out << "        case JP_TIPO_BOOL:   return jp_string(\"" << getTypeName("booleano") << "\");\n";
+            out << "        case JP_TIPO_LISTA:  return jp_string(\"" << getTypeName("lista") << "\");\n";
+            out << "        case JP_TIPO_OBJETO: return jp_string(\"" << getTypeName("objeto") << "\");\n";
+            out << "        case JP_TIPO_PONTEIRO: return jp_string(\"" << getTypeName("ponteiro") << "\");\n";
+            out << "        default:             return jp_string(\"" << getTypeName("nulo") << "\");\n";
+            out << "    }\n";
+            out << "}\n\n";
+        }
+        
         out << JPCRuntime::LISTAS;
         out << JPCRuntime::OBJETOS;
 
@@ -360,6 +527,27 @@ public:
         out.close();
     }
 
+    // Encontra GCC/MinGW no PATH do sistema
+    std::string encontrarGcc() {
+        #ifdef _WIN32
+        std::vector<std::string> nomes = {"gcc.exe", "mingw32-gcc.exe", "x86_64-w64-mingw32-gcc.exe"};
+        for (const auto& nome : nomes) {
+            std::string cmd = "where " + nome + " >nul 2>nul";
+            if (system(cmd.c_str()) == 0) {
+                return nome;
+            }
+        }
+        #else
+        if (system("which gcc >/dev/null 2>/dev/null") == 0) {
+            return "gcc";
+        }
+        if (system("which cc >/dev/null 2>/dev/null") == 0) {
+            return "cc";
+        }
+        #endif
+        return "";
+    }
+
     // Encontra o TCC - busca relativo ao executável E ao diretório atual
     std::string encontrarTcc() {
         fs::path baseDir = importBaseDir;
@@ -462,7 +650,6 @@ public:
                     fs::path destino = dirRuntime / origem.filename();
                     try {
                         fs::copy_file(origem, destino, fs::copy_options::overwrite_existing);
-                        std::cout << "[JP] Biblioteca copiada: " << destino.filename().string() << std::endl;
                     } catch (...) {}
                     break;
                 }
@@ -509,8 +696,17 @@ public:
         // Copia bibliotecas nativas para temp/runtime/
         std::set<std::string> bibliotecasUsadas;
         for (const auto& [key, info] : moduleTable) {
-            if (isNativeLibrary(info.name, info.path)) {
+            if (info.isNativeDirect) {
                 bibliotecasUsadas.insert(info.name);
+            } else if (isNativeLibrary(info.name, info.path)) {
+                bibliotecasUsadas.insert(info.name);
+            }
+        }
+        for (const auto& [funcName, funcInfo] : nativeFuncTable) {
+            if (!funcInfo.dllPath.empty()) {
+                fs::path p(funcInfo.dllPath);
+                std::string libName = p.stem().string();
+                bibliotecasUsadas.insert(libName);
             }
         }
         if (!bibliotecasUsadas.empty()) {
@@ -568,12 +764,7 @@ public:
     }
 
     // Compila o programa (build para output/)
-    bool compilar(const std::vector<Instruction>& code, const std::string& nomeBase, bool modoJanela = false) {
-        std::string tccPath = encontrarTcc();
-        if (tccPath.empty()) {
-            std::cerr << "[ERRO] TCC nao encontrado!\n";
-            return false;
-        }
+    bool compilar(const std::vector<Instruction>& code, const std::string& nomeBase, bool modoJanela = false, bool otimizado = false) {
         
         fs::path runtimeDir = encontrarRuntime();
         if (runtimeDir.empty()) {
@@ -597,31 +788,67 @@ public:
         // Gera código C
         gerarC(code, cOutput.string(), modoJanela);
         
-        // Compila com TCC
+        // Escolhe compilador
         std::stringstream cmd;
         
-        #ifdef _WIN32
-        cmd << "\"";
-        #endif
-        
-        cmd << "\"" << fs::path(tccPath).make_preferred().string() << "\" ";
-        
-        fs::path tccDir = fs::path(tccPath).parent_path();
-        if (!tccDir.empty()) {
-            cmd << "-B\"" << tccDir.make_preferred().string() << "\" ";
+        if (otimizado) {
+            // Tenta GCC/MinGW
+            std::string gccCmd = encontrarGcc();
+            if (gccCmd.empty()) {
+                std::cerr << "\033[33m[JP] GCC/MinGW nao encontrado no PATH. Usando TCC.\033[0m" << std::endl;
+                otimizado = false;
+            } else {
+                #ifdef _WIN32
+                cmd << "\"";
+                #endif
+                
+                cmd << "\"" << gccCmd << "\" ";
+                cmd << "-O2 -s ";
+                cmd << "-o \"" << exeOutput.make_preferred().string() << "\" ";
+                cmd << "\"" << cOutput.make_preferred().string() << "\" ";
+                cmd << "-I\"" << runtimeDir.make_preferred().string() << "\" ";
+                
+                #ifdef _WIN32
+                if (modoJanela) cmd << "-mwindows ";
+                cmd << "-lkernel32 ";
+                cmd << "\"";
+                #else
+                cmd << "-ldl ";
+                #endif
+            }
         }
         
-        cmd << "-o \"" << exeOutput.make_preferred().string() << "\" ";
-        cmd << "\"" << cOutput.make_preferred().string() << "\" ";
-        cmd << "-I\"" << runtimeDir.make_preferred().string() << "\" ";
-        
-        #ifdef _WIN32
-        if (modoJanela) cmd << "-mwindows ";
-        cmd << "-lkernel32 ";
-        cmd << "\"";
-        #else
-        cmd << "-ldl ";
-        #endif
+        if (!otimizado) {
+            // Compilação padrão com TCC
+            std::string tccPath = encontrarTcc();
+            if (tccPath.empty()) {
+                std::cerr << "[ERRO] TCC nao encontrado!\n";
+                return false;
+            }
+            
+            #ifdef _WIN32
+            cmd << "\"";
+            #endif
+            
+            cmd << "\"" << fs::path(tccPath).make_preferred().string() << "\" ";
+            
+            fs::path tccDir = fs::path(tccPath).parent_path();
+            if (!tccDir.empty()) {
+                cmd << "-B\"" << tccDir.make_preferred().string() << "\" ";
+            }
+            
+            cmd << "-o \"" << exeOutput.make_preferred().string() << "\" ";
+            cmd << "\"" << cOutput.make_preferred().string() << "\" ";
+            cmd << "-I\"" << runtimeDir.make_preferred().string() << "\" ";
+            
+            #ifdef _WIN32
+            if (modoJanela) cmd << "-mwindows ";
+            cmd << "-lkernel32 ";
+            cmd << "\"";
+            #else
+            cmd << "-ldl ";
+            #endif
+        }
         
         int ret = system(cmd.str().c_str());
         
@@ -634,8 +861,17 @@ public:
         // Copia bibliotecas usando moduleTable (apenas bibliotecas nativas)
         std::set<std::string> bibliotecasUsadas;
         for (const auto& [key, info] : moduleTable) {
-            if (isNativeLibrary(info.name, info.path)) {
+            if (info.isNativeDirect) {
                 bibliotecasUsadas.insert(info.name);
+            } else if (isNativeLibrary(info.name, info.path)) {
+                bibliotecasUsadas.insert(info.name);
+            }
+        }
+        for (const auto& [funcName, funcInfo] : nativeFuncTable) {
+            if (!funcInfo.dllPath.empty()) {
+                fs::path p(funcInfo.dllPath);
+                std::string libName = p.stem().string();
+                bibliotecasUsadas.insert(libName);
             }
         }
         
@@ -643,7 +879,11 @@ public:
             copiarBibliotecas(bibliotecasUsadas, dirRuntime);
         }
         
-        std::cout << "[JP] Sucesso: " << exeOutput << std::endl;
+        if (otimizado) {
+            std::cout << "[JP] Sucesso (GCC -O2): " << exeOutput << std::endl;
+        } else {
+            std::cout << "[JP] Sucesso: " << exeOutput << std::endl;
+        }
         return true;
     }
 };

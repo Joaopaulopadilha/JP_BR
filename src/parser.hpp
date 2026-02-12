@@ -31,7 +31,8 @@ public:
         }
         // Erro com número da linha
         int line = peek().line;
-        throw std::runtime_error("Linha " + std::to_string(line) + ": " + err + ". Encontrado: '" + peek().value + "'");
+        std::string found = langErro("encontrado", {{"valor", peek().value}});
+        throw std::runtime_error(langErro("linha", {{"num", std::to_string(line)}}) + ": " + err + ". " + found);
     }
     
     // Consome um nome de membro (aceita ID ou palavras reservadas como nomes de método/atributo)
@@ -70,13 +71,14 @@ public:
             return t;
         }
         int line = peek().line;
-        throw std::runtime_error("Linha " + std::to_string(line) + ": " + err + ". Encontrado: '" + peek().value + "'");
+        std::string found = langErro("encontrado", {{"valor", peek().value}});
+        throw std::runtime_error(langErro("linha", {{"num", std::to_string(line)}}) + ": " + err + ". " + found);
     }
     
     // Helper para erro com linha
     void error(const std::string& msg) {
         int line = peek().line;
-        throw std::runtime_error("Linha " + std::to_string(line) + ": " + msg);
+        throw std::runtime_error(langErro("linha", {{"num", std::to_string(line)}}) + ": " + msg);
     }
 
     // Métodos de Parse (Despachantes)
@@ -187,7 +189,7 @@ inline std::unique_ptr<ASTNode> Parser::parseStatement() {
     }
 
     // 10. COMANDO DE SAIDA
-    if (t.type == TokenType::ID && t.value.rfind("saida", 0) == 0) {
+    if (t.type == TokenType::ID && t.value.rfind(langSaidaPrefixo, 0) == 0) {
         return ParserSaida::parse(*this);
     }
 
@@ -218,8 +220,8 @@ inline std::unique_ptr<ASTNode> Parser::parseStatement() {
             consume(TokenType::ID, "");
             consume(TokenType::LBRACKET, "");
             auto index = parseExpression();
-            consume(TokenType::RBRACKET, "Esperado ']'");
-            consume(TokenType::EQUALS, "Esperado '='");
+            consume(TokenType::RBRACKET, langErro("esperado", {{"valor", "]"}}));
+            consume(TokenType::EQUALS, langErro("esperado", {{"valor", "="}}));
             auto value = parseExpression();
             return std::make_unique<ListAssignStmt>(listName, std::move(index), std::move(value));
         } else {
@@ -240,26 +242,54 @@ inline std::unique_ptr<ASTNode> Parser::parseStatement() {
         return std::make_unique<ExpressionStmt>(std::move(expr));
     }
 
-    // 14. BUILTIN COMO STATEMENT (entrada, inteiro, int, decimal, dec, texto, booleano, bool, tipo)
+    // 14. BUILTIN COMO STATEMENT (entrada, inteiro, decimal, texto, booleano, tipo, etc.)
     if (t.type == TokenType::ID && peek(1).type == TokenType::LPAREN &&
-        (t.value == "entrada" || t.value == "inteiro" || t.value == "int" ||
-         t.value == "decimal" || t.value == "dec" || t.value == "texto" ||
-         t.value == "booleano" || t.value == "bool" || t.value == "tipo")) {
+        langBuiltins.find(t.value) != langBuiltins.end()) {
+        auto expr = parseExpression();
+        return std::make_unique<ExpressionStmt>(std::move(expr));
+    }
+
+    // 14b. TOKEN DE TIPO COMO BUILTIN STATEMENT: int("42"), float(x), str(42), bool(1)
+    if ((t.type == TokenType::TYPE_INT || t.type == TokenType::TYPE_FLOAT ||
+         t.type == TokenType::TYPE_STR || t.type == TokenType::TYPE_BOOL) &&
+        peek(1).type == TokenType::LPAREN) {
         auto expr = parseExpression();
         return std::make_unique<ExpressionStmt>(std::move(expr));
     }
 
     // 15. CHAMADA DE FUNÇÃO (ID(...)) - pode ser nativa ou normal
     if (t.type == TokenType::ID && peek(1).type == TokenType::LPAREN) {
-        // Verifica se é função nativa
+        // Verifica se é função nativa registrada
         if (ParserNativo::isNativeFunc(t.value)) {
             return ParserNativo::parseNativeCall(*this);
         }
+        
+        // Verifica se é função do usuário conhecida
+        if (functionTable.find(t.value) != functionTable.end()) {
+            return ParserFunc::parseFuncCall(*this);
+        }
+        
+        // Função desconhecida: pode ser nativa de DLL importada diretamente
+        // Verifica se há alguma biblioteca nativa direta carregada
+        bool hasNativeDirectLib = false;
+        for (const auto& [key, info] : moduleTable) {
+            if (info.isNativeDirect) {
+                hasNativeDirectLib = true;
+                break;
+            }
+        }
+        
+        if (hasNativeDirectLib) {
+            // Trata como chamada nativa lazy (será validada na compilação)
+            return ParserNativo::parseNativeCall(*this);
+        }
+        
+        // Fallback: trata como chamada de função normal
         return ParserFunc::parseFuncCall(*this);
     }
 
     // Se chegou aqui, é um token que não sabemos lidar no início de linha
-    error("Comando desconhecido ou inesperado: " + t.value);
+    error(langErro("comando_desconhecido", {{"valor", t.value}}));
     return nullptr; // Nunca alcançado
 }
 

@@ -1,0 +1,11 @@
+funcao saudar(nome):
+    saida("Ola, {nome}!")
+
+nome = entrada("Seu nome: ")
+saudar(nome)
+
+valor = int("42")
+saida("Tipo: ", tipo(valor))
+saida_vermelho("Erro!")
+saidal_verde("Sem quebra de ")
+saida("linha")

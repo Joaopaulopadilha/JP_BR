@@ -1,5 +1,0 @@
-importar jprasp
-
-saida("Testando buscar...")
-html = jprasp.buscar("https://httpbin.org/get")
-saida("Resultado: {html}")

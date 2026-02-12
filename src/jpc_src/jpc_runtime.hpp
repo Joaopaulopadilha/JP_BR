@@ -155,19 +155,6 @@ JPValor converter_bool(JPValor v) {
     return jp_bool(is_true(v));
 }
 
-JPValor tipo_de(JPValor v) {
-    switch (v.tipo) {
-        case JP_TIPO_INT:    return jp_string("inteiro");
-        case JP_TIPO_DOUBLE: return jp_string("decimal");
-        case JP_TIPO_STRING: return jp_string("texto");
-        case JP_TIPO_BOOL:   return jp_string("booleano");
-        case JP_TIPO_LISTA:  return jp_string("lista");
-        case JP_TIPO_OBJETO: return jp_string("objeto");
-        case JP_TIPO_PONTEIRO: return jp_string("ponteiro");
-        default:             return jp_string("nulo");
-    }
-}
-
 )";
 
 // Código de listas

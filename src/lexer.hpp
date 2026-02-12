@@ -60,7 +60,7 @@ public:
                             tokens.push_back({TokenType::DEDENT, "DEDENT", currentLine});
                         }
                         if (spaces != indentStack.back()) {
-                            throw std::runtime_error("Linha " + std::to_string(currentLine) + ": Erro de indentacao invalida");
+                            throw std::runtime_error(langErroLinha(currentLine, "indentacao_invalida"));
                         }
                     }
                 }
@@ -176,7 +176,7 @@ public:
                 continue;
             }
 
-            throw std::runtime_error("Linha " + std::to_string(currentLine) + ": Caractere inesperado: " + current);
+            throw std::runtime_error(langErroLinha(currentLine, "caractere_inesperado", {{"valor", std::string(1, current)}}));
         }
 
         while (indentStack.size() > 1) {
