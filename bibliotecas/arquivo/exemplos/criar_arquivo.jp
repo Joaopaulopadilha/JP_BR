@@ -1,0 +1,12 @@
+importar arquivo
+
+saida("verificar se o arquivo existe:")
+existe = arquivo.existe("ok.jp")
+saida(existe)
+saida("ler o arquivo:")
+ler = arquivo.ler("ok.jp")
+saida(ler)
+aumento = """
+"este texto é uma continuação"
+"""
+anexar = arquivo.anexar("ok.jp", aumento)

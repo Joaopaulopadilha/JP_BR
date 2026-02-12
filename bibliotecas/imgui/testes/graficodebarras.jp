@@ -1,0 +1,12 @@
+#exemplo grafico de barras
+
+importar imgui
+importar tempo
+
+janela1 = imgui.janela("Exemplo com graficos de barra", 500, 500)
+#(id, nome(opcional), x, y, comprimento, altura, valor minimo, valor maximo, orientação v ou h, r, g, b)
+imgui.grafico_barra_porcento(janela1, "cadidato A", 1700, 130 , 100, 10, 0, 100, v, 0, 255, 0)
+
+
+loop:
+    imgui.exibir(janela1)

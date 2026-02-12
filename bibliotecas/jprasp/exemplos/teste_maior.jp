@@ -1,0 +1,72 @@
+// raspagem_completa.jp
+// Teste completo da biblioteca jprasp
+
+importar jprasp
+
+// Teste 1: Status HTTP
+saida("=== TESTE 1: Status HTTP ===")
+status = jprasp.status("https://httpbin.org/get")
+saida("Status httpbin.org: {status}")
+
+status404 = jprasp.status("https://httpbin.org/status/404")
+saida("Status 404: {status404}")
+
+// Teste 2: Verificar disponibilidade
+saida("")
+saida("=== TESTE 2: Disponibilidade ===")
+disp = jprasp.disponivel("https://google.com")
+saida("Google disponivel: {disp}")
+
+// Teste 3: Buscar conteudo
+saida("")
+saida("=== TESTE 3: Buscar HTML ===")
+html = jprasp.buscar("https://example.com")
+saida("HTML buscado com sucesso")
+
+// Teste 4: Buscar tag
+saida("")
+saida("=== TESTE 4: Buscar Tag ===")
+titulo = jprasp.buscar_tag(html, "title")
+saida("Tag title: {titulo}")
+
+h1 = jprasp.buscar_tag(html, "h1")
+saida("Tag h1: {h1}")
+
+// Teste 5: Pegar texto de elemento
+saida("")
+saida("=== TESTE 5: Extrair Texto ===")
+texto_titulo = jprasp.pegar_texto(titulo)
+saida("Texto do titulo: {texto_titulo}")
+
+texto_h1 = jprasp.pegar_texto(h1)
+saida("Texto do h1: {texto_h1}")
+
+// Teste 6: Buscar todas as tags de um tipo
+saida("")
+saida("=== TESTE 6: Buscar Todas ===")
+paragrafos = jprasp.buscar_todas(html, "p")
+saida("Paragrafos encontrados:")
+saida(paragrafos)
+
+// Teste 7: Contar tags
+saida("")
+saida("=== TESTE 7: Contar Tags ===")
+num_p = jprasp.contar(html, "p")
+saida("Quantidade de p: {num_p}")
+
+num_div = jprasp.contar(html, "div")
+saida("Quantidade de div: {num_div}")
+
+num_a = jprasp.contar(html, "a")
+saida("Quantidade de a: {num_a}")
+
+// Teste 8: Pegar atributo
+saida("")
+saida("=== TESTE 8: Pegar Atributo ===")
+link = jprasp.buscar_tag(html, "a")
+saida("Tag a: {link}")
+href = jprasp.pegar_atributo(link, "href")
+saida("Atributo href: {href}")
+
+saida("")
+saida("=== TESTES CONCLUIDOS ===")

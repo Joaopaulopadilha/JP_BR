@@ -1,0 +1,77 @@
+# gdx.jp
+# Biblioteca Gráfica para JPLang
+
+nativo "bibliotecas/gdx/gdx.jpd" importar gdx_janela(3), gdx_janela_exibir(1), gdx_janela_cor(4), gdx_janela_cor_atualizar(4), gdx_janela_imagem(2), gdx_janela_imagem_atualizar(2), gdx_botao(5), gdx_botao_camada_1(5), gdx_botao_camada_2(5), gdx_botao_clicado(1), gdx_botao_cor(4), gdx_botao_fonte_cor(4), gdx_botao_canto_redondo(2), gdx_botao_exibir(1), gdx_etiqueta(4), gdx_etiqueta_atualizar(5), gdx_etiqueta_exibir(1)
+
+classe gdx:
+    
+    # === JANELA ===
+    # janela(titulo, w, h) -> retorna id
+    funcao janela(titulo, largura, altura):
+        retorna gdx_janela(titulo, largura, altura)
+    
+    # Mantém o loop da janela vivo
+    funcao janela_exibir(janela_id):
+        retorna gdx_janela_exibir(janela_id)
+    
+    # Define cor de fundo da janela (r, g, b: 0-255)
+    funcao janela_cor(janela_id, r, g, b):
+        retorna gdx_janela_cor(janela_id, r, g, b)
+    
+    # Atualiza cor de fundo da janela em tempo de execução
+    funcao janela_cor_atualizar(janela_id, r, g, b):
+        retorna gdx_janela_cor_atualizar(janela_id, r, g, b)
+    
+    # Define imagem de fundo da janela (redimensiona automaticamente)
+    funcao janela_imagem(janela_id, caminho):
+        retorna gdx_janela_imagem(janela_id, caminho)
+    
+    # Atualiza imagem de fundo da janela em tempo de execução
+    funcao janela_imagem_atualizar(janela_id, caminho):
+        retorna gdx_janela_imagem_atualizar(janela_id, caminho)
+    
+    # === BOTAO ===
+    # botao(texto, w, h, x, y) -> retorna id (camada 0 - fundo)
+    funcao botao(titulo, largura, altura, x, y):
+        retorna gdx_botao(titulo, largura, altura, x, y)
+
+    # botao_camada_1(texto, w, h, x, y) -> retorna id (camada 1 - meio)
+    funcao botao_camada_1(titulo, largura, altura, x, y):
+        retorna gdx_botao_camada_1(titulo, largura, altura, x, y)
+
+    # botao_camada_2(texto, w, h, x, y) -> retorna id (camada 2 - topo)
+    funcao botao_camada_2(titulo, largura, altura, x, y):
+        retorna gdx_botao_camada_2(titulo, largura, altura, x, y)
+
+    # botao_clicado(id) -> bool
+    funcao botao_clicado(btn_id):
+        retorna gdx_botao_clicado(btn_id)
+
+    # Define cor de fundo do botão (r, g, b: 0-255)
+    funcao botao_cor(btn_id, r, g, b):
+        retorna gdx_botao_cor(btn_id, r, g, b)
+
+    # Define cor da fonte do botão (r, g, b: 0-255)
+    funcao botao_fonte_cor(btn_id, r, g, b):
+        retorna gdx_botao_fonte_cor(btn_id, r, g, b)
+
+    # Define cantos arredondados do botão (raio em pixels)
+    funcao botao_canto_redondo(btn_id, raio):
+        retorna gdx_botao_canto_redondo(btn_id, raio)
+
+    # Atualiza visual do botão (Linux)
+    funcao botao_exibir(btn_id):
+        retorna gdx_botao_exibir(btn_id)
+
+    # === ETIQUETA ===
+    # etiqueta(texto, tamanho, x, y) -> retorna id
+    funcao etiqueta(texto, tamanho, x, y):
+        retorna gdx_etiqueta(texto, tamanho, x, y)
+    
+    # etiqueta_atualizar(id, texto, tamanho, x, y)
+    funcao etiqueta_atualizar(id, texto, tamanho, x, y):
+        retorna gdx_etiqueta_atualizar(id, texto, tamanho, x, y)
+
+    # Atualiza visual da etiqueta (Linux)
+    funcao etiqueta_exibir(id):
+        retorna gdx_etiqueta_exibir(id)

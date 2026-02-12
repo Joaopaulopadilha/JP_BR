@@ -1,0 +1,58 @@
+# bibliotecas/tempo.jp
+#link tempo.a
+#flag -static
+
+# Importa funções da DLL
+nativo "bibliotecas/tempo/tempo.jpd" importar tm_data_str(0), tm_data_num(0), tm_dia(0), tm_mes(0), tm_ano(0), tm_hora_str(0), tm_hora_num(0), tm_h(0), tm_m(0), tm_s(0), tm_full(0), tm_wday(0), tm_yday(0), tm_timestamp(0), tm_sleep(1), tm_start(0), tm_end(0)
+
+classe tempo:
+    funcao data():
+        retorna tm_data_str()
+    
+    funcao data_numero():
+        retorna tm_data_num()
+        
+    funcao data_dia():
+        retorna tm_dia()
+        
+    funcao data_mes():
+        retorna tm_mes()
+        
+    funcao data_ano():
+        retorna tm_ano()
+        
+    funcao hora():
+        retorna tm_hora_str()
+        
+    funcao hora_numero():
+        retorna tm_hora_num()
+        
+    funcao hora_hora():
+        retorna tm_h()
+        
+    funcao hora_minuto():
+        retorna tm_m()
+        
+    funcao hora_segundo():
+        retorna tm_s()
+        
+    funcao completo():
+        retorna tm_full()
+        
+    funcao dia_semana():
+        retorna tm_wday()
+        
+    funcao dia_ano():
+        retorna tm_yday()
+        
+    funcao timestamp():
+        retorna tm_timestamp()
+        
+    funcao dormir(ms):
+        retorna tm_sleep(ms)
+        
+    funcao cronometro_inicio():
+        retorna tm_start()
+        
+    funcao cronometro_fim():
+        retorna tm_end()

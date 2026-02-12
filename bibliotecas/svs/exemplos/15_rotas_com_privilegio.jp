@@ -1,0 +1,208 @@
+importar svs
+importar texto
+importar hash
+
+porta = svs.criar(8080)
+saida("Servidor RBAC rodando em: " + svs.meu_ip() + ":" + porta)
+
+# ==============================================================================
+# BANCO DE DADOS SIMULADO
+# ==============================================================================
+# Senha "1234" para ambos (hash SHA-256 + salt fictício do exemplo anterior)
+hash_padrao = "cU3wyarFPl4u6sjE$2980e4bde5ebe7921ccf724cdd53d45033f3e5fd25301b2999619924382a461a"
+
+# Simula uma tabela de usuários
+u_admin_user = "admin"
+u_admin_pass = hash_padrao
+u_admin_role = "admin" # Acesso total
+
+u_func_user = "funcionario"
+u_func_pass = hash_padrao
+u_func_role = "basico" # Acesso restrito
+
+# ==============================================================================
+# TEMPLATES HTML
+# ==============================================================================
+
+html_login = """
+<!DOCTYPE html>
+<style>
+body { font-family: sans-serif; background: #222; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
+.box { background: #333; padding: 40px; border-radius: 8px; text-align: center; }
+input { padding: 10px; display: block; margin: 10px auto; width: 200px; }
+button { padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; }
+</style>
+<div class="box">
+    <h2>Sistema Corporativo</h2>
+    <input id="u" placeholder="Usuario">
+    <input id="s" type="password" placeholder="Senha">
+    <button onclick="logar()">Entrar</button>
+    <p id="msg"></p>
+</div>
+<script>
+async function logar() {
+    let u = document.getElementById('u').value;
+    let s = document.getElementById('s').value;
+    let res = await fetch('/login', { method: 'POST', body: u + ':' + s });
+    let txt = await res.text();
+    if(txt === 'ok') window.location.href = '/dashboard';
+    else document.getElementById('msg').innerText = "Acesso Negado";
+}
+</script>
+"""
+
+html_dashboard = """
+<!DOCTYPE html>
+<style>
+body { font-family: sans-serif; padding: 50px; background: #f0f0f0; }
+.card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.admin-only { border-left: 5px solid red; }
+.basic { border-left: 5px solid green; }
+a { text-decoration: none; padding: 10px; background: #ddd; color: #333; border-radius: 4px; }
+</style>
+<h1>Dashboard Principal</h1>
+<p>Bem vindo, <b>{USUARIO}</b>! Seu nível é: <b>{CARGO}</b></p>
+<hr>
+
+<div class="card basic">
+    <h3>Área Comum</h3>
+    <p>Todos os funcionários podem ver isso.</p>
+    <a href="/relatorios">Ver Relatórios (Básico)</a>
+</div>
+
+<div class="card admin-only">
+    <h3>Área da Diretoria (Admin)</h3>
+    <p>Apenas administradores podem clicar aqui.</p>
+    <a href="/financeiro">Acessar Financeiro (Restrito)</a>
+</div>
+
+<br><br>
+<a href="/logout" style="background: #ff4444; color: white;">Sair</a>
+"""
+
+html_financeiro = """
+<body style="background: #ffcccc; font-family: sans-serif; padding: 50px; text-align: center;">
+    <h1 style="color: #cc0000; font-size: 3em;">CONFIDENCIAL</h1>
+    <h2>Dados Financeiros da Empresa</h2>
+    <p>Você só vê isso porque é ADMIN.</p>
+    <br>
+    <a href="/dashboard">Voltar</a>
+</body>
+"""
+
+html_relatorios = """
+<body style="background: #ccffcc; font-family: sans-serif; padding: 50px; text-align: center;">
+    <h1 style="color: #006600;">Relatórios Gerais</h1>
+    <p>Área acessível para todos os funcionários logados.</p>
+    <br>
+    <a href="/dashboard">Voltar</a>
+</body>
+"""
+
+# ==============================================================================
+# LOOP DO SERVIDOR
+# ==============================================================================
+
+enquanto verdadeiro:
+    req = svs.aguardar(porta)
+    caminho = svs.caminho(req)
+    metodo = svs.metodo(req)
+    
+    # 1. Recupera Sessão
+    sid = svs.id_sessao(req)
+    
+    # 2. Recupera Dados do Usuário (se existirem)
+    usuario_logado = svs.sessao_obter(sid, "usuario") # ex: "admin"
+    cargo_logado = svs.sessao_obter(sid, "cargo")     # ex: "admin" ou "basico"
+    esta_autenticado = (usuario_logado != "")
+
+    # --------------------------------------------------------------------------
+    # ROTA: LOGIN (Pública)
+    # --------------------------------------------------------------------------
+    se caminho == "/":
+        se esta_autenticado:
+            svs.responder_html(req, 200, "<script>location.href='/dashboard'</script>")
+        senao:
+            svs.responder_html(req, 200, html_login)
+
+    ou_se caminho == "/login":
+        se metodo == "POST":
+            dados = svs.corpo(req)
+            u = texto.dividir(dados, ":", 0)
+            s = texto.dividir(dados, ":", 1)
+            
+            # Lógica de Login (Simulada)
+            novo_cargo = ""
+            login_sucesso = falso
+            
+            # Verifica Admin
+            se u == u_admin_user:
+                se hash.verificar(s, u_admin_pass):
+                    novo_cargo = u_admin_role
+                    login_sucesso = verdadeiro
+            
+            # Verifica Funcionario
+            ou_se u == u_func_user:
+                se hash.verificar(s, u_func_pass):
+                    novo_cargo = u_func_role
+                    login_sucesso = verdadeiro
+            
+            se login_sucesso:
+                # INICIA A SESSÃO E GRAVA O CARGO (ROLE)
+                sid = svs.iniciar_sessao(req)
+                svs.sessao_definir(sid, "usuario", u)
+                svs.sessao_definir(sid, "cargo", novo_cargo)
+                svs.responder(req, 200, "ok")
+            senao:
+                svs.responder(req, 401, "falha")
+        senao:
+            svs.responder(req, 405, "metodo invalido")
+
+    # --------------------------------------------------------------------------
+    # ROTA: DASHBOARD (Acesso: Qualquer Autenticado)
+    # --------------------------------------------------------------------------
+    ou_se caminho == "/dashboard":
+        se esta_autenticado:
+            # Preenche o template com dados da sessão
+            pag = texto.substituir(html_dashboard, "{USUARIO}", usuario_logado)
+            pag = texto.substituir(pag, "{CARGO}", cargo_logado)
+            svs.responder_html(req, 200, pag)
+        senao:
+            svs.responder_html(req, 403, "Faça login primeiro. <a href='/'>Ir para Login</a>")
+
+    # --------------------------------------------------------------------------
+    # ROTA: RELATORIOS (Acesso: Básico E Admin)
+    # --------------------------------------------------------------------------
+    ou_se caminho == "/relatorios":
+        se esta_autenticado:
+            # Aqui qualquer um entra, basta estar logado
+            svs.responder_html(req, 200, html_relatorios)
+        senao:
+            svs.responder_html(req, 403, "Acesso negado.")
+
+    # --------------------------------------------------------------------------
+    # ROTA: FINANCEIRO (Acesso: APENAS ADMIN)
+    # --------------------------------------------------------------------------
+    ou_se caminho == "/financeiro":
+        se esta_autenticado:
+            # VERIFICAÇÃO DE PRIVILÉGIO
+            se cargo_logado == "admin":
+                svs.responder_html(req, 200, html_financeiro)
+            senao:
+                # Se for "basico", cai aqui
+                aviso = "<h1>Erro 403 - Proibido</h1><p>O usuario <b>" + usuario_logado + "</b> nao tem permissao de ADMIN.</p><a href='/dashboard'>Voltar</a>"
+                svs.responder_html(req, 403, aviso)
+        senao:
+            svs.responder_html(req, 403, "Faça login.")
+
+    # --------------------------------------------------------------------------
+    # ROTA: LOGOUT
+    # --------------------------------------------------------------------------
+    ou_se caminho == "/logout":
+        svs.sessao_definir(sid, "usuario", "")
+        svs.sessao_definir(sid, "cargo", "")
+        svs.definir_cookie(req, "JPSESSID", "") # Mata cookie
+        svs.responder_html(req, 200, "<script>location.href='/'</script>")
+
+    senao:
+        svs.responder(req, 404, "Nao encontrado")1

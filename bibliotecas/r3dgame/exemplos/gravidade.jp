@@ -1,0 +1,27 @@
+importar r3dgame
+
+jogo = r3dgame.janela("Teste Gravidade", 1000, 1000)
+
+jogador = r3dgame.player(jogo, 0, 2, 0)  # Começa no ar
+r3dgame.player_tamanho(jogador, 1, 1, 1)
+r3dgame.player_colisao(jogador, 1, 1, 1)
+r3dgame.player_mover(jogador, "w", "a", "s", "d")
+r3dgame.player_velocidade(jogador, 0.1, 0.1)
+r3dgame.player_gravidade(jogador, 0.01)  # Ativa gravidade
+
+chao = r3dgame.objeto(0, -1, 0)
+r3dgame.objeto_escala(chao, 20, 0.5, 20)
+r3dgame.objeto_colisao(chao, 20, 0.5, 20)
+r3dgame.objeto_solido(chao)
+r3dgame.objeto_cor(chao, 100, 100, 100)
+
+r3dgame.camera_player(jogo, jogador, 8, 2, 0.005)
+
+enquanto verdadeiro:
+    # Pula só se estiver no chão
+    se r3dgame.tecla("espaco") e r3dgame.player_no_chao(jogador):
+        r3dgame.player_pular(jogador, 0.2)
+    
+    se r3dgame.tecla("esc")
+        parar
+    r3dgame.exibir(jogo)

@@ -1,0 +1,79 @@
+# 1_sqlite_basico.jp
+# Exemplo básico de uso da biblioteca SQLite em JPLang
+
+# Importa a biblioteca SQLite
+importar sqlite
+
+# =============================================================================
+# CONEXÃO COM O BANCO DE DADOS
+# =============================================================================
+
+# Abre (ou cria) um banco de dados SQLite
+# Se o arquivo não existir, será criado automaticamente
+# Retorna um ID de conexão que será usado em todas as operações
+db = sqlite.abrir("teste.db")
+
+# =============================================================================
+# CRIAÇÃO DE TABELA
+# =============================================================================
+
+# Cria uma tabela chamada "usuarios" com 3 colunas:
+# - id: número inteiro, chave primária (auto-incrementa)
+# - nome: texto
+# - idade: número inteiro
+# O "IF NOT EXISTS" evita erro se a tabela já existir
+sqlite.executar(db, "CREATE TABLE IF NOT EXISTS usuarios (id INTEGER PRIMARY KEY, nome TEXT, idade INTEGER)")
+
+# =============================================================================
+# INSERÇÃO DE DADOS
+# =============================================================================
+
+# Insere dois registros na tabela
+# O campo "id" é preenchido automaticamente por ser PRIMARY KEY
+sqlite.executar(db, "INSERT INTO usuarios (nome, idade) VALUES ('João', 25)")
+sqlite.executar(db, "INSERT INTO usuarios (nome, idade) VALUES ('Maria', 30)")
+
+# =============================================================================
+# CONSULTA SIMPLES
+# =============================================================================
+
+# Consulta todos os registros da tabela
+# O resultado é uma string no formato CSV:
+# "coluna1,coluna2,coluna3\nvalor1,valor2,valor3\n..."
+resultado = sqlite.consultar(db, "SELECT * FROM usuarios")
+saida(resultado)
+
+# =============================================================================
+# CONSULTA COM PREPARED STATEMENT
+# =============================================================================
+
+# Prepared statements são mais seguros contra SQL Injection
+# O "?" é um placeholder que será substituído pelo valor vinculado
+
+# Prepara a consulta: seleciona usuários com idade maior que ?
+stmt = sqlite.preparar(db, "SELECT * FROM usuarios WHERE idade > ?")
+
+# Vincula o valor 20 ao primeiro placeholder (índice 1)
+# Isso é equivalente a: SELECT * FROM usuarios WHERE idade > 20
+sqlite.vincular(stmt, 1, 20)
+
+# Executa a consulta e percorre os resultados
+# sqlite.passo() retorna:
+#   1 = há uma linha disponível (SQLITE_ROW)
+#   0 = consulta terminou (SQLITE_DONE)
+#  -1 = erro
+enquanto sqlite.passo(stmt) == 1:
+    # sqlite.coluna_texto(stmt, índice) obtém o valor da coluna como texto
+    # Índices começam em 0: coluna 0 = id, coluna 1 = nome, coluna 2 = idade
+    saida(sqlite.coluna_texto(stmt, 1))
+
+# Finaliza o statement para liberar memória
+sqlite.finalizar(stmt)
+
+# =============================================================================
+# ENCERRAMENTO
+# =============================================================================
+
+# Fecha a conexão com o banco de dados
+# Importante: sempre fechar para garantir que os dados sejam salvos
+sqlite.fechar(db)

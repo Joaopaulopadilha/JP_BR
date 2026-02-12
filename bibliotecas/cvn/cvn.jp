@@ -1,0 +1,200 @@
+# cvn.jp
+# Biblioteca de visão computacional para JPLang (Portável Windows/Linux)
+
+#link cvn.a
+#flag -static
+#flag -lgdi32
+#flag -lole32
+#flag -loleaut32
+#flag -lstrmiids
+
+nativo "bibliotecas/cvn/cvn.jpd" importar cvn_ler(1), cvn_existe(1), cvn_existe_imagem(1), cvn_tamanho_arquivo(1), cvn_tamanho(1), cvn_redimensionar(3), cvn_salvar(2), cvn_exibir(2), cvn_esperar(1), cvn_liberar(1), cvn_fechar(1), cvn_fechar_todas(0), cvn_listar_telas(0), cvn_listar_cameras(0), cvn_camera(1), cvn_tela(1), cvn_regiao(5), cvn_reproduzir(3), cvn_camera_fechar(1), cvn_fonte_cinza(1), cvn_fonte_inverter(1), cvn_fonte_brilho(2), cvn_fonte_contraste(2), cvn_fonte_blur(2), cvn_fonte_bordas(1), cvn_fonte_sepia(1), cvn_fonte_saturacao(2), cvn_fonte_flip_h(1), cvn_fonte_flip_v(1), cvn_fonte_redimensionar(3), cvn_cinza(1), cvn_inverter(1), cvn_brilho(2), cvn_contraste(2), cvn_limiar(2), cvn_blur(2), cvn_bordas(1), cvn_sepia(1), cvn_saturacao(2), cvn_flip_h(1), cvn_flip_v(1), cvn_rotacionar(2), cvn_capturar_tela(0), cvn_capturar_regiao(4), cvn_capturar_janela(1)
+
+classe cvn:
+    # === VERIFICAÇÃO DE ARQUIVOS ===
+    
+    # Verifica se arquivo existe
+    # Uso: se cvn.existe("foto.jpg"):
+    # Retorna: verdadeiro ou falso
+    funcao existe(pCaminho):
+        retorna cvn_existe(pCaminho)
+    
+    # Verifica se arquivo existe E é uma imagem válida
+    # Uso: se cvn.existe_imagem("foto.jpg"):
+    # Retorna: verdadeiro ou falso
+    funcao existe_imagem(pCaminho):
+        retorna cvn_existe_imagem(pCaminho)
+    
+    # Retorna tamanho do arquivo em bytes
+    # Uso: bytes = cvn.tamanho_arquivo("foto.jpg")
+    # Retorna: tamanho em bytes ou -1 se não existir
+    funcao tamanho_arquivo(pCaminho):
+        retorna cvn_tamanho_arquivo(pCaminho)
+    
+    # === FONTES DE VÍDEO ===
+    
+    # Lista monitores disponíveis
+    # Uso: telas = cvn.listar_telas()
+    # Retorna: "0:1920x1080,1:1920x1080"
+    funcao listar_telas():
+        retorna cvn_listar_telas()
+    
+    # Lista câmeras disponíveis
+    # Uso: cameras = cvn.listar_cameras()
+    # Retorna: "0:WebCam HD,1:USB Camera"
+    funcao listar_cameras():
+        retorna cvn_listar_cameras()
+    
+    # Cria fonte de câmera
+    # Uso: cam = cvn.camera(0)
+    funcao camera(pIndice):
+        retorna cvn_camera(pIndice)
+    
+    # Cria fonte de tela (monitor)
+    # Uso: tela = cvn.tela(0)
+    funcao tela(pIndice):
+        retorna cvn_tela(pIndice)
+    
+    # Cria fonte de região de um monitor
+    # Uso: regiao = cvn.regiao(0, 100, 100, 300, 300)
+    funcao regiao(pMonitor, pX, pY, pLargura, pAltura):
+        retorna cvn_regiao(pMonitor, pX, pY, pLargura, pAltura)
+    
+    # Reproduz fonte continuamente (ESC para sair)
+    # Uso: cvn.reproduzir("janela", fonte, 30)
+    funcao reproduzir(pTitulo, pFonte, pMs):
+        retorna cvn_reproduzir(pTitulo, pFonte, pMs)
+    
+    # Fecha câmera
+    # Uso: cvn.camera_fechar(cam)
+    funcao camera_fechar(pFonte):
+        retorna cvn_camera_fechar(pFonte)
+    
+    # === FILTROS EM FONTES ===
+    # Retornam nova fonte com filtro aplicado
+    
+    funcao cinza(pFonte):
+        retorna cvn_fonte_cinza(pFonte)
+    
+    funcao inverter(pFonte):
+        retorna cvn_fonte_inverter(pFonte)
+    
+    funcao brilho(pFonte, pValor):
+        retorna cvn_fonte_brilho(pFonte, pValor)
+    
+    funcao contraste(pFonte, pValor):
+        retorna cvn_fonte_contraste(pFonte, pValor)
+    
+    funcao blur(pFonte, pRaio):
+        retorna cvn_fonte_blur(pFonte, pRaio)
+    
+    funcao bordas(pFonte):
+        retorna cvn_fonte_bordas(pFonte)
+    
+    funcao sepia(pFonte):
+        retorna cvn_fonte_sepia(pFonte)
+    
+    funcao saturacao(pFonte, pValor):
+        retorna cvn_fonte_saturacao(pFonte, pValor)
+    
+    funcao flip_h(pFonte):
+        retorna cvn_fonte_flip_h(pFonte)
+    
+    funcao flip_v(pFonte):
+        retorna cvn_fonte_flip_v(pFonte)
+    
+    funcao redimensionar(pFonte, pLargura, pAltura):
+        retorna cvn_fonte_redimensionar(pFonte, pLargura, pAltura)
+    
+    # === IMAGENS ESTÁTICAS ===
+    
+    # Lê imagem do disco
+    # Uso: img = cvn.ler("foto.jpg")
+    funcao ler(pCaminho):
+        retorna cvn_ler(pCaminho)
+    
+    # Retorna tamanho da imagem como "largura,altura"
+    # Uso: tamanho = cvn.tamanho(img)
+    funcao tamanho(pImg):
+        retorna cvn_tamanho(pImg)
+    
+    # Redimensiona imagem
+    # Uso: img2 = cvn.redimensionar(img, 300, 300)
+    funcao redimensionar(pImg, pLargura, pAltura):
+        retorna cvn_redimensionar(pImg, pLargura, pAltura)
+    
+    # Salva imagem
+    # Uso: cvn.salvar(img, "foto.png")
+    funcao salvar(pImg, pCaminho):
+        retorna cvn_salvar(pImg, pCaminho)
+    
+    # Exibe imagem em janela
+    # Uso: cvn.exibir("janela", img)
+    funcao exibir(pTitulo, pImg):
+        retorna cvn_exibir(pTitulo, pImg)
+    
+    # Espera tecla ou tempo
+    # Uso: cvn.esperar(0) ou cvn.esperar(1000)
+    funcao esperar(pMs):
+        retorna cvn_esperar(pMs)
+    
+    # Libera imagem da memória
+    funcao liberar(pImg):
+        retorna cvn_liberar(pImg)
+    
+    # Fecha janela
+    funcao fechar(pTitulo):
+        retorna cvn_fechar(pTitulo)
+    
+    # Fecha todas as janelas
+    funcao fechar_todas():
+        retorna cvn_fechar_todas()
+    
+    # === FILTROS EM IMAGENS (uso único) ===
+    
+    funcao img_cinza(pImg):
+        retorna cvn_cinza(pImg)
+    
+    funcao img_inverter(pImg):
+        retorna cvn_inverter(pImg)
+    
+    funcao img_brilho(pImg, pValor):
+        retorna cvn_brilho(pImg, pValor)
+    
+    funcao img_contraste(pImg, pValor):
+        retorna cvn_contraste(pImg, pValor)
+    
+    funcao img_limiar(pImg, pValor):
+        retorna cvn_limiar(pImg, pValor)
+    
+    funcao img_blur(pImg, pRaio):
+        retorna cvn_blur(pImg, pRaio)
+    
+    funcao img_bordas(pImg):
+        retorna cvn_bordas(pImg)
+    
+    funcao img_sepia(pImg):
+        retorna cvn_sepia(pImg)
+    
+    funcao img_saturacao(pImg, pValor):
+        retorna cvn_saturacao(pImg, pValor)
+    
+    funcao img_flip_h(pImg):
+        retorna cvn_flip_h(pImg)
+    
+    funcao img_flip_v(pImg):
+        retorna cvn_flip_v(pImg)
+    
+    funcao img_rotacionar(pImg, pGraus):
+        retorna cvn_rotacionar(pImg, pGraus)
+    
+    # === CAPTURA ÚNICA (legado) ===
+    
+    funcao capturar_tela():
+        retorna cvn_capturar_tela()
+    
+    funcao capturar_regiao(pX, pY, pLargura, pAltura):
+        retorna cvn_capturar_regiao(pX, pY, pLargura, pAltura)
+    
+    funcao capturar_janela(pTitulo):
+        retorna cvn_capturar_janela(pTitulo)

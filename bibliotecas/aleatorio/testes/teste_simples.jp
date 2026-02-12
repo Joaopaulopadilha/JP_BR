@@ -1,0 +1,26 @@
+importar aleatorio
+
+saidal_verde("gerando um numero aleatorio entre 1 e 100: ")
+valor = aleatorio.numero(1, 100)
+saida(valor)
+saida("")
+
+
+saidal_verde("gerando uma letra aleatoria entre a e z: ")
+letra = aleatorio.letra("a", "z")
+saida(letra)
+saida("")
+
+saidal_verde("gerando um valor booleano: ")
+logico = aleatorio.booleano()
+saida(logico)
+saida("")
+
+saidal_verde("gerando uma palavra aleatoria com 5 letras: ")
+string = aleatorio.texto(5)
+saida(string)
+saida("")
+
+saidal_verde("gerando uma palavra aleatoria com letras e numeros com 5 digitos: ")
+senha = aleatorio.alfanumerico(5)
+saida(senha)

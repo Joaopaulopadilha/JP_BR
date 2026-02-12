@@ -1,0 +1,6 @@
+importar gdx
+
+janela = gdx.janela("Aplicação", 600, 600)
+
+loop:
+    gdx.janela_exibir(janela)

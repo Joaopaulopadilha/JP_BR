@@ -1,0 +1,3 @@
+importar janela
+
+janela.abrir("Teste JPLang", 800, 600)

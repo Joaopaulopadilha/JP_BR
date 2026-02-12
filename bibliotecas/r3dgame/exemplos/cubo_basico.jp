@@ -1,0 +1,23 @@
+importar r3dgame
+
+jogo = r3dgame.janela("Jogo do inscrito", 600, 600)
+r3dgame.janela_cor_fundo(jogo, 15, 100, 255)
+
+# Cria player na posição (x, y, z)
+jogador = r3dgame.player(jogo, 0, 0, 0)
+
+# Define tamanho (largura, altura, profundidade)
+r3dgame.player_tamanho(jogador, 2, 3, 1)
+
+# Define cores das 6 faces (RGB 0-255)
+# Ordem: frente, tras, topo, base, esquerda, direita
+r3dgame.player_cores(jogador, 255,0,0, 0,255,0, 0,0,255, 255,255,0, 255,0,255, 0,255,255)
+
+# Posiciona câmera
+r3dgame.camera(jogo, 0, 5, -10)
+
+enquanto verdadeiro:
+    # Rotaciona o player
+    r3dgame.player_rotacionar(jogador, 0.01, 0.02, 0)
+    
+    r3dgame.exibir(jogo)

@@ -1,0 +1,152 @@
+importar svs
+importar texto
+importar hash
+
+porta = svs.criar(8080)
+ip = svs.meu_ip()
+
+saida("=========================================")
+saida("[INIT] SERVIDOR EM: http://" + ip + ":" + porta)
+saida("=========================================")
+
+# Configura pasta
+# Nota: Coloquei numa variavel para evitar sujar a pilha, caso seja esse o bug do interpretador
+res_pasta = svs.pasta(porta, "/public", "public/")
+
+hash_padrao = "cU3wyarFPl4u6sjE$2980e4bde5ebe7921ccf724cdd53d45033f3e5fd25301b2999619924382a461a"
+
+enquanto verdadeiro:
+    # DEBUG 1: Antes de aguardar
+    # saida("[1] Aguardando conexao...") 
+    req = svs.aguardar(porta)
+
+    # DEBUG 2: Recebeu algo
+    # Se for -1, é timeout ou erro de socket, NAO PODE continuar descendo
+    se req == -1:
+        # saida("[2] Req invalida (-1). Ignorando.")
+        continuar
+    
+    saida("[3] Nova Requisicao ID: " + req)
+
+    # 4. Pegando dados básicos
+    caminho = svs.caminho(req)
+    metodo = svs.metodo(req)
+    saida("[4] Caminho: " + caminho + " | Metodo: " + metodo)
+
+    # 5. Tentando servir estático
+    # Importante: Salvamos o resultado numa variavel antes de testar
+    serviu_estatico = svs.servir_estatico(req, porta)
+    
+    se serviu_estatico == 1:
+        saida("[5] Arquivo estatico entregue. Encerrando ciclo.")
+        continuar
+    
+    saida("[6] Nao é estatico. Processando rota...")
+
+    # 6. Lendo Sessão
+    sid = svs.id_sessao(req)
+    saida("[6.1] ID Sessao: " + sid)
+    
+    usuario = svs.sessao_obter(sid, "usuario")
+    cargo = svs.sessao_obter(sid, "cargo")
+    
+    logado = falso
+    se usuario != "":
+        logado = verdadeiro
+    
+    saida("[6.2] Usuario: " + usuario + " | Logado: " + logado)
+
+    # ==========================================================================
+    # ROTAS
+    # ==========================================================================
+
+    # Rota: Home
+    se caminho == "/":
+        saida("[ROTA] Home")
+        se logado:
+            svs.responder_html(req, 200, "<script>location.href='/dashboard'</script>")
+        senao:
+            svs.arquivo(req, "public/login.html")
+
+    # Rota: Login
+    ou_se caminho == "/login":
+        saida("[ROTA] Login API")
+        se metodo == "POST":
+            dados = svs.corpo(req)
+            u = texto.dividir(dados, ":", 0)
+            s = texto.dividir(dados, ":", 1)
+            
+            saida("[LOGIN] Tentativa: " + u)
+            
+            novo_cargo = ""
+            
+            se hash.verificar(s, hash_padrao):
+                se u == "admin": 
+                    novo_cargo = "admin"
+                ou_se u == "funcionario": 
+                    novo_cargo = "basico"
+
+            se novo_cargo != "":
+                sid = svs.iniciar_sessao(req)
+                svs.sessao_definir(sid, "usuario", u)
+                svs.sessao_definir(sid, "cargo", novo_cargo)
+                saida("[LOGIN] Sucesso! Sessao criada.")
+                svs.responder(req, 200, "ok")
+            senao:
+                saida("[LOGIN] Falha.")
+                svs.responder(req, 401, "erro")
+        senao:
+            svs.responder(req, 405, "metodo invalido")
+
+    # Rota: Dashboard
+    ou_se caminho == "/dashboard":
+        saida("[ROTA] Dashboard")
+        se logado:
+            html = svs.ler_texto("public/dashboard.html")
+            
+            # Debug para ver se leu o arquivo
+            tamanho_html = 0
+            # Se sua linguagem tiver len(), use. Senao, apenas verifique se nao eh vazio.
+            se html != "":
+                saida("[DASH] Template carregado com sucesso.")
+                html = texto.substituir(html, "{USUARIO}", usuario)
+                html = texto.substituir(html, "{CARGO}", cargo)
+                svs.responder_html(req, 200, html)
+            senao:
+                saida("[ERRO] Template dashboard.html vazio ou nao encontrado!")
+                svs.responder(req, 500, "Erro interno: Template nao encontrado")
+        senao:
+            svs.responder_html(req, 403, "Faça login. <a href='/'>Ir para Login</a>")
+
+    # Rota: Relatórios
+    ou_se caminho == "/relatorios":
+        saida("[ROTA] Relatorios")
+        se logado:
+            svs.arquivo(req, "public/relatorios.html")
+        senao:
+            svs.responder_html(req, 403, "Acesso Negado")
+
+    # Rota: Financeiro
+    ou_se caminho == "/financeiro":
+        saida("[ROTA] Financeiro")
+        se logado:
+            se cargo == "admin":
+                svs.arquivo(req, "public/financeiro.html")
+            senao:
+                aviso = "<h1>Acesso Negado</h1>"
+                svs.responder_html(req, 403, aviso)
+        senao:
+            svs.responder_html(req, 403, "Acesso Negado")
+
+    # Rota: Logout
+    ou_se caminho == "/logout":
+        saida("[ROTA] Logout")
+        svs.sessao_definir(sid, "usuario", "")
+        svs.definir_cookie(req, "JPSESSID", "")
+        svs.responder_html(req, 200, "<script>location.href='/'</script>")
+
+    senao:
+        saida("[ROTA] 404 Nao encontrado: " + caminho)
+        svs.responder(req, 404, "Pagina nao encontrada")
+    
+    saida("[FIM] Requisicao processada.")

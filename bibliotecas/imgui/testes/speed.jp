@@ -1,0 +1,62 @@
+# speed.jp
+# Exemplo de uso do componente Gauge (medidor circular com ponteiro)
+
+importar imgui
+importar tempo
+
+# Cria a janela principal
+# Parâmetros: título, largura, altura
+janela = imgui.janela("Speed Test", 500, 500)
+
+# Cria o gauge (medidor semicircular com ponteiro)
+# Parâmetros: janela, x, y, raio, valorMinimo, valorMaximo
+# - x, y: posição do canto superior esquerdo
+# - raio: tamanho do medidor (100 pixels)
+# - valorMinimo: valor mínimo da escala (0)
+# - valorMaximo: valor máximo da escala (100)
+medidor = imgui.gauge(janela, 150, 150, 100, 0, 100)
+
+# Define a cor do arco preenchido (verde)
+# Parâmetros: gauge, R, G, B (0-255)
+imgui.gauge_cor(medidor, 0, 200, 100)
+
+# Define a cor do ponteiro/agulha (vermelho)
+# Parâmetros: gauge, R, G, B (0-255)
+imgui.gauge_cor_ponteiro(medidor, 255, 50, 50)
+
+# Cria etiqueta para mostrar o valor numérico
+# Parâmetros: janela, texto, x, y
+label = imgui.etiqueta(janela, "0 Mb/s", 220, 280)
+
+velocidade = 0
+subindo = verdadeiro
+
+enquanto verdadeiro:
+    # Move o ponteiro para o valor atual
+    # Parâmetros: gauge, valor (entre min e max definidos)
+    imgui.gauge_valor(medidor, velocidade)
+    
+    # Converte 0-100 para 0-1024 MB
+    mb = (velocidade * 1024) / 100
+    
+    # Atualiza o texto da etiqueta
+    # Parâmetros: etiqueta, novoTexto
+    imgui.etiqueta_texto(label, mb + " Mb/s")
+    
+    # Renderiza um frame da janela
+    # Parâmetros: janela
+    imgui.exibir(janela)
+    
+    # Pausa para controlar a velocidade da animação
+    # Parâmetros: milissegundos
+    tempo.dormir(25)
+    
+    # Lógica de oscilação: sobe de 0 a 100, depois desce de 100 a 0
+    se subindo:
+        velocidade = velocidade + 1
+        se velocidade >= 100:
+            subindo = falso
+    senao:
+        velocidade = velocidade - 1
+        se velocidade <= 0:
+            subindo = verdadeiro

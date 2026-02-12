@@ -1,0 +1,22 @@
+# gerar_hash.jp
+# Utilitário para gerar hash de senha
+
+importar hash
+
+senha = entrada("Digite a senha: ")
+resultado = hash.senha(senha)
+
+saida("Hash gerado:")
+saida(resultado)
+saida("")
+saida("Copie essa linha para usar no seu codigo")
+
+
+
+#Digite a senha: 1234
+#Hash gerado:
+#aB3kL9mN$8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
+
+#Copie essa linha para usar no seu codigo
+
+#cU3wyarFPl4u6sjE$2980e4bde5ebe7921ccf724cdd53d45033f3e5fd25301b2999619924382a461a

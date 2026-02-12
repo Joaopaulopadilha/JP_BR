@@ -1,0 +1,122 @@
+importar miniaudio
+importar tempo
+
+
+do_3 = 131
+doSUS_3 = 139
+re_3 = 147
+reSUS_3 = 156
+mi_3 = 165
+fa_3 = 175
+faSUS_3 = 185
+sol_3 = 196
+solSUS_3 = 208
+la_3 = 220
+laSUS_3 = 233
+si_3 = 247
+do_4 = 262
+doSUS_4 = 277
+re_4 = 294
+reSUS_4 = 311
+mi_4 = 330
+fa_4 = 349
+faSUS_4 = 370
+sol_4 = 392
+solSUS_4 = 415
+la_4 = 440
+laSUS_4 = 466
+si_4 = 494
+do_5 = 523
+doSUS_5 = 554
+re_5 = 587
+reSUS_5 = 622
+mi_5 = 659
+fa_5 = 698
+faSUS_5 = 740
+sol_5 = 784
+solSUS_5 = 831
+la_5 = 880
+laSUS_5 = 932
+si_5 = 988
+
+
+# --- Tempos (choro bem rapido ~150 BPM) ---
+t_curta = 120      # Semicolcheia
+t_media = 240   # Colcheia
+t_longa = 480    # Seminima
+pausa_pequena = 60
+
+funcao tocar_nota(frequencia, duracao):
+    som = miniaudio.sint(frequencia, duracao)
+    miniaudio.tocar(som)
+    tempo.dormir(duracao)
+
+funcao pausa(duracao):
+    tempo.dormir(duracao)
+
+
+
+repetir(2)
+    tocar_nota(doSUS_5, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+
+    tempo.dormir(pausa_pequena)
+
+    tocar_nota(mi_4, t_curta)
+    tocar_nota(la_4, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+
+    tempo.dormir(pausa_pequena)
+
+    tocar_nota(mi_4, t_curta)
+    tocar_nota(la_4, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+
+    tempo.dormir(pausa_pequena)
+
+    tocar_nota(mi_4, t_curta)
+    tocar_nota(la_4, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+
+    tempo.dormir(pausa_pequena)
+
+    tocar_nota(mi_4, t_curta)
+    tocar_nota(la_4, t_curta)
+    tocar_nota(do_5, t_curta)
+
+    tempo.dormir(pausa_pequena)
+
+    tocar_nota(mi_4, t_curta)
+    tocar_nota(la_4, t_curta)
+    tocar_nota(do_5, t_curta)
+
+    tempo.dormir(pausa_pequena)
+
+    tocar_nota(mi_4, t_curta)
+    tocar_nota(la_4, t_curta)
+    tocar_nota(do_5, t_curta)
+
+    tempo.dormir(pausa_pequena)
+
+    tocar_nota(mi_4, t_curta)
+    tocar_nota(la_4, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+
+    tempo.dormir(pausa_pequena)
+
+    tocar_nota(doSUS_5, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+    tocar_nota(doSUS_5, t_curta)
+    tocar_nota(do_5, t_curta)
+    tocar_nota(si_4, t_curta)
+    tocar_nota(laSUS_4, t_curta)
+    tocar_nota(la_4, t_curta)
+
+
+
+
+# Pausa antes de repetir
+    tempo.dormir(800)
+   
