@@ -1,0 +1,33 @@
+#detecta que é lista quando esta dentro das chaves, ou seja é uma variavel do tipo lista
+numeros = [1, 2, 3, 4, 5]
+nomes = ["João", "Maria", "Pedro"]
+precos = [10.50, 20.99, 5.00]
+
+vazia = []
+
+#mostrar todos os elementos
+numeros.exibir()
+nomes.exibir()
+precos.exibir()
+#obter elementos
+primeiro = numeros[0]
+ultimo = numeros[4]
+numeros[2] = 100
+pessoa = nomes[2]
+# Adicionar elemento
+numeros.adicionar(6)
+numeros[6] = 100
+numeros.exibir()
+# Remover por índice
+numeros.remover(0)
+
+# Tamanho
+quantidade = numeros.tamanho()
+
+saida("primeiro numero do array: {primeiro}")
+saida("terceiro elemento da lista nomes: {pessoa}")
+saida("tamanho do array numeros: {quantidade}")
+saida("ultimo numero: {ultimo}")
+saida(nomes)
+saida(numeros)
+saida(precos)

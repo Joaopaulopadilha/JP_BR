@@ -1,0 +1,20 @@
+#tipos automáticos
+nome = "João"
+idade = 20
+altura = 1.88
+ativo = verdadeiro 
+
+#Ou tipos explícitos
+texto produto = "feijão"
+int tamanho = 20
+dec valor = 1.30
+bool aprovado = falso
+
+saida(nome)
+saida(idade)
+saida(altura)
+saida(ativo)
+saida(produto)
+saida(tamanho)
+saida(valor)
+saida(aprovado)

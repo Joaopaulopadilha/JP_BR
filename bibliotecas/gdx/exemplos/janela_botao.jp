@@ -1,0 +1,26 @@
+importar gdx
+
+saida("criando interface...")
+
+# Cria janela (ID será 0)
+janela = gdx.janela("Aplicação JPLang", 600, 600)
+
+# Cria botão (ID será 0, mas em outro vetor interno)
+# Texto, Largura, Altura, X, Y
+botao = gdx.botao("Aplicação", 100, 30, 250, 250)
+
+
+
+
+loop:
+    se gdx.botao_clicado(botao):
+        saida_amarelo("O BOTAO FOI CLICADO!")
+    
+    
+    # Atualiza visual do botão (Importante no Linux)
+    gdx.botao_exibir(botao)
+   
+    
+    # Processa eventos da janela (Mantém loop vivo)
+    gdx.janela_exibir(janela)
+   

@@ -1,0 +1,41 @@
+importar paravoz
+
+saida_verde("=== Biblioteca ParaVoz - Testes ===")
+saida("")
+
+saida_azul("1. Fala simples:")
+texto frase1 = "Ola, eu sou o JP Lang"
+saida("   Falando: {frase1}")
+paravoz.falar(frase1)
+saida("")
+
+saida_azul("2. Velocidade:")
+paravoz.velocidade(-5)
+texto frase2 = "Agora estou falando devagar"
+saida("   Falando devagar: {frase2}")
+paravoz.falar(frase2)
+saida("")
+
+paravoz.velocidade(5)
+texto frase3 = "Agora estou falando rapido"
+saida("   Falando rapido: {frase3}")
+paravoz.falar(frase3)
+saida("")
+
+saida_azul("3. Volume:")
+paravoz.velocidade(0)
+paravoz.volume(50)
+texto frase4 = "Volume a cinquenta porcento"
+saida("   Falando com volume 50: {frase4}")
+paravoz.falar(frase4)
+saida("")
+
+saida_azul("4. Teste completo:")
+paravoz.volume(100)
+paravoz.velocidade(0)
+texto frase5 = "Biblioteca de sintese de voz funcionando perfeitamente no JP Lang!"
+saida("   Frase final: {frase5}")
+paravoz.falar(frase5)
+saida("")
+
+saida_verde("=== Testes Concluidos! ===")

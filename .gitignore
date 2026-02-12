@@ -1,0 +1,9 @@
+*.exe
+*.o
+*.obj
+temp/
+output/
+debug/
+.vs/
+.vscode/
+*.user

@@ -1,0 +1,42 @@
+importar jpllama
+
+saida("=== CHATBOT JPLANG ===")
+#saida("Versao do motor: " + jpllama.llama_versao())
+
+# 1. Carregar
+sucesso = jpllama.ia.carregar("modelo.gguf")
+
+se sucesso:
+    saida("--------------------------------")
+    
+    # Prompt formatado para o TinyLlama
+    # <|user|> pergunta <|assistant|>
+    pergunta = "Ola! Quem e voce e o que voce faz?"
+    prompt = "<|user|>\n" + pergunta + "\n<|assistant|>\n"
+    
+    saida("Usuario: " + pergunta)
+    saida("IA: ")
+    
+    # 2. Processar o prompt inicial
+    jpllama.ia.processar(prompt)
+    
+    # 3. Loop de geracao (Streaming)
+    token = ""
+    contador = 0
+    
+    # Gera ate encontrar o fim ou 200 tokens
+    enquanto token != "[EOS]" e contador < 200:
+        token = jpllama.ia.gerar()
+        
+        se token != "[EOS]":
+            escrever(token) # Escreve sem pular linha (se sua linguagem suportar)
+        
+        contador = contador + 1
+        
+    saida("\n--------------------------------")
+    saida("Fim da geracao.")
+    
+    # 4. Limpeza
+    jpllama.ia.liberar()
+senao:
+    saida("Verifique se o arquivo modelo.gguf esta na pasta.")

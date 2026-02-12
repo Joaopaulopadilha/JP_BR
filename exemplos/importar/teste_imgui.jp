@@ -1,0 +1,33 @@
+importar imgui
+
+imgui.iniciar("Teste JPLang ImGui", 800, 600)
+
+contador = 0
+nome = ""
+ativo = falso
+
+enquanto imgui.ativo():
+    imgui.iniciar_frame()
+    
+    imgui.janela_iniciar("Painel de Teste")
+    
+    imgui.texto("Olá do JPLang!")
+    imgui.separador()
+    
+    se imgui.botao("Clique aqui"):
+        contador = contador + 1
+        saida_azul("clicou no botão")
+    
+    imgui.mesma_linha()
+    imgui.texto("Contador: {contador}")
+    
+    nome = imgui.input_texto("Seu nome", nome)
+    ativo = imgui.checkbox("Ativo", ativo)
+    
+    imgui.texto_colorido(0.0, 1.0, 0.0, "Texto verde!")
+    
+    imgui.janela_finalizar()
+    
+    imgui.finalizar_frame()
+
+imgui.encerrar()

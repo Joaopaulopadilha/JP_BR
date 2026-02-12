@@ -1,0 +1,24 @@
+importar imgui
+importar tempo
+
+janela1 = imgui.janela("Aplicação", 800, 600)
+imgui.fundo(janela1, 230, 230, 230)
+
+# Campo de input
+campo_nome = imgui.input(janela1, "Digite seu nome", 100, 50, 200, 30)
+
+# Botão para confirmar
+botao_ok = imgui.botao(janela1, "OK", 100, 100, 200, 40)
+
+# Etiqueta para mostrar resultado
+resultado = imgui.etiqueta(janela1, "", 100, 160)
+imgui.etiqueta_cor(resultado, 0, 0, 0)
+
+loop:
+    imgui.exibir(janela1)
+    se imgui.clicado(botao_ok):
+        nome = imgui.input_valor(campo_nome)
+        imgui.etiqueta_texto(resultado, "Olá, " + nome)
+        
+    tempo.dormir(10)
+

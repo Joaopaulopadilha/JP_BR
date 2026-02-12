@@ -1,0 +1,16 @@
+importar "bibliotecas\svs\exemplos\6_pagina_importada.jp"
+importar svs
+
+porta = svs.criar(8080)
+ip = svs.meu_ip()
+saida("Servidor em: {ip}:{porta}")
+
+
+enquanto verdadeiro:
+    req = svs.aguardar(porta)
+    caminho = svs.caminho(req)
+    
+    se caminho == "/":
+        svs.responder_html(req, 200, pagina)
+    senao:
+        svs.responder(req, 404, "Página não encontrada")

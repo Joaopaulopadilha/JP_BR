@@ -1,0 +1,144 @@
+# cadastro_web_v2.jp
+# Servidor web com SQLite que verifica se nome já está cadastrado antes de salvar
+
+importar svs
+importar sqlite
+importar texto
+
+# Abre o banco de dados
+db = sqlite.abrir("cadastro.db")
+sqlite.executar(db, "CREATE TABLE IF NOT EXISTS nomes (id INTEGER PRIMARY KEY, nome TEXT)")
+
+# Inicia o servidor
+porta = svs.criar(8080)
+ip = svs.meu_ip()
+saida("Servidor em: {ip}:{porta}")
+
+pagina = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #1a1a2e;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 12px;
+        }
+        input {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            margin-right: 10px;
+            width: 250px;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            background: #4facfe;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #00f2fe;
+        }
+        #mensagem {
+            margin-top: 15px;
+            font-size: 16px;
+            min-height: 24px;
+        }
+        .sucesso { color: #4facfe; }
+        .erro { color: #ff6b6b; }
+        #lista {
+            margin-top: 25px;
+            font-size: 16px;
+            color: #4facfe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cadastro de Nomes</h1>
+        <div>
+            <input type="text" id="nome" placeholder="Digite um nome...">
+            <button onclick="salvar()">Salvar</button>
+        </div>
+        <div id="mensagem"></div>
+        <div id="lista"></div>
+    </div>
+
+    <script>
+        async function salvar() {
+            const nome = document.getElementById('nome').value;
+            if (nome.trim() === '') return;
+            const resp = await fetch('/salvar', { method: 'POST', body: nome });
+            const texto = await resp.text();
+            const msg = document.getElementById('mensagem');
+            msg.innerText = texto;
+            msg.className = resp.status === 200 ? 'sucesso' : 'erro';
+            document.getElementById('nome').value = '';
+            carregar();
+        }
+
+        async function carregar() {
+            const resp = await fetch('/listar');
+            const texto = await resp.text();
+            document.getElementById('lista').innerHTML = texto;
+        }
+
+        carregar();
+    </script>
+</body>
+</html>
+"""
+
+enquanto verdadeiro:
+    req = svs.aguardar(porta)
+    caminho = svs.caminho(req)
+    metodo = svs.metodo(req)
+    
+    se caminho == "/":
+        svs.responder_html(req, 200, pagina)
+    
+    senao se caminho == "/salvar":
+        se metodo == "POST":
+            nome = svs.corpo(req)
+            
+            # Verifica se já existe
+            # sqlite.consultar() retorna formato CSV: "coluna\nvalor\n..."
+            # Se não encontrar nada, retorna apenas "nome\n" (5 caracteres)
+            # Se encontrar, retorna "nome\nJoao\n" (mais que 5 caracteres)
+            resultado = sqlite.consultar(db, "SELECT nome FROM nomes WHERE nome = '{nome}'")
+            
+            se texto.tamanho(resultado) > 5:
+                saida("Duplicado: {nome}")
+                svs.responder(req, 409, "Nome '{nome}' já está cadastrado!")
+            senao:
+                sqlite.executar(db, "INSERT INTO nomes (nome) VALUES ('{nome}')")
+                saida("Salvo: {nome}")
+                svs.responder(req, 200, "Nome '{nome}' cadastrado com sucesso!")
+        senao:
+            svs.responder(req, 405, "Método não permitido")
+    
+    senao se caminho == "/listar":
+        resultado = sqlite.consultar(db, "SELECT nome FROM nomes")
+        html = "<h3>Nomes cadastrados:</h3><p>" + texto.substituir(resultado, "\n", "</p><p>") + "</p>"
+        svs.responder_html(req, 200, html)
+    
+    senao:
+        svs.responder(req, 404, "Não encontrado")

@@ -1,0 +1,37 @@
+# overlay.jp
+
+# Adicionamos ov_imagem(5) à lista de imports
+nativo "bibliotecas/overlay/overlay.jpd" importar ov_texto(7), ov_retangulo(8), ov_barra(10), ov_imagem(5), ov_atualizar(2), ov_valor(2), ov_exibir(1), ov_fechar(1), ov_fechar_todos(0), ov_mover(3), ov_cor(4), ov_redimensionar(3)
+
+classe overlay:
+    
+    # Cria imagem (caminho, x, y, largura, altura)
+    funcao imagem(path, x, y, w, h):
+        retorna ov_imagem(path, x, y, w, h)
+
+    funcao texto(txt, x, y, tam, r, g, b):
+        retorna ov_texto(txt, x, y, tam, r, g, b)
+    
+    funcao retangulo(x, y, w, h, esp, r, g, b):
+        retorna ov_retangulo(x, y, w, h, esp, r, g, b)
+        
+    funcao barra(x, y, w, h, min, max, ori, r, g, b):
+        retorna ov_barra(x, y, w, h, min, max, ori, r, g, b)
+        
+    funcao atualizar(handle, txt):
+        retorna ov_atualizar(handle, txt)
+        
+    funcao valor(handle, val):
+        retorna ov_valor(handle, val)
+        
+    funcao exibir(handle):
+        retorna ov_exibir(handle)
+        
+    funcao mover(handle, x, y):
+        retorna ov_mover(handle, x, y)
+        
+    funcao fechar(handle):
+        retorna ov_fechar(handle)
+        
+    funcao fechar_todos():
+        retorna ov_fechar_todos()

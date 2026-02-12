@@ -1,0 +1,61 @@
+# mouse.jp
+# Biblioteca de controle do mouse
+
+nativo "bibliotecas/mouse/mouse.jpd" importar ms_posicaox(0), ms_posicaoy(0), ms_relmover(2), ms_relmover_passo(4), ms_absmover(2), ms_absmover_passo(4), ms_clique(0), ms_clique_dir(0), ms_clique_meio(0), ms_duplo_clique(0), ms_segurar(0), ms_soltar(0), ms_scroll(1), ms_scroll_h(1), ms_arrastar(4)
+
+classe mouse:
+    
+    # Retorna X atual
+    funcao x():
+        retorna ms_posicaox()
+        
+    # Retorna Y atual
+    funcao y():
+        retorna ms_posicaoy()
+        
+    # Mover relativo (delta X, delta Y)
+    funcao mover(dx, dy):
+        retorna ms_relmover(dx, dy)
+        
+    # Mover relativo suave (dx, dy, pixels/step, ms/step)
+    funcao mover_suave(dx, dy, passo, tempo):
+        retorna ms_relmover_passo(dx, dy, passo, tempo)
+        
+    # Mover absoluto (X, Y)
+    funcao ir_para(x, y):
+        retorna ms_absmover(x, y)
+        
+    # Mover absoluto suave (X, Y, pixels/step, ms/step)
+    funcao ir_para_suave(x, y, passo, tempo):
+        retorna ms_absmover_passo(x, y, passo, tempo)
+        
+    # Cliques
+    funcao clique():
+        retorna ms_clique()
+        
+    funcao clique_direito():
+        retorna ms_clique_dir()
+        
+    funcao clique_meio():
+        retorna ms_clique_meio()
+        
+    funcao duplo_clique():
+        retorna ms_duplo_clique()
+        
+    # Segurar e Soltar
+    funcao segurar():
+        retorna ms_segurar()
+        
+    funcao soltar():
+        retorna ms_soltar()
+        
+    # Scroll (positivo = cima/direita)
+    funcao rolar(qtd):
+        retorna ms_scroll(qtd)
+        
+    funcao rolar_h(qtd):
+        retorna ms_scroll_h(qtd)
+        
+    # Arrastar de A para B
+    funcao arrastar(x1, y1, x2, y2):
+        retorna ms_arrastar(x1, y1, x2, y2)

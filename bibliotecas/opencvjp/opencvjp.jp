@@ -1,0 +1,103 @@
+# opencvjp.jp
+# Biblioteca de Visão Computacional (OpenCV 4.5.5)
+
+# Linka com o seu wrapper
+#link libopencvjp.a
+
+# Indica onde estão as libs do OpenCV
+#flag -Lbibliotecas/opencvjp/lib
+
+# Bibliotecas do OpenCV
+#flag -lopencv_core455 -lopencv_highgui455 -lopencv_imgcodecs455 -lopencv_imgproc455 -lopencv_videoio455
+# Bibliotecas do Sistema Windows
+#flag -lgdi32 -luser32 -lkernel32 -lcomdlg32 -lole32
+
+# Importação das funções nativas
+nativo "bibliotecas/opencvjp/opencvjp.jpd" importar cv_carregar(1), cv_largura(1), cv_altura(1), cv_exibir(2), cv_esperar(1), cv_salvar(2), cv_redimensionar(3), cv_inverter_h(1), cv_inverter_v(1), cv_cinza(1), cv_bordas(1), cv_blur(2), cv_camera_abrir(1), cv_camera_ler(1), cv_liberar(1), cv_fechar_todas(0), cv_camera(1), cv_obter(1), cv_tecla(1), cv_fechar(0), cv_modelo_haarcascade(1), cv_detectar(2)
+
+classe cv:
+    # =========================================
+    # FUNÇÕES SIMPLIFICADAS (novas)
+    # =========================================
+    
+    funcao camera(indice):
+        retorna cv_camera(indice)
+    
+    funcao obter(cam):
+        retorna cv_obter(cam)
+    
+    funcao tecla(codigo):
+        retorna cv_tecla(codigo)
+    
+    funcao fechar():
+        retorna cv_fechar()
+
+    # =========================================
+    # FUNÇÕES DE DETECÇÃO
+    # =========================================
+    
+    funcao modelo_haarcascade(caminho):
+        retorna cv_modelo_haarcascade(caminho)
+    
+    funcao detectar(modelo, frame):
+        retorna cv_detectar(modelo, frame)
+
+    # =========================================
+    # FUNÇÕES DE IMAGEM
+    # =========================================
+    
+    funcao carregar(caminho):
+        retorna cv_carregar(caminho)
+    
+    funcao largura(id):
+        retorna cv_largura(id)
+
+    funcao altura(id):
+        retorna cv_altura(id)
+
+    funcao exibir(titulo, id):
+        retorna cv_exibir(titulo, id)
+
+    funcao esperar(ms):
+        retorna cv_esperar(ms)
+
+    funcao salvar(id, caminho):
+        retorna cv_salvar(id, caminho)
+
+    funcao redimensionar(id, w, h):
+        retorna cv_redimensionar(id, w, h)
+
+    funcao inverter_h(id):
+        retorna cv_inverter_h(id)
+
+    funcao inverter_v(id):
+        retorna cv_inverter_v(id)
+
+    funcao cinza(id):
+        retorna cv_cinza(id)
+
+    funcao bordas(id):
+        retorna cv_bordas(id)
+
+    funcao blur(id, k):
+        retorna cv_blur(id, k)
+
+    # =========================================
+    # FUNÇÕES DE CÂMERA (legado)
+    # =========================================
+
+    funcao camera_abrir(idx):
+        retorna cv_camera_abrir(idx)
+
+    funcao camera_ler(cam):
+        retorna cv_camera_ler(cam)
+
+    # =========================================
+    # FUNÇÕES DE MEMÓRIA (legado)
+    # =========================================
+
+    funcao liberar(id):
+        retorna cv_liberar(id)
+
+    funcao fechar_todas():
+        retorna cv_fechar_todas()

@@ -1,0 +1,90 @@
+# os.jp
+# Wrapper da biblioteca de funções do sistema operacional - Versão Unificada Windows/Linux
+
+nativo "bibliotecas/os/os.jpd" importar os_limpar_terminal(0), os_dormir(1), os_executar(1), os_getenv(1), os_setenv(2), os_diretorio_atual(0), os_mudar_diretorio(1), os_existe(1), os_eh_diretorio(1), os_criar_diretorio(1), os_remover_arquivo(1), os_remover_diretorio(1), os_renomear(2), os_copiar_arquivo(2), os_usuario(0), os_computador(0), os_timestamp(0), os_tick(0), os_beep(2), os_sair(1), os_nome(0)
+
+classe os:
+    
+    # Limpar terminal
+    funcao limpar_terminal():
+        retorna os_limpar_terminal()
+    
+    # Pausar execução (milissegundos)
+    funcao dormir(ms):
+        retorna os_dormir(ms)
+    
+    # Executar comando do sistema
+    funcao executar(cmd):
+        retorna os_executar(cmd)
+    
+    # Obter variável de ambiente
+    funcao getenv(nome):
+        retorna os_getenv(nome)
+    
+    # Definir variável de ambiente
+    funcao setenv(nome, valor):
+        retorna os_setenv(nome, valor)
+    
+    # Obter diretório atual
+    funcao diretorio_atual():
+        retorna os_diretorio_atual()
+    
+    # Mudar diretório
+    funcao mudar_diretorio(caminho):
+        retorna os_mudar_diretorio(caminho)
+    
+    # Verificar se arquivo/pasta existe
+    funcao existe(caminho):
+        retorna os_existe(caminho)
+    
+    # Verificar se é diretório
+    funcao eh_diretorio(caminho):
+        retorna os_eh_diretorio(caminho)
+    
+    # Criar diretório
+    funcao criar_diretorio(caminho):
+        retorna os_criar_diretorio(caminho)
+    
+    # Remover arquivo
+    funcao remover_arquivo(caminho):
+        retorna os_remover_arquivo(caminho)
+    
+    # Remover diretório (deve estar vazio)
+    funcao remover_diretorio(caminho):
+        retorna os_remover_diretorio(caminho)
+    
+    # Renomear/mover arquivo ou pasta
+    funcao renomear(origem, destino):
+        retorna os_renomear(origem, destino)
+    
+    # Copiar arquivo
+    funcao copiar_arquivo(origem, destino):
+        retorna os_copiar_arquivo(origem, destino)
+    
+    # Obter nome do usuário
+    funcao usuario():
+        retorna os_usuario()
+    
+    # Obter nome do computador
+    funcao computador():
+        retorna os_computador()
+    
+    # Obter timestamp (segundos desde epoch)
+    funcao timestamp():
+        retorna os_timestamp()
+    
+    # Obter tick count (ms desde boot)
+    funcao tick():
+        retorna os_tick()
+    
+    # Emitir beep (frequencia Hz, duracao ms)
+    funcao beep(freq, duracao):
+        retorna os_beep(freq, duracao)
+    
+    # Sair do programa com código
+    funcao sair(codigo):
+        retorna os_sair(codigo)
+    
+    # Obter nome do sistema operacional ("windows" ou "linux")
+    funcao nome():
+        retorna os_nome()

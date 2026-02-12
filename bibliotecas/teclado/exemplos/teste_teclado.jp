@@ -1,0 +1,32 @@
+importar teclado
+importar tempo
+
+saida("===Testando biblioteca teclado===")
+tempo.dormir(10000)
+
+saida("teste de pressionamento unico de teclas")
+teclado.pressionar("s")
+teclado.pressionar("enter")
+tempo.dormir(2000)
+
+saida("digitacao de frases")
+frase = "o rato roeu a roupa do rei de roma"
+teclado.pressionar(frase)
+teclado.pressionar("enter")
+
+
+saida("digitacao de frases com passo")
+frase2 = "essa frase sera digitada como manualmente"
+# (frase, tempo entre um presionamento e outro em ms)
+teclado.digitar(frase2, 80)
+
+saida("lendo o teclado")
+enquanto verdadeiro:
+    texto tecla = teclado.escutar()
+    se tecla != ""
+        saida("tecla pressionada: {tecla}")
+        se tecla == "esc"
+            parar
+
+    
+    tempo.dormir(5)

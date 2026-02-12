@@ -1,0 +1,7 @@
+importar cvn
+
+se cvn.existe("loops.png"):
+    img = cvn.ler("loops.png")
+    saida("Tamanho: " + cvn.tamanho_arquivo("loops.png") + " bytes")
+senao:
+    saida("Arquivo não encontrado!")

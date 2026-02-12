@@ -1,0 +1,4 @@
+// recurso.rc
+// Arquivo de recursos para incluir o ícone no executável
+
+IDI_ICON1 ICON "icone.ico"

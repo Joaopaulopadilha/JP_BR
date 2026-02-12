@@ -1,0 +1,14 @@
+importar svs
+
+porta = svs.criar(8080)
+ip = svs.meu_ip()
+saida("Servidor em: {ip}:{porta}")
+
+enquanto verdadeiro:
+    req = svs.aguardar(porta)
+    caminho = svs.caminho(req)
+    
+    se caminho == "/":
+        svs.responder_html(req, 200, "<h1>Bem-vindo!</h1><p>Servidor JPLang funcionando!</p>")
+    senao:
+        svs.responder(req, 404, "Página não encontrada")

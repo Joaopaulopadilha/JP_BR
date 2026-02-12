@@ -1,0 +1,14 @@
+#saidas com quebra automatica de linhas
+saida("acentuação")
+saida("saida simples ok")
+saida_amarelo("amarelo")
+saida_azul("azul")
+saida_vermelho("vermelho")
+saida_verde("verde")
+
+#saida sem quebra automatica
+saidal("saida simples ok, ")
+saidal_amarelo("amarelo, ")
+saidal_azul("azul, ")
+saidal_vermelho("vermelho, ")
+saidal_verde("verde, ")

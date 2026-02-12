@@ -1,0 +1,35 @@
+importar gdx
+
+saida("criando interface...")
+
+# Cria janela (ID será 0)
+janela = gdx.janela("Aplicação JPLang", 600, 600)
+gdx.janela_cor(janela, 150, 20, 150)
+
+# Tecla branca (camada 0 - fica atrás)
+tecla_c = gdx.botao("C", 40, 150, 0, 0)
+gdx.botao_cor(tecla_c, 255, 255, 255)
+
+# Tecla preta (camada 2 - fica na frente)
+tecla_cs = gdx.botao_camada_2("C#", 25, 90, 25, 0)
+gdx.botao_fonte_cor(tecla_cs, 255, 255, 255)
+gdx.botao_cor(tecla_cs, 0, 0, 0)
+
+
+
+
+
+loop:
+    se gdx.botao_clicado(tecla_c):
+        saida_amarelo("C")
+    se gdx.botao_clicado(tecla_cs):
+        saida_amarelo("C#")
+    
+    # Atualiza visual do botão (Importante no Linux)
+    
+    gdx.botao_exibir(tecla_cs)
+    gdx.botao_exibir(tecla_c)
+    
+    # Processa eventos da janela (Mantém loop vivo)
+    gdx.janela_exibir(janela)
+   

@@ -1,0 +1,35 @@
+importar jpgame
+
+#parametro obrigatorio
+jogo = jpgame.janela("Jogo do inscrito", 600, 600)
+
+#parametros opcionais
+#(id da janela, r, g ,b)
+#jpgame.janela_cor_fundo(jogo, 0, 0, 0)
+
+#(id da janela, caminho da imagem)
+jpgame.janela_imagem_fundo(jogo, "imagens\fundo.png")
+
+# Cria player: (largura, altura, r, g, b)
+#jogador = jpgame.player(20, 50, 255, 0, 0)
+
+# Cria player: (caminho, largura, altura)
+jogador = jpgame.player_imagem("imagens\sprites\frente.png", 70, 120)
+
+# Define hitbox: (id, largura, altura)
+jpgame.colisao_retangulo(jogador, 20, 50)
+
+# Posiciona player: (player, x, y)
+jpgame.player_posicionar(jogador, 150, 150)
+
+# Define teclas: (player, cima, esquerda, baixo, direita)
+jpgame.player_mover(jogador, "w", "a", "s", "d")
+
+# Define velocidade: (player, vel_x, vel_y)
+jpgame.player_velocidade(jogador, 1, 1)
+
+
+enquanto verdadeiro:
+    #comando para exibir a janela
+    jpgame.exibir(jogador)
+    jpgame.exibir(jogo)

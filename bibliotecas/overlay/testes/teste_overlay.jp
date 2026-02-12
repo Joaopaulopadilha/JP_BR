@@ -1,0 +1,15 @@
+importar overlay
+
+
+frase = "consumo cpu"
+#(texto, x, y, tamanho, r, g, b)
+top = overlay.texto(frase, 1700, 100, 16, 255, 0, 0)
+
+#(x, y, comprimento, altura, espessura px, r, g, b)
+quadrado = overlay.retangulo(1700, 100 , 200, 200, 8, 0, 255, 0)
+enquanto verdadeiro:
+    overlay.exibir(quadrado)
+    overlay.exibir(top)
+   
+
+overlay.fechar(top)

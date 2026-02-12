@@ -1,0 +1,1 @@
+g++ -shared -o bibliotecas/jprasp/jprasp.jpd bibliotecas/jprasp/jprasp.cpp -DCURL_STATICLIB -O3 -lcurl -lnghttp2 -lpsl -lbrotlidec -lbrotlicommon -lzstd -lssh2 -lssl -lcrypto -lz -lidn2 -lunistring -liconv -lws2_32 -lwldap32 -lbcrypt -lcrypt32 -luser32 -lnormaliz -static-libgcc -static-libstdc++

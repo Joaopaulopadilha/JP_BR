@@ -1,0 +1,90 @@
+#importar tempo
+importar texto
+
+saida_verde("=== Biblioteca Texto - Testes ===")
+saida("")
+
+texto frase = "Ola Mundo"
+saida("Frase original: {frase}")
+saida("")
+
+saida_azul("1. Conversoes:")
+texto maiusculo = texto.maiusculo(frase)
+saida("   Maiusculo: {maiusculo}")
+
+texto minusculo = texto.minusculo(frase)
+saida("   Minusculo: {minusculo}")
+saida("")
+
+saida_azul("2. Manipulacao:")
+texto com_espacos = "   Texto com espacos   "
+saida("   Com espacos: [{com_espacos}]")
+
+texto sem_espacos = texto.remover_espacos(com_espacos)
+saida("   Sem espacos: [{sem_espacos}]")
+saida("")
+
+saida_azul("3. Informacoes:")
+inteiro tamanho = texto.tamanho(frase)
+saida("   Tamanho de '{frase}': {tamanho}")
+
+inteiro contem_mundo = texto.contem(frase, "Mundo")
+saida("   Contem 'Mundo'? {contem_mundo}")
+
+inteiro contem_canal = texto.contem(frase, "canal")
+saida("   Contem 'canal'? {contem_canal}")
+saida("")
+
+saida_azul("4. Substituicao:")
+texto original = "O gato comeu o rato"
+saida("   Original: {original}")
+
+texto substituido = texto.substituir(original, "gato", "cao")
+saida("   Substituido: {substituido}")
+saida("")
+
+saida_azul("5. Repeticao:")
+texto base = "Ha"
+texto repetido = texto.repetir(base, 5)
+saida("   '{base}' x 5 = {repetido}")
+saida("")
+
+saida_azul("6. Inversao:")
+texto normal = "JPLang"
+texto invertido = texto.inverter(normal)
+saida("   Normal: {normal}")
+saida("   Invertido: {invertido}")
+saida("")
+
+saida_azul("7. Substring:")
+texto completo = "Programacao"
+texto pedaco = texto.substring(completo, 0, 7)
+saida("   Substring de '{completo}' (0, 7): {pedaco}")
+saida("")
+
+saida_azul("8. Prefixo/Sufixo:")
+texto arquivo = "documento.txt"
+inteiro comeca_doc = texto.comeca_com(arquivo, "doc")
+saida("   '{arquivo}' comeca com 'doc'? {comeca_doc}")
+
+inteiro termina_txt = texto.termina_com(arquivo, ".txt")
+saida("   '{arquivo}' termina com '.txt'? {termina_txt}")
+saida("")
+
+saida_azul("9. Concatenacao:")
+texto parte1 = "Hello"
+texto parte2 = "World"
+texto junto = texto.concatenar(parte1, parte2)
+saida("   '{parte1}' + '{parte2}' = {junto}")
+saida("")
+
+saida_azul("10. Divisao:")
+texto emails = "joao@email.com"
+texto usuario = texto.dividir(emails, "@", 0)
+texto dominio = texto.dividir(emails, "@", 1)
+saida("   Email: {emails}")
+saida("   Usuario: {usuario}")
+saida("   Dominio: {dominio}")
+saida("")
+
+saida_verde("=== Testes Concluidos! ===")

@@ -1,0 +1,68 @@
+# jprasp.jp
+# Biblioteca de raspagem web (web scraping) para JPLang - estilo BeautifulSoup
+
+#link jprasp.a
+
+nativo "bibliotecas/jprasp/jprasp.jpd" importar rasp_buscar(1), rasp_status(1), rasp_disponivel(1), rasp_buscar_tag(2), rasp_buscar_todas(2), rasp_buscar_classe(2), rasp_buscar_id(2), rasp_pegar_texto(1), rasp_pegar_atributo(2), rasp_contar(2)
+
+classe jprasp:
+    # === REQUISICOES HTTP ===
+    
+    # Busca o conteudo de uma URL (usa User-Agent Firefox)
+    # Retorna o HTML/texto da pagina ou mensagem de erro
+    # Uso: html = jprasp.buscar("https://exemplo.com")
+    funcao buscar(url):
+        retorna rasp_buscar(url)
+    
+    # Retorna o codigo de status HTTP
+    # Retorna 200, 404, 500, etc ou -1 se falhou
+    # Uso: codigo = jprasp.status("https://exemplo.com")
+    funcao status(url):
+        retorna rasp_status(url)
+    
+    # Verifica se URL esta disponivel (status 2xx)
+    # Retorna verdadeiro ou falso
+    # Uso: se jprasp.disponivel("https://exemplo.com"):
+    funcao disponivel(url):
+        retorna rasp_disponivel(url)
+    
+    # === PARSER HTML ===
+    
+    # Encontra a primeira ocorrencia de uma tag
+    # Retorna o elemento completo com conteudo
+    # Uso: titulo = jprasp.buscar_tag(html, "title")
+    funcao buscar_tag(html, tag):
+        retorna rasp_buscar_tag(html, tag)
+    
+    # Encontra todas as ocorrencias de uma tag
+    # Retorna elementos separados por ||
+    # Uso: links = jprasp.buscar_todas(html, "a")
+    funcao buscar_todas(html, tag):
+        retorna rasp_buscar_todas(html, tag)
+    
+    # Busca elementos por classe CSS
+    # Retorna elementos separados por ||
+    # Uso: itens = jprasp.buscar_classe(html, "produto")
+    funcao buscar_classe(html, classe):
+        retorna rasp_buscar_classe(html, classe)
+    
+    # Busca elemento por ID
+    # Retorna o elemento completo
+    # Uso: menu = jprasp.buscar_id(html, "nav-principal")
+    funcao buscar_id(html, id):
+        retorna rasp_buscar_id(html, id)
+    
+    # Extrai apenas o texto de um elemento (remove tags)
+    # Uso: texto = jprasp.pegar_texto(elemento)
+    funcao pegar_texto(elemento):
+        retorna rasp_pegar_texto(elemento)
+    
+    # Pega o valor de um atributo
+    # Uso: link = jprasp.pegar_atributo(elemento, "href")
+    funcao pegar_atributo(elemento, atributo):
+        retorna rasp_pegar_atributo(elemento, atributo)
+    
+    # Conta quantas vezes uma tag aparece
+    # Uso: total = jprasp.contar(html, "img")
+    funcao contar(html, tag):
+        retorna rasp_contar(html, tag)

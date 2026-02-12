@@ -1,0 +1,12 @@
+importar opencvjp
+
+cam = cv.camera(0)
+
+loop:
+    frame = cv.obter(cam)
+    cv.exibir("Camera", frame)
+    
+    se cv.tecla(27):
+        parar
+
+cv.fechar()

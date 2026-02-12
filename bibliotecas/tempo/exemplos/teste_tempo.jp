@@ -1,0 +1,66 @@
+importar tempo
+
+saida_verde("=== Biblioteca Tempo - Testes ===")
+saida("")
+
+saida_azul("1. Data:")
+texto data = tempo.data()
+saida("   Data: {data}")
+
+inteiro data_numero = tempo.data_numero()
+saida("   Data numero (DDMMAAAA): {data_numero}")
+
+inteiro dia = tempo.data_dia()
+saida("   Dia: {dia}")
+
+inteiro mes = tempo.data_mes()
+saida("   Mes: {mes}")
+
+inteiro ano = tempo.data_ano()
+saida("   Ano: {ano}")
+saida("")
+
+saida_azul("2. Hora:")
+texto hora = tempo.hora()
+saida("   Hora: {hora}")
+
+inteiro hora_numero = tempo.hora_numero()
+saida("   Hora numero (HHMMSS): {hora_numero}")
+
+inteiro h = tempo.hora_hora()
+saida("   Hora: {h}")
+
+inteiro minuto = tempo.hora_minuto()
+saida("   Minuto: {minuto}")
+
+inteiro segundo = tempo.hora_segundo()
+saida("   Segundo: {segundo}")
+saida("")
+
+saida_azul("3. Data e Hora Completa:")
+texto completo = tempo.completo()
+saida("   Completo: {completo}")
+saida("")
+
+saida_azul("4. Informacoes Adicionais:")
+inteiro dia_semana = tempo.dia_semana()
+saida("   Dia da semana (0=Dom): {dia_semana}")
+
+inteiro dia_ano = tempo.dia_ano()
+saida("   Dia do ano: {dia_ano}")
+
+inteiro ts = tempo.timestamp()
+saida("   Timestamp Unix: {ts}")
+saida("")
+
+saida_azul("5. Cronometro:")
+saida("   Aguarde 3 segundos...")
+inteiro inicio = tempo.cronometro_inicio()
+
+tempo.dormir(3000)
+
+inteiro fim = tempo.cronometro_fim()
+saida("   Tempo decorrido: {fim} ms")
+saida("")
+
+saida_verde("=== Testes Concluidos! ===")

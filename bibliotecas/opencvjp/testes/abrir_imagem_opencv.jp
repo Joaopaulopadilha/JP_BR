@@ -1,0 +1,37 @@
+# Importa o arquivo bibliotecas/opencvjp/opencvjp.jp
+importar opencvjp
+
+saida("Iniciando teste do OpenCV...")
+
+# Como a classe dentro do arquivo se chama 'cv', usamos 'cv.carregar'
+# Se a imagem estiver na raiz junto com o jp.exe:
+id = cv.carregar("banner.jpg")
+largura = cv.largura(id)
+altura = cv.altura(id)
+prato = cv.cinza(id)
+saida("tamanho da foto {largura} x {altura}")
+nova = cv_redimensionar(id, 1920, 1080)
+altura1 = cv.altura(nova)
+largura1 = cv.largura(nova)
+saida("tamanho da foto {largura1} x {altura1}")
+
+se id > 0:
+    saida("Imagem carregada! ID interno: " + id)
+    
+    
+    # Exibe a janela
+    cv.exibir("Minha Janela OpenCV", nova)
+    
+    saida("Pressione qualquer tecla na janela da imagem para fechar...")
+    
+    # Espera uma tecla (0 = espera para sempre)
+    cv.esperar(0)
+    
+    # Limpa
+    cv.fechar_todas()
+    cv.liberar(id)
+senao:
+    saida("Erro: Nao foi possivel carregar 'banner.jpg'.")
+    saida("Dica: Verifique se a imagem esta na mesma pasta do jp.exe")
+
+saida("Fim do teste.")

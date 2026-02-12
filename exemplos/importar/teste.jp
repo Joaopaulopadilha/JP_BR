@@ -1,0 +1,12 @@
+#importar da pasta bibliotecas
+#importar tempo
+
+#importar de outros lugares
+importar "exemplos\funcoes.jp"
+importar "exemplos\classes.jp"
+
+saudar("João")
+
+meu_carro = Carro.criar("Toyota", "Corolla")
+meu_carro.buzinar()
+meu_carro.info()

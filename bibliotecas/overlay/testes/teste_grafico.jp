@@ -1,0 +1,16 @@
+importar overlay
+importar os
+
+frase = "consumo cpu"
+#(texto, x, y, tamanho, r, g, b)
+top = overlay.texto(frase, 1700, 100, 16, 255, 0, 0)
+
+#(x, y, comprimento, altura, valor minimo, valor maximo, orientação v ou h, r, g, b)
+barra = overlay.barra(1700, 130 , 100, 10, 0, 100, v, 0, 255, 0)
+enquanto verdadeiro:
+    overlay.exibir(barra)
+    overlay.valor(barra, 50)
+    overlay.exibir(top)
+    os.dormir(30)
+
+overlay.fechar(top)

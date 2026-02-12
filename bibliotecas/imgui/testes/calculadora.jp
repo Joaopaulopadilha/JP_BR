@@ -1,0 +1,147 @@
+# calculadora.jp
+# Exemplo de calculadora usando a biblioteca imgui da JPLang
+
+importar imgui
+importar tempo
+
+janela1 = imgui.janela("Calculadora", 310, 400)
+
+# Display
+display = imgui.input(janela1, "", 20, 20, 260, 40)
+imgui.input_cor_fundo(display, 255, 255, 255)
+imgui.input_cor_fonte(display, 0, 0, 0)
+
+# Botões numéricos
+btn7 = imgui.botao(janela1, "7", 20, 80, 60, 50)
+btn8 = imgui.botao(janela1, "8", 85, 80, 60, 50)
+btn9 = imgui.botao(janela1, "9", 150, 80, 60, 50)
+btnDiv = imgui.botao(janela1, "/", 215, 80, 60, 50)
+
+btn4 = imgui.botao(janela1, "4", 20, 140, 60, 50)
+btn5 = imgui.botao(janela1, "5", 85, 140, 60, 50)
+btn6 = imgui.botao(janela1, "6", 150, 140, 60, 50)
+btnMul = imgui.botao(janela1, "*", 215, 140, 60, 50)
+
+btn1 = imgui.botao(janela1, "1", 20, 200, 60, 50)
+btn2 = imgui.botao(janela1, "2", 85, 200, 60, 50)
+btn3 = imgui.botao(janela1, "3", 150, 200, 60, 50)
+btnSub = imgui.botao(janela1, "-", 215, 200, 60, 50)
+
+btn0 = imgui.botao(janela1, "0", 20, 260, 60, 50)
+btnC = imgui.botao(janela1, "C", 85, 260, 60, 50)
+btnIgual = imgui.botao(janela1, "=", 150, 260, 60, 50)
+btnAdd = imgui.botao(janela1, "+", 215, 260, 60, 50)
+
+# Estilo dos botões de operação
+imgui.botao_cor_fundo(btnDiv, 255, 150, 0)
+imgui.botao_cor_fundo(btnMul, 255, 150, 0)
+imgui.botao_cor_fundo(btnSub, 255, 150, 0)
+imgui.botao_cor_fundo(btnAdd, 255, 150, 0)
+imgui.botao_cor_fundo(btnIgual, 0, 150, 0)
+imgui.botao_cor_fundo(btnC, 255, 0, 0)
+
+imgui.botao_cor_fonte(btnDiv, 255, 255, 255)
+imgui.botao_cor_fonte(btnMul, 255, 255, 255)
+imgui.botao_cor_fonte(btnSub, 255, 255, 255)
+imgui.botao_cor_fonte(btnAdd, 255, 255, 255)
+imgui.botao_cor_fonte(btnIgual, 255, 255, 255)
+imgui.botao_cor_fonte(btnC, 255, 255, 255)
+
+# Variáveis
+valor_atual = ""
+valor_anterior = 0
+operacao = ""
+
+loop:
+    imgui.exibir(janela1)
+    tempo.dormir(10)
+    
+    # Números
+    se imgui.clicado(btn0):
+        valor_atual = valor_atual + "0"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn1):
+        valor_atual = valor_atual + "1"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn2):
+        valor_atual = valor_atual + "2"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn3):
+        valor_atual = valor_atual + "3"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn4):
+        valor_atual = valor_atual + "4"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn5):
+        valor_atual = valor_atual + "5"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn6):
+        valor_atual = valor_atual + "6"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn7):
+        valor_atual = valor_atual + "7"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn8):
+        valor_atual = valor_atual + "8"
+        imgui.input_definir(display, valor_atual)
+    
+    se imgui.clicado(btn9):
+        valor_atual = valor_atual + "9"
+        imgui.input_definir(display, valor_atual)
+    
+    # Operações
+    se imgui.clicado(btnAdd):
+        valor_anterior = inteiro(valor_atual)
+        valor_atual = ""
+        operacao = "+"
+        imgui.input_definir(display, "")
+    
+    se imgui.clicado(btnSub):
+        valor_anterior = inteiro(valor_atual)
+        valor_atual = ""
+        operacao = "-"
+        imgui.input_definir(display, "")
+    
+    se imgui.clicado(btnMul):
+        valor_anterior = inteiro(valor_atual)
+        valor_atual = ""
+        operacao = "*"
+        imgui.input_definir(display, "")
+    
+    se imgui.clicado(btnDiv):
+        valor_anterior = inteiro(valor_atual)
+        valor_atual = ""
+        operacao = "/"
+        imgui.input_definir(display, "")
+    
+    # Igual
+    se imgui.clicado(btnIgual):
+        resultado = 0
+        se operacao == "+":
+            resultado = valor_anterior + inteiro(valor_atual)
+        se operacao == "-":
+            resultado = valor_anterior - inteiro(valor_atual)
+        se operacao == "*":
+            resultado = valor_anterior * inteiro(valor_atual)
+        se operacao == "/":
+            se inteiro(valor_atual) != 0:
+                resultado = valor_anterior / inteiro(valor_atual)
+        
+        valor_atual = texto(resultado)
+        imgui.input_definir(display, valor_atual)
+        operacao = ""
+    
+    # Limpar
+    se imgui.clicado(btnC):
+        valor_atual = ""
+        valor_anterior = 0
+        operacao = ""
+        imgui.input_definir(display, "")

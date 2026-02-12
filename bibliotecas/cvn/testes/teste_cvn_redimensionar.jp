@@ -1,0 +1,23 @@
+importar cvn
+
+#ler uma imagem e salvar na memoria
+img = cvn.ler("tumb.png")
+
+#capturar o tamanho da imagem
+tamanho = cvn.tamanho(img)
+saida("tamanho original: {tamanho}")
+
+#redimensionar
+x = 1920 / 2
+y = 1080 / 2
+foto = cvn.redimensionar(img, x, y)
+tamanho2 = cvn.tamanho(foto)
+saida("tamanho redimensionado: {tamanho2}")
+
+cvn.exibir("janela", foto)
+cvn.esperar(0)
+cvn.liberar(img)
+
+#salvar no formato desejado
+resultado = cvn.salvar(foto, "thumb.jpg")
+saida("salvou: {resultado}")

@@ -1,0 +1,59 @@
+# exemplo_os.jp
+# Exemplo de uso da biblioteca de sistema operacional
+
+importar os
+
+# Exibe informações do sistema
+saida("=== Informações do Sistema ===")
+saida("Sistema: {os.nome()}")
+saida("Usuário: {os.usuario()}")
+saida("Computador: {os.computador()}")
+saida("Diretório atual: {os.diretorio_atual()}")
+saida("")
+
+# Variáveis de ambiente
+saida("=== Variáveis de Ambiente ===")
+saida("PATH: {os.getenv("PATH")}")
+saida("")
+
+# Teste de criação de diretório
+saida("=== Teste de Diretório ===")
+texto pasta = "teste_os_jp"
+
+se os.existe(pasta) == 1:
+    saida("Pasta '{pasta}' já existe")
+senao:
+    se os.criar_diretorio(pasta) == 1:
+        saida("Pasta '{pasta}' criada com sucesso!")
+    senao:
+        saida("Erro ao criar pasta")
+
+# Verifica se é diretório
+se os.eh_diretorio(pasta) == 1:
+    saida("'{pasta}' é um diretório")
+
+# Timestamp e tick
+saida("")
+saida("=== Tempo ===")
+saida("Timestamp: {os.timestamp()}")
+saida("Tick (ms desde boot): {os.tick()}")
+
+# Beep (só funciona bem no Windows)
+saida("")
+saida("=== Beep ===")
+se os.nome() == "windows":
+    saida("Emitindo beep...")
+    os.beep(800, 200)
+senao:
+    saida("Beep não suportado no Linux")
+
+# Limpeza - remove a pasta de teste
+saida("")
+saida("=== Limpeza ===")
+se os.remover_diretorio(pasta) == 1:
+    saida("Pasta '{pasta}' removida")
+senao:
+    saida("Não foi possível remover a pasta")
+
+saida("")
+saida("Fim do exemplo!")

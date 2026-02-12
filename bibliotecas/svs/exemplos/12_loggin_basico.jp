@@ -1,0 +1,181 @@
+# exemplo_login.jp
+# Exemplo de sistema de login simples com SVS
+
+importar svs
+importar texto
+
+porta = svs.criar(8080)
+ip = svs.meu_ip()
+saida("Servidor em: {ip}:{porta}")
+
+# Usuários cadastrados (em um sistema real, viria de um banco de dados)
+usuario_correto = "admin"
+senha_correta = "1234"
+
+pagina_login = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+        }
+        .login-box {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 12px;
+            width: 300px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4facfe;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #00f2fe;
+        }
+        #erro {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>Login</h1>
+        <input type="text" id="usuario" placeholder="Usuário">
+        <input type="password" id="senha" placeholder="Senha">
+        <button onclick="fazerLogin()">Entrar</button>
+        <div id="erro"></div>
+    </div>
+
+    <script>
+        async function fazerLogin() {
+            const usuario = document.getElementById('usuario').value;
+            const senha = document.getElementById('senha').value;
+            
+            const resposta = await fetch('/login', {
+                method: 'POST',
+                body: usuario + ':' + senha
+            });
+            const resultado = await resposta.text();
+            
+            if (resultado == 'ok') {
+                window.location.href = '/painel';
+            } else {
+                document.getElementById('erro').innerText = 'Usuário ou senha incorretos!';
+            }
+        }
+    </script>
+</body>
+</html>
+"""
+
+pagina_painel = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #0f3443, #34e89e);
+            color: white;
+        }
+        .painel {
+            background: rgba(255,255,255,0.1);
+            padding: 50px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        a {
+            color: #fff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="painel">
+        <h1>Bem-vindo ao Painel!</h1>
+        <p>Você está logado com sucesso.</p>
+        <p><a href="/">Sair</a></p>
+    </div>
+</body>
+</html>
+"""
+
+enquanto verdadeiro:
+    req = svs.aguardar(porta)
+    caminho = svs.caminho(req)
+    metodo = svs.metodo(req)
+    
+    
+    se caminho == "/":
+        svs.responder_html(req, 200, pagina_login)
+    
+    ou_se caminho == "/login":
+        se metodo == "POST":
+            dados = svs.corpo(req)
+            saida("DEBUG - Corpo recebido: [{dados}]")
+            
+            usuario = texto.dividir(dados, ":", 0)
+            senha = texto.dividir(dados, ":", 1)
+            
+            saida("Tentativa de login - Usuario: {usuario}, Senha: {senha}")
+            
+            # Teste simples primeiro
+            se usuario == "admin":
+                se senha == "1234":
+                    saida("Login bem sucedido!")
+                    svs.responder(req, 200, "ok")
+                senao:
+                    saida("Senha incorreta!")
+                    svs.responder(req, 200, "erro")
+            senao:
+                saida("Usuario incorreto!")
+                svs.responder(req, 200, "erro")
+        senao:
+            svs.responder(req, 405, "Método não permitido")
+    
+    ou_se caminho == "/painel":
+        svs.responder_html(req, 200, pagina_painel)
+    
+    senao:
+        svs.responder(req, 404, "Não encontrado")

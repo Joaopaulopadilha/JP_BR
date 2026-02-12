@@ -1,0 +1,121 @@
+# hardinfo.jp
+# Wrapper da biblioteca de informações de hardware
+#link hardinfo.a
+#flag -lpdh
+#flag -lpsapi
+#flag -static
+
+# Importação das funções nativas da DLL/Lib
+nativo "bibliotecas/hardinfo/hardinfo.jpd" importar hardinfo_cpu(0), hardinfo_gpu(0), hardinfo_memoria(0), hardinfo_hd(0), hardinfo_cpu_nucleos(0), hardinfo_windows(0), hardinfo_hostname(0), hardinfo_usuario(0), hardinfo_cpu_percent(0), hardinfo_memoria_total(0), hardinfo_memoria_usada(0), hardinfo_memoria_livre(0), hardinfo_memoria_percent(0), hardinfo_uptime(0), hardinfo_uptime_fmt(0), hardinfo_hd_livre(1), hardinfo_hd_usado(1), hardinfo_hd_percent(1), hardinfo_hd_total(1), hardinfo_processos(0)
+
+classe hardinfo:
+    
+    # ===================
+    # INFORMAÇÕES ESTÁTICAS
+    # ===================
+    
+    # Retorna o modelo do processador
+    # Ex: "Intel(R) Core(TM) i5-9400F CPU @ 2.90GHz"
+    funcao cpu():
+        retorna hardinfo_cpu()
+    
+    # Retorna o nome da placa de vídeo principal
+    # Ex: "NVIDIA GeForce GTX 1050 Ti"
+    funcao gpu():
+        retorna hardinfo_gpu()
+    
+    # Retorna o total de memória RAM instalada
+    # Ex: "16.00 GB"
+    funcao memoria():
+        retorna hardinfo_memoria()
+    
+    # Retorna as unidades de disco lógicas e seus tamanhos totais
+    # Ex: "C: [237.00 GB]; D: [931.00 GB]"
+    funcao hd():
+        retorna hardinfo_hd()
+    
+    # Retorna o número de núcleos/threads da CPU
+    funcao cpu_nucleos():
+        retorna hardinfo_cpu_nucleos()
+    
+    # Retorna a versão do Windows
+    # Ex: "Windows 10.0 (Build 19045)"
+    funcao windows():
+        retorna hardinfo_windows()
+    
+    # Retorna o nome do computador
+    funcao hostname():
+        retorna hardinfo_hostname()
+    
+    # Retorna o nome do usuário atual
+    funcao usuario():
+        retorna hardinfo_usuario()
+    
+    # ===================
+    # MONITORAMENTO CPU
+    # ===================
+    
+    # Retorna a porcentagem de uso da CPU (0-100)
+    funcao cpu_percent():
+        retorna hardinfo_cpu_percent()
+    
+    # ===================
+    # MONITORAMENTO MEMÓRIA
+    # ===================
+    
+    # Retorna a memória RAM total em GB (decimal)
+    funcao memoria_total():
+        retorna hardinfo_memoria_total()
+    
+    # Retorna a memória RAM usada em GB (decimal)
+    funcao memoria_usada():
+        retorna hardinfo_memoria_usada()
+    
+    # Retorna a memória RAM livre em GB (decimal)
+    funcao memoria_livre():
+        retorna hardinfo_memoria_livre()
+    
+    # Retorna a porcentagem de uso da memória (0-100)
+    funcao memoria_percent():
+        retorna hardinfo_memoria_percent()
+    
+    # ===================
+    # MONITORAMENTO DISCO
+    # ===================
+    
+    # Retorna o espaço total do disco em GB
+    # Ex: hardinfo.hd_total("C")
+    funcao hd_total(drive):
+        retorna hardinfo_hd_total(drive)
+    
+    # Retorna o espaço usado do disco em GB
+    # Ex: hardinfo.hd_usado("C")
+    funcao hd_usado(drive):
+        retorna hardinfo_hd_usado(drive)
+    
+    # Retorna o espaço livre do disco em GB
+    # Ex: hardinfo.hd_livre("C")
+    funcao hd_livre(drive):
+        retorna hardinfo_hd_livre(drive)
+    
+    # Retorna a porcentagem de uso do disco (0-100)
+    # Ex: hardinfo.hd_percent("C")
+    funcao hd_percent(drive):
+        retorna hardinfo_hd_percent(drive)
+    
+    # ===================
+    # SISTEMA
+    # ===================
+    
+    # Retorna o tempo ligado em segundos
+    funcao uptime():
+        retorna hardinfo_uptime()
+    
+    # Retorna o tempo ligado formatado
+    # Ex: "2d 5h 30m 15s"
+    funcao uptime_fmt():
+        retorna hardinfo_uptime_fmt()
+    
+    # Retorna o número de processos rodando
+    funcao processos():
+        retorna hardinfo_processos()

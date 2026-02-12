@@ -1,0 +1,7 @@
+importar sqlite
+
+# cria o banco
+db = sqlite.abrir("primeiro_banco_de_dados.db")
+
+# fecha e salva o banco para liberar a memoria
+sqlite.fechar(db)

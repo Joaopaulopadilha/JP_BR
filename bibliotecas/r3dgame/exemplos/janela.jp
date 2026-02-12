@@ -1,0 +1,7 @@
+importar r3dgame
+
+jogo = r3dgame.janela("Jogo do inscrito", 600, 600)
+r3dgame.janela_cor_fundo(jogo, 15, 100, 255)
+
+enquanto verdadeiro:
+    r3dgame.exibir(jogo)
