@@ -90,6 +90,12 @@ void install_linux() {
         run("chmod +x /usr/local/share/jp/jp");
     }
 
+    if (access("/usr/local/share/jp/jp.elf", F_OK) == 0) {
+        run("chmod +x /usr/local/share/jp/compilador/linux/tcc.elf");
+    } else {
+        run("chmod +x /usr/local/share/jp/compilador/linux/tcc");
+    }
+
     /* Script Desinstalacao */
     FILE *uninstall = fopen("/usr/local/share/jp/desinstalar-jp.sh", "w");
     if (uninstall) {
@@ -109,10 +115,19 @@ void install_linux() {
         fprintf(launcher,
             "#!/bin/bash\n"
             "JP_ROOT=\"/usr/local/share/jp\"\n"
-            "if [ -f \"$JP_ROOT/jp.elf\" ]; then JP_BIN=\"$JP_ROOT/jp.elf\"; else JP_BIN=\"$JP_ROOT/jp\"; fi\n"
-            "if [[ \"$1\" == \"desinstalar\" ]]; then sudo \"$JP_ROOT/desinstalar-jp.sh\"; exit 0; fi\n"
-            "if [[ -z \"$1\" ]]; then echo \"Uso: jp arquivo.jp\"; exit 1; fi\n"
-            "exec \"$JP_BIN\" \"$(realpath \"$1\")\" \"$@\"\n"
+            "\n"
+            "if [ -f \"$JP_ROOT/jp.elf\" ]; then\n"
+            "    JP_BIN=\"$JP_ROOT/jp.elf\"\n"
+            "else\n"
+            "    JP_BIN=\"$JP_ROOT/jp\"\n"
+            "fi\n"
+            "\n"
+            "if [[ \"$1\" == \"desinstalar\" ]]; then\n"
+            "    sudo \"$JP_ROOT/desinstalar-jp.sh\"\n"
+            "    exit 0\n"
+            "fi\n"
+            "\n"
+            "exec \"$JP_BIN\" \"$@\"\n"
         );
         fclose(launcher);
         run("chmod +x /usr/local/bin/jp");
@@ -182,26 +197,24 @@ void install_windows() {
     if (launcher) {
         fprintf(launcher,
             "@echo off\n"
-            "setlocal enabledelayedexpansion\n"
+            "setlocal\n"
+            "\n"
             "set \"JP_HOME=C:\\Program Files\\JP\"\n"
-            "if \"%%1\"==\"desinstalar\" ( call \"%%JP_HOME%%\\desinstalar-jp.cmd\" & exit /b )\n"
-            "if \"%%1\"==\"\" ( echo Uso: jp arquivo.jp & exit /b 1 )\n"
-            "REM Procura o executavel\n"
-            "set \"EXE=\"\n"
-            "if exist \"%%JP_HOME%%\\jp.exe\" set \"EXE=%%JP_HOME%%\\jp.exe\"\n"
-            "if not defined EXE for /d %%%%d in (\"%%JP_HOME%%\\*\") do (\n"
-            "    if exist \"%%%%~d\\jp.exe\" set \"EXE=%%%%~d\\jp.exe\"\n"
+            "\n"
+            "if \"%1\"==\"desinstalar\" (\n"
+            "    call \"%JP_HOME%\\desinstalar-jp.cmd\"\n"
+            "    exit /b\n"
             ")\n"
-            "if not defined EXE (\n"
-            "    echo Erro: jp.exe nao encontrado em %%JP_HOME%%\n"
+            "\n"
+            "set \"EXE=%JP_HOME%\\jp.exe\"\n"
+            "\n"
+            "if not exist \"%EXE%\" (\n"
+            "    echo Erro: jp.exe nao encontrado em %JP_HOME%\n"
             "    exit /b 1\n"
             ")\n"
-            "REM Se for subcomando (build/compilar/debug), passa literal + expande o segundo arg\n"
-            "if /i \"%%1\"==\"build\" ( \"!EXE!\" build \"%%~f2\" %%3 %%4 %%5 & exit /b )\n"
-            "if /i \"%%1\"==\"compilar\" ( \"!EXE!\" compilar \"%%~f2\" %%3 %%4 %%5 & exit /b )\n"
-            "if /i \"%%1\"==\"debug\" ( \"!EXE!\" debug \"%%~f2\" %%3 %%4 %%5 & exit /b )\n"
-            "REM Senao, e um arquivo .jp direto\n"
-            "\"!EXE!\" \"%%~f1\" %%2 %%3 %%4 %%5\n"
+            "\n"
+            "REM Apenas repassa todos os argumentos exatamente como digitados\n"
+            "\"%EXE%\" %*\n"
         );
         fclose(launcher);
     }
