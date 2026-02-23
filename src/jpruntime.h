@@ -19,6 +19,7 @@
     #define JP_EXPORT __attribute__((visibility("default")))
     #define JP_IMPORT
     #include <dlfcn.h>
+    #include <dirent.h>
 #endif
 
 #ifdef __cplusplus
@@ -272,6 +273,32 @@ static inline JPBiblioteca jp_carregar_lib(const char* caminho) {
             lib.handle = LoadLibraryA(alt);
         }
     #else
+        // Pre-carrega .so da pasta runtime para resolver dependencias
+        {
+            const char* dirs[] = {"./runtime", "./bibliotecas"};
+            char dirpath[512];
+            for (int d = 0; d < 2; d++) {
+                if (d == 1) snprintf(dirpath, 512, "./bibliotecas/%s", caminho);
+                else strcpy(dirpath, dirs[d]);
+                
+                void* dirp = opendir(dirpath);
+                if (dirp) {
+                    struct dirent* ent;
+                    while ((ent = readdir((DIR*)dirp)) != NULL) {
+                        const char* name = ent->d_name;
+                        size_t nlen = strlen(name);
+                        // Carrega .so mas nao a .jpd
+                        if (nlen > 3 && strcmp(name + nlen - 3, ".so") == 0) {
+                            char fullpath[1024];
+                            snprintf(fullpath, 1024, "%s/%s", dirpath, name);
+                            dlopen(fullpath, RTLD_LAZY | RTLD_GLOBAL);
+                        }
+                    }
+                    closedir((DIR*)dirp);
+                }
+            }
+        }
+        
         char runtime[512];
         snprintf(runtime, 512, "./runtime/lib%s.jpd", caminho);
         lib.handle = dlopen(runtime, RTLD_LAZY);

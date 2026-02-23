@@ -257,7 +257,13 @@ public:
                 for (const auto& [libName, libPath] : libPaths) {
                     bool achou = false;
                     #ifdef _WIN32
+                    // Aponta para a pasta da DLL para resolver dependencias
+                    fs::path libDir = fs::path(libPath).parent_path();
+                    if (!libDir.empty()) {
+                        SetDllDirectoryA(libDir.string().c_str());
+                    }
                     HMODULE handle = LoadLibraryA(libPath.c_str());
+                    SetDllDirectoryA(NULL); // Restaura
                     if (handle) {
                         if (GetProcAddress(handle, nome.c_str()) ||
                             GetProcAddress(handle, ("jp_" + nome).c_str())) {
@@ -266,6 +272,18 @@ public:
                         FreeLibrary(handle);
                     }
                     #else
+                    // Pre-carrega .so da mesma pasta para resolver dependencias
+                    fs::path libDir = fs::path(libPath).parent_path();
+                    std::vector<void*> preloaded;
+                    if (!libDir.empty()) {
+                        for (const auto& dep : fs::directory_iterator(libDir)) {
+                            std::string depName = dep.path().filename().string();
+                            if (depName.size() > 3 && depName.substr(depName.size()-3) == ".so" && depName != fs::path(libPath).filename().string()) {
+                                void* ph = dlopen(dep.path().c_str(), RTLD_LAZY | RTLD_GLOBAL);
+                                if (ph) preloaded.push_back(ph);
+                            }
+                        }
+                    }
                     void* handle = dlopen(libPath.c_str(), RTLD_LAZY);
                     if (handle) {
                         if (dlsym(handle, nome.c_str()) ||
@@ -274,6 +292,7 @@ public:
                         }
                         dlclose(handle);
                     }
+                    for (void* ph : preloaded) dlclose(ph);
                     #endif
                     if (achou) {
                         libsEncontradas.push_back(libName);
@@ -651,6 +670,51 @@ public:
                     try {
                         fs::copy_file(origem, destino, fs::copy_options::overwrite_existing);
                     } catch (...) {}
+                    
+                    // Copia DLLs e SOs extras da pasta da biblioteca
+                    fs::path pastaLib = origem.parent_path();
+                    if (fs::exists(pastaLib) && fs::is_directory(pastaLib)) {
+                        for (const auto& entry : fs::directory_iterator(pastaLib)) {
+                            if (!entry.is_regular_file()) continue;
+                            std::string ext = entry.path().extension().string();
+                            if (ext == ".dll" || ext == ".so" || ext == ".exe" || ext.empty()) {
+                                // Pula arquivos fonte (.cpp, .c, .h, .hpp) e a propria .jpd
+                                std::string fname = entry.path().filename().string();
+                                if (fname == (lib + ".jpd") || fname == ("lib" + lib + ".jpd") ||
+                                    ext == ".cpp" || ext == ".c" || ext == ".h" || ext == ".hpp" ||
+                                    ext == ".o" || ext == ".obj") {
+                                    continue;
+                                }
+                                
+                                // Copia para runtime/
+                                fs::path destExtra = dirRuntime / entry.path().filename();
+                                try {
+                                    fs::copy_file(entry.path(), destExtra, fs::copy_options::overwrite_existing);
+                                } catch (...) {}
+                                
+                                // DLLs e SOs tambem vao pra pasta do exe (dependencias diretas)
+                                // Executaveis worker (.exe ou sem extensao) ficam apenas em runtime/
+                                if (ext == ".dll" || ext == ".so") {
+                                    fs::path destPai = dirRuntime.parent_path() / entry.path().filename();
+                                    try {
+                                        fs::copy_file(entry.path(), destPai, fs::copy_options::overwrite_existing);
+                                    } catch (...) {}
+                                }
+                                
+                                // Em Linux, garante permissao de execucao pra workers
+                                #ifndef _WIN32
+                                if (ext.empty() || ext == ".exe") {
+                                    try {
+                                        fs::permissions(destExtra, 
+                                            fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+                                            fs::perm_options::add);
+                                    } catch (...) {}
+                                }
+                                #endif
+                            }
+                        }
+                    }
+                    
                     break;
                 }
             }
@@ -736,7 +800,7 @@ public:
         cmd << "-lkernel32 ";
         cmd << "\"";
         #else
-        cmd << "-ldl ";
+        cmd << "-ldl -lpthread ";
         #endif
 
         int ret = system(cmd.str().c_str());
@@ -813,7 +877,7 @@ public:
                 cmd << "-lkernel32 ";
                 cmd << "\"";
                 #else
-                cmd << "-ldl ";
+                cmd << "-ldl -lpthread ";
                 #endif
             }
         }
@@ -846,7 +910,7 @@ public:
             cmd << "-lkernel32 ";
             cmd << "\"";
             #else
-            cmd << "-ldl ";
+            cmd << "-ldl -lpthread ";
             #endif
         }
         

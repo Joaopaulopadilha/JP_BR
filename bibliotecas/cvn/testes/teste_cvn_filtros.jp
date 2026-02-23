@@ -1,9 +1,0 @@
-importar cvn
-
-se cvn.existe("loops.png"):
-    img = cvn.ler("loops.png")
-    img = cvn.img_cinza(img)
-    cvn.salvar(img, "loops_cinza.png")
-    saida("Imagem convertida para cinza e salva como loops_cinza.png")
-senao:
-    saida("Arquivo loops.png não encontrado!")

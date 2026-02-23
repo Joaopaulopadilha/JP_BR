@@ -1,0 +1,50 @@
+Metadata-Version: 2.4
+Name: cuda-bindings
+Version: 12.9.4
+Summary: Python bindings for CUDA
+Author-email: NVIDIA Corporation <cuda-python-conduct@nvidia.com>
+License-Expression: LicenseRef-NVIDIA-SOFTWARE-LICENSE
+Project-URL: Repository, https://github.com/NVIDIA/cuda-python
+Project-URL: Documentation, https://nvidia.github.io/cuda-python/
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Database
+Classifier: Topic :: Scientific/Engineering
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Environment :: GPU :: NVIDIA CUDA
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+Requires-Dist: cuda-pathfinder~=1.1
+Provides-Extra: all
+Requires-Dist: nvidia-cuda-nvcc-cu12; extra == "all"
+Requires-Dist: nvidia-cuda-nvrtc-cu12; extra == "all"
+Requires-Dist: nvidia-nvjitlink-cu12>=12.3; extra == "all"
+Requires-Dist: nvidia-cufile-cu12; sys_platform == "linux" and extra == "all"
+Provides-Extra: test
+Requires-Dist: cython<3.2,>=3.1; extra == "test"
+Requires-Dist: setuptools>=77.0.0; extra == "test"
+Requires-Dist: numpy>=1.21.1; extra == "test"
+Requires-Dist: pytest>=6.2.4; extra == "test"
+Requires-Dist: pytest-benchmark>=3.4.1; extra == "test"
+Requires-Dist: pyglet>=2.1.9; extra == "test"
+Dynamic: license-file
+
+.. SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+.. SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
+
+****************************************
+cuda-bindings: Low-level CUDA interfaces
+****************************************
+
+`cuda.bindings <https://nvidia.github.io/cuda-python/cuda-bindings/>`_ is a standard set of low-level interfaces, providing full coverage of and 1:1 access to the CUDA host APIs from Python. Checkout the `Overview <https://nvidia.github.io/cuda-python/cuda-bindings/latest/overview.html>`_ for the workflow and performance results.
+
+* `Repository <https://github.com/NVIDIA/cuda-python/tree/main/cuda_bindings>`_
+* `Documentation <https://nvidia.github.io/cuda-python/cuda-bindings/>`_
+* `Examples <https://github.com/NVIDIA/cuda-python/tree/main/cuda_bindings/examples>`_
+* `Issue tracker <https://github.com/NVIDIA/cuda-python/issues/>`_
+
+For the installation instruction, please refer to the `Installation <https://nvidia.github.io/cuda-python/cuda-bindings/latest/install.html>`_ page.

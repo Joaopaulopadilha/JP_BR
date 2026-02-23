@@ -1,7 +1,0 @@
-nativo "bibliotecas/jprasp/jprasp.jpd" importar rasp_obter(1)
-
-url = "https://www.google.com"
-saida("Antes da chamada...")
-html = rasp_obter(url)
-saida("Depois da chamada!")
-saida("Tipo de html: teste")

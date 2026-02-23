@@ -1,5 +1,0 @@
-importar svs
-
-ip = svs.meu_ip()
-
-saida("meu ip local é: {ip}")

@@ -1,8 +1,0 @@
-importar miniaudio
-importar tempo
-
-la = miniaudio.sint(440,500)
-
-loop:
-    miniaudio.tocar(la)
-    tempo.dormir(500)

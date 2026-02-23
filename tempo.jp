@@ -1,6 +1,0 @@
-importar time
-start()
-x = 0
-enquanto x < 1000000:
-    x = x + 1
-saida(end())

@@ -1,5 +1,0 @@
-importar imgui
-janela1 = imgui.janela("Gráfico de Barras - Votação", 500, 450)
-
-loop:
-    imgui.exibir(janela1)

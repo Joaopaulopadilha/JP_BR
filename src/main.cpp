@@ -14,6 +14,7 @@
 #include "opcodes.hpp"
 #include "import_processor.hpp"
 #include "jpc_compilador.hpp"
+#include "jp_install.hpp"
 
 namespace fs = std::filesystem;
 
@@ -27,7 +28,10 @@ void setupConsole() {
 }
 #else
 #include <clocale>
-void setupConsole() { std::setlocale(LC_ALL, ""); }
+void setupConsole() {
+    std::setlocale(LC_ALL, "");
+    std::setlocale(LC_NUMERIC, "C");
+}
 #endif
 
 void saveDebugFile(const std::string& originalFilename, const std::vector<Instruction>& code) {
@@ -60,6 +64,10 @@ void mostrarAjuda() {
     std::cout << "  jp <arquivo.jp>              Executa o arquivo\n";
     std::cout << "  jp build <arquivo.jp>        Compila para executavel\n";
     std::cout << "  jp debug <arquivo.jp>        Executa e gera debug/opcodes\n";
+    std::cout << "  jp instalar <biblioteca>     Instala biblioteca do repositorio\n";
+    std::cout << "  jp desinstalar <biblioteca>  Remove biblioteca instalada\n";
+    std::cout << "  jp bibliotecas               Lista bibliotecas instaladas\n";
+    std::cout << "  jp <biblioteca>              Mostra info e funcoes da biblioteca\n";
     std::cout << "\nOpcoes:\n";
     std::cout << "  -w                           Modo janela (sem console)\n";
     std::cout << "  -o                           Build otimizado (usa GCC/MinGW)\n";
@@ -68,6 +76,8 @@ void mostrarAjuda() {
     std::cout << "  jp build meu_programa.jp     Gera output/meu_programa/meu_programa.exe\n";
     std::cout << "  jp build meu_programa.jp -o  Gera executavel otimizado com GCC\n";
     std::cout << "  jp debug meu_programa.jp     Executa + gera debug/meu_programa.jpdbg\n";
+    std::cout << "  jp instalar yt               Instala a biblioteca yt\n";
+    std::cout << "  jp yt                        Mostra funcoes da biblioteca yt\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -76,6 +86,12 @@ int main(int argc, char* argv[]) {
     if (argc < 2) {
         mostrarAjuda();
         return 1;
+    }
+
+    // Processa comandos de instalacao (instalar, desinstalar, info)
+    int installResult = jpinstall::processarComando(argc, argv);
+    if (installResult >= 0) {
+        return installResult;
     }
 
     std::string arg1 = argv[1];

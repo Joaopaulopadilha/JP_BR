@@ -36,7 +36,11 @@ namespace JPCGerador {
             return "jp_int(" + std::to_string(std::get<long>(val)) + ")";
         }
         if (std::holds_alternative<double>(val)) {
-            return "jp_double(" + std::to_string(std::get<double>(val)) + ")";
+            char buf[64];
+            snprintf(buf, sizeof(buf), "%.6f", std::get<double>(val));
+            // Garante ponto decimal independente do locale
+            for (char* p = buf; *p; p++) { if (*p == ',') *p = '.'; }
+            return "jp_double(" + std::string(buf) + ")";
         }
         if (std::holds_alternative<bool>(val)) {
             return std::get<bool>(val) ? "jp_bool(1)" : "jp_bool(0)";
