@@ -1,2 +1,2 @@
 chmod +x jp
-chmod +x compilador/linux/tcc
+chmod +x src/backend_linux/ld_linker/ld

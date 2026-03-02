@@ -1,11 +1,9 @@
 interpretador
-# Windows
-g++ -std=c++17 -static -DJP_MAIN_EXE -o jp src/main.cpp src/recurso.o -lstdc++fs
+# windows
+g++ -std=c++17 -Wall -Wextra -static -I. -o jp.exe src/main.cpp
 
-# Linux
-g++ -o jp src/main.cpp -std=c++17 -ldl
-
-
+# linux
+g++ -std=c++17 -Wall -Wextra -static -I. -o jp src/main.cpp
 
 
 
