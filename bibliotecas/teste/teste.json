@@ -1,0 +1,9 @@
+{
+    "funcoes": [
+        { "nome": "teste_somar",       "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "teste_multiplicar", "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "teste_maior",       "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "teste_saudacao",    "retorno": "texto",   "params": ["texto"] },
+        { "nome": "teste_fatorial",    "retorno": "inteiro", "params": ["inteiro"] }
+    ]
+}

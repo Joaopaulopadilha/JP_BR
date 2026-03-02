@@ -1,0 +1,22 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "arq_ler",            "retorno": "texto",   "params": ["texto"] },
+        { "nome": "arq_ler_linhas",     "retorno": "texto",   "params": ["texto", "inteiro", "inteiro"] },
+        { "nome": "arq_contar_linhas",  "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "arq_escrever",       "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "arq_adicionar",      "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "arq_escrever_linha", "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "arq_existe",         "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "arq_tamanho",        "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "arq_eh_diretorio",   "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "arq_apagar",         "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "arq_renomear",       "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "arq_copiar",         "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "arq_criar_dir",      "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "arq_temp",           "retorno": "texto",   "params": ["texto"] },
+        { "nome": "arq_erro",           "retorno": "texto",   "params": [] },
+        { "nome": "arq_versao",         "retorno": "texto",   "params": [] }
+    ],
+    "libs": []
+}

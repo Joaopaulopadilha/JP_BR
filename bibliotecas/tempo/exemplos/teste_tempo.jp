@@ -1,66 +1,86 @@
+# teste_tempo.jp
+# Teste completo da biblioteca de tempo para JPLang
+
 importar tempo
 
-saida_verde("=== Biblioteca Tempo - Testes ===")
+saidal_verde("=== Teste Biblioteca Tempo ===")
 saida("")
 
-saida_azul("1. Data:")
-texto data = tempo.data()
-saida("   Data: {data}")
+# --- Componentes de data ---
+saidal_verde("tm_dia: ")
+v = tm_dia()
+saida(v)
 
-inteiro data_numero = tempo.data_numero()
-saida("   Data numero (DDMMAAAA): {data_numero}")
+saidal_verde("tm_mes: ")
+v = tm_mes()
+saida(v)
 
-inteiro dia = tempo.data_dia()
-saida("   Dia: {dia}")
+saidal_verde("tm_ano: ")
+v = tm_ano()
+saida(v)
 
-inteiro mes = tempo.data_mes()
-saida("   Mes: {mes}")
+# --- Componentes de hora ---
+saidal_verde("tm_hora: ")
+v = tm_hora()
+saida(v)
 
-inteiro ano = tempo.data_ano()
-saida("   Ano: {ano}")
+saidal_verde("tm_minuto: ")
+v = tm_minuto()
+saida(v)
+
+saidal_verde("tm_segundo: ")
+v = tm_segundo()
+saida(v)
+
+# --- Dia da semana e do ano ---
+saidal_verde("tm_dia_semana (0=dom, 6=sab): ")
+v = tm_dia_semana()
+saida(v)
+
+saidal_verde("tm_dia_ano: ")
+v = tm_dia_ano()
+saida(v)
+
+# --- Timestamp ---
+saidal_verde("tm_timestamp: ")
+v = tm_timestamp()
+saida(v)
+
+# --- Formatos numéricos ---
+saidal_verde("tm_data_num (DDMMAAAA): ")
+v = tm_data_num()
+saida(v)
+
+saidal_verde("tm_hora_num (HHMMSS): ")
+v = tm_hora_num()
+saida(v)
+
+# --- Formatos texto ---
+saidal_verde("tm_data_str: ")
+v = tm_data_str()
+saida(v)
+
+saidal_verde("tm_hora_str: ")
+v = tm_hora_str()
+saida(v)
+
+saidal_verde("tm_completo: ")
+v = tm_completo()
+saida(v)
+
+# --- Sleep ---
+saidal_verde("tm_sleep(500ms)... ")
+tm_sleep(500)
+saida("ok")
+
+# --- Cronômetro ---
+saidal_verde("tm_cronometro: ")
+tm_cronometro_iniciar()
+tm_sleep(200)
+v = tm_cronometro_parar()
+saidal(v)
+saida("ms")
+
 saida("")
-
-saida_azul("2. Hora:")
-texto hora = tempo.hora()
-saida("   Hora: {hora}")
-
-inteiro hora_numero = tempo.hora_numero()
-saida("   Hora numero (HHMMSS): {hora_numero}")
-
-inteiro h = tempo.hora_hora()
-saida("   Hora: {h}")
-
-inteiro minuto = tempo.hora_minuto()
-saida("   Minuto: {minuto}")
-
-inteiro segundo = tempo.hora_segundo()
-saida("   Segundo: {segundo}")
+saidal_verde("=== Fim ===")
 saida("")
-
-saida_azul("3. Data e Hora Completa:")
-texto completo = tempo.completo()
-saida("   Completo: {completo}")
-saida("")
-
-saida_azul("4. Informacoes Adicionais:")
-inteiro dia_semana = tempo.dia_semana()
-saida("   Dia da semana (0=Dom): {dia_semana}")
-
-inteiro dia_ano = tempo.dia_ano()
-saida("   Dia do ano: {dia_ano}")
-
-inteiro ts = tempo.timestamp()
-saida("   Timestamp Unix: {ts}")
-saida("")
-
-saida_azul("5. Cronometro:")
-saida("   Aguarde 3 segundos...")
-inteiro inicio = tempo.cronometro_inicio()
-
-tempo.dormir(3000)
-
-inteiro fim = tempo.cronometro_fim()
-saida("   Tempo decorrido: {fim} ms")
-saida("")
-
-saida_verde("=== Testes Concluidos! ===")

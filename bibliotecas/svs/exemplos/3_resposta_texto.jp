@@ -1,0 +1,16 @@
+# exemplo_texto.jp
+# Exemplo de servidor SVS com resposta em texto simples
+
+importar svs
+
+porta = svs_criar(8080)
+ip = svs_meu_ip()
+saida("Servidor em: {ip}:{porta}")
+
+enquanto verdadeiro:
+    req = svs_aguardar(porta)
+    saida("Requisição recebida!")
+    saida("Método: " + svs_metodo(req))
+    saida("Caminho: " + svs_caminho(req))
+    
+    svs_responder(req, 200, "Olá! Servidor JPLang funcionando!")

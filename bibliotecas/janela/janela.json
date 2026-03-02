@@ -1,0 +1,29 @@
+{
+    "funcoes": [
+        {
+            "nome": "jn_criar",
+            "retorno": "inteiro",
+            "params": ["texto", "inteiro", "inteiro"]
+        },
+        {
+            "nome": "jn_exibir",
+            "retorno": "inteiro",
+            "params": []
+        },
+        {
+            "nome": "jn_botao",
+            "retorno": "inteiro",
+            "params": ["texto", "inteiro", "inteiro"]
+        },
+        {
+            "nome": "jn_botao_clicado",
+            "retorno": "inteiro",
+            "params": []
+        },
+        {
+            "nome": "jn_destroy_vm",
+            "retorno": "inteiro",
+            "params": []
+        }
+    ]
+}

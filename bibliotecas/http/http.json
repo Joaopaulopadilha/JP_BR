@@ -1,0 +1,22 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "http_config_host",        "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "http_config_porta",        "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "http_config_modelo",       "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "http_config_temperatura",  "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "http_config_timeout",      "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "http_ollama_status",       "retorno": "inteiro", "params": [] },
+        { "nome": "http_ollama_gerar",        "retorno": "texto",   "params": ["texto"] },
+        { "nome": "http_ollama_chat",         "retorno": "texto",   "params": ["texto"] },
+        { "nome": "http_ollama_listar",       "retorno": "texto",   "params": [] },
+        { "nome": "http_get",                 "retorno": "texto",   "params": ["texto"] },
+        { "nome": "http_post",                "retorno": "texto",   "params": ["texto", "texto"] },
+        { "nome": "http_post_texto",          "retorno": "texto",   "params": ["texto", "texto"] },
+        { "nome": "http_json_campo",          "retorno": "texto",   "params": ["texto", "texto"] },
+        { "nome": "http_erro",                "retorno": "texto",   "params": [] },
+        { "nome": "http_versao",              "retorno": "texto",   "params": [] }
+    ],
+    "libs": ["ws2_32"],
+    "libs_linux": []
+}

@@ -1,0 +1,10 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "hash_sha256",         "retorno": "texto",   "params": ["texto"] },
+        { "nome": "hash_salt",            "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "hash_senha",           "retorno": "texto",   "params": ["texto"] },
+        { "nome": "hash_verificar",       "retorno": "bool",    "params": ["texto", "texto"] },
+        { "nome": "hash_senha_com_salt",  "retorno": "texto",   "params": ["texto", "texto"] }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "tm_dia",                "retorno": "inteiro", "params": [] },
+        { "nome": "tm_mes",                "retorno": "inteiro", "params": [] },
+        { "nome": "tm_ano",                "retorno": "inteiro", "params": [] },
+        { "nome": "tm_hora",               "retorno": "inteiro", "params": [] },
+        { "nome": "tm_minuto",             "retorno": "inteiro", "params": [] },
+        { "nome": "tm_segundo",            "retorno": "inteiro", "params": [] },
+        { "nome": "tm_dia_semana",         "retorno": "inteiro", "params": [] },
+        { "nome": "tm_dia_ano",            "retorno": "inteiro", "params": [] },
+        { "nome": "tm_timestamp",          "retorno": "inteiro", "params": [] },
+        { "nome": "tm_data_num",           "retorno": "inteiro", "params": [] },
+        { "nome": "tm_hora_num",           "retorno": "inteiro", "params": [] },
+        { "nome": "tm_data_str",           "retorno": "texto",   "params": [] },
+        { "nome": "tm_hora_str",           "retorno": "texto",   "params": [] },
+        { "nome": "tm_completo",           "retorno": "texto",   "params": [] },
+        { "nome": "tm_sleep",              "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "tm_cronometro_iniciar", "retorno": "inteiro", "params": [] },
+        { "nome": "tm_cronometro_parar",   "retorno": "inteiro", "params": [] }
+    ]
+}

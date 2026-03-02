@@ -1,0 +1,15 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "cmd_executar",       "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "cmd_stdout",         "retorno": "texto",   "params": [] },
+        { "nome": "cmd_stderr",         "retorno": "texto",   "params": [] },
+        { "nome": "cmd_retorno",        "retorno": "inteiro", "params": [] },
+        { "nome": "cmd_compilar_c",     "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "cmd_compilar_cpp",   "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "cmd_compilar_flags", "retorno": "inteiro", "params": ["texto", "texto", "texto"] },
+        { "nome": "cmd_erro",           "retorno": "texto",   "params": [] },
+        { "nome": "cmd_versao",         "retorno": "texto",   "params": [] }
+    ],
+    "libs": []
+}

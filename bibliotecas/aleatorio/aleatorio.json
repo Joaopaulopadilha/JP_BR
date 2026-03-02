@@ -1,0 +1,15 @@
+{
+    "funcoes": [
+        { "nome": "al_numero",       "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "al_decimal",      "retorno": "texto",   "params": ["inteiro", "inteiro"] },
+        { "nome": "al_letra",        "retorno": "texto",   "params": ["texto", "texto"] },
+        { "nome": "al_booleano",     "retorno": "bool",    "params": [] },
+        { "nome": "al_indice",       "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "al_texto",        "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "al_alfanumerico", "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "al_semente",      "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "al_embaralhar",   "retorno": "inteiro", "params": [] },
+        { "nome": "al_chance",       "retorno": "bool",    "params": ["inteiro"] },
+        { "nome": "al_dado",         "retorno": "inteiro", "params": ["inteiro"] }
+    ]
+}

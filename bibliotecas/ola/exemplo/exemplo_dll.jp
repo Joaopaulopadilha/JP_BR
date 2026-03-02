@@ -1,0 +1,4 @@
+importar ola.jpd
+
+ola_mundo()
+ola_nome("JPLang")

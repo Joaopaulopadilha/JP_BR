@@ -1,211 +1,314 @@
 // arquivo.cpp
-// Biblioteca de manipulação de arquivos para JPLang
-// Compatível com Windows e Linux
+// Biblioteca nativa de manipulação de arquivos e diretórios para JPLang
 //
-// COMPILAÇÃO:
-//   Windows: g++ -shared -o bibliotecas/arquivo/arquivo.jpd bibliotecas/arquivo/arquivo.cpp -O3 -static
-//   Linux:   g++ -shared -fPIC -o bibliotecas/arquivo/libarquivo.jpd bibliotecas/arquivo/arquivo.cpp -O3 -static-libgcc -static-libstdc++
+// Compilar:
+//   Windows: g++ -c -o bibliotecas/arquivo/arquivo.obj bibliotecas/arquivo/arquivo.cpp -O3
+//   Linux:   g++ -c -fPIC -o bibliotecas/arquivo/arquivo.o bibliotecas/arquivo/arquivo.cpp -O3
 
-#include <iostream>
+#include <string>
+#include <cstring>
+#include <cstdint>
+#include <cstdio>
 #include <fstream>
 #include <sstream>
-#include <string>
-#include <vector>
-#include <cstring>
-#include <cstdlib>
-#include <cstdint> // <--- ADICIONADO: Essencial para int64_t
-#include <cstdio>  // <--- ADICIONADO: Para remove, rename
+#include <mutex>
 #include <sys/stat.h>
 
-// =============================================================================
-// MACROS DE PORTABILIDADE
-// =============================================================================
 #if defined(_WIN32) || defined(_WIN64)
     #define JP_WINDOWS 1
     #define JP_EXPORT extern "C" __declspec(dllexport)
-    #include <direct.h> // Para _mkdir, _rmdir
-    #include <io.h>     // Para _access
-    
+    #include <direct.h>
+    #include <io.h>
     #define MKDIR(path) _mkdir(path)
-    #define RMDIR(path) _rmdir(path)
-    #define ACCESS(path) _access(path, 0)
 #else
     #define JP_WINDOWS 0
     #define JP_EXPORT extern "C" __attribute__((visibility("default")))
-    #include <unistd.h> // Para access, rmdir
-    #include <sys/types.h>
-    
-    #define MKDIR(path) mkdir(path, 0777)
-    #define RMDIR(path) rmdir(path)
-    #define ACCESS(path) access(path, F_OK)
+    #include <unistd.h>
+    #define MKDIR(path) mkdir(path, 0755)
 #endif
 
 // =============================================================================
-// TIPOS OBRIGATÓRIOS JPLANG
+// BUFFER ROTATIVO PARA RETORNO DE STRINGS
 // =============================================================================
-typedef enum {
-    JP_TIPO_NULO = 0,
-    JP_TIPO_INT = 1,
-    JP_TIPO_DOUBLE = 2,
-    JP_TIPO_STRING = 3,
-    JP_TIPO_BOOL = 4
-} JPTipo;
+static const int NUM_BUFS = 8;
+static std::string bufs[NUM_BUFS];
+static int buf_idx = 0;
+static std::mutex buf_mutex;
 
-typedef struct {
-    JPTipo tipo;
-    union {
-        int64_t inteiro;
-        double decimal;
-        char* texto;
-        int booleano;
-        void* objeto;
-    } valor;
-} JPValor;
-
-// =============================================================================
-// HELPERS INTERNOS
-// =============================================================================
-
-static inline JPValor jp_bool(bool b) {
-    JPValor v; v.tipo = JP_TIPO_BOOL; v.valor.booleano = b ? 1 : 0; return v;
+static int64_t retorna_str(const std::string& s) {
+    std::lock_guard<std::mutex> lock(buf_mutex);
+    int idx = buf_idx++ & (NUM_BUFS - 1);
+    bufs[idx] = s;
+    return (int64_t)bufs[idx].c_str();
 }
 
-static inline JPValor jp_int(int64_t i) {
-    JPValor v; v.tipo = JP_TIPO_INT; v.valor.inteiro = i; return v;
+// Último erro
+static std::string ultimo_erro = "";
+static std::mutex erro_mutex;
+
+static void set_erro(const std::string& msg) {
+    std::lock_guard<std::mutex> lock(erro_mutex);
+    ultimo_erro = msg;
 }
 
-static inline JPValor jp_string(const std::string& s) {
-    JPValor v;
-    v.tipo = JP_TIPO_STRING;
-    v.valor.texto = (char*)malloc(s.size() + 1);
-    if (v.valor.texto) {
-        memcpy(v.valor.texto, s.c_str(), s.size() + 1);
+// =============================================================================
+// FUNÇÕES EXPORTADAS - LEITURA
+// =============================================================================
+
+// arq_ler(caminho) -> texto
+// Lê o conteúdo inteiro de um arquivo texto
+JP_EXPORT int64_t arq_ler(int64_t caminho_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    std::ifstream arquivo(caminho, std::ios::binary);
+    if (!arquivo.is_open()) {
+        set_erro("Nao foi possivel abrir: " + caminho);
+        return retorna_str("");
     }
-    return v;
+    std::ostringstream ss;
+    ss << arquivo.rdbuf();
+    arquivo.close();
+    return retorna_str(ss.str());
 }
 
-static inline std::string get_string(JPValor* args, int idx, int numArgs) {
-    if (idx >= numArgs) return "";
-    if (args[idx].tipo == JP_TIPO_STRING && args[idx].valor.texto) 
-        return std::string(args[idx].valor.texto);
-    return "";
-}
-
-// =============================================================================
-// FUNÇÕES EXPORTADAS
-// =============================================================================
-
-// Verifica se um arquivo ou diretório existe
-JP_EXPORT JPValor jp_arquivo_existe(JPValor* args, int numArgs) {
-    std::string caminho = get_string(args, 0, numArgs);
-    if (caminho.empty()) return jp_bool(false);
-    
-    // Retorna 0 se existe, -1 se não existe
-    return jp_bool(ACCESS(caminho.c_str()) == 0);
-}
-
-// Cria um arquivo com o conteúdo especificado (sobrescreve se existir)
-JP_EXPORT JPValor jp_arquivo_criar(JPValor* args, int numArgs) {
-    std::string caminho = get_string(args, 0, numArgs);
-    std::string conteudo = get_string(args, 1, numArgs);
-    
-    std::ofstream arquivo(caminho);
-    if (arquivo.is_open()) {
-        arquivo << conteudo;
-        arquivo.close();
-        return jp_bool(true);
-    }
-    return jp_bool(false);
-}
-
-// Lê todo o conteúdo de um arquivo
-JP_EXPORT JPValor jp_arquivo_ler(JPValor* args, int numArgs) {
-    std::string caminho = get_string(args, 0, numArgs);
-    
+// arq_ler_linhas(caminho, linha_inicio, quantidade) -> texto
+// Lê um trecho específico de linhas de um arquivo
+JP_EXPORT int64_t arq_ler_linhas(int64_t caminho_ptr, int64_t inicio, int64_t quantidade) {
+    std::string caminho((const char*)caminho_ptr);
     std::ifstream arquivo(caminho);
-    if (arquivo.is_open()) {
-        std::stringstream buffer;
-        buffer << arquivo.rdbuf();
-        return jp_string(buffer.str());
+    if (!arquivo.is_open()) {
+        set_erro("Nao foi possivel abrir: " + caminho);
+        return retorna_str("");
     }
-    return jp_string("");
+
+    std::string resultado;
+    std::string linha;
+    int linha_atual = 1;
+    int ini = (int)inicio;
+    int qtd = (int)quantidade;
+
+    while (std::getline(arquivo, linha)) {
+        if (linha_atual >= ini && linha_atual < ini + qtd) {
+            if (!resultado.empty()) resultado += "\n";
+            resultado += linha;
+        }
+        if (linha_atual >= ini + qtd) break;
+        linha_atual++;
+    }
+
+    arquivo.close();
+    return retorna_str(resultado);
 }
 
-// Escreve conteúdo (alias para criar/sobrescrever)
-JP_EXPORT JPValor jp_arquivo_escrever(JPValor* args, int numArgs) {
-    return jp_arquivo_criar(args, numArgs);
+// arq_contar_linhas(caminho) -> inteiro
+// Conta o número de linhas de um arquivo
+JP_EXPORT int64_t arq_contar_linhas(int64_t caminho_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    std::ifstream arquivo(caminho);
+    if (!arquivo.is_open()) {
+        set_erro("Nao foi possivel abrir: " + caminho);
+        return 0;
+    }
+
+    int64_t count = 0;
+    std::string linha;
+    while (std::getline(arquivo, linha)) {
+        count++;
+    }
+
+    arquivo.close();
+    return count;
 }
 
-// Anexa conteúdo ao final de um arquivo
-JP_EXPORT JPValor jp_arquivo_anexar(JPValor* args, int numArgs) {
-    std::string caminho = get_string(args, 0, numArgs);
-    std::string conteudo = get_string(args, 1, numArgs);
-    
-    // std::ios::app move o cursor para o fim antes de escrever
-    std::ofstream arquivo(caminho, std::ios::app);
-    if (arquivo.is_open()) {
-        arquivo << conteudo;
-        arquivo.close();
-        return jp_bool(true);
+// =============================================================================
+// FUNÇÕES EXPORTADAS - ESCRITA
+// =============================================================================
+
+// arq_escrever(caminho, conteudo) -> inteiro
+// Escreve conteúdo em um arquivo (sobrescreve se existir)
+JP_EXPORT int64_t arq_escrever(int64_t caminho_ptr, int64_t conteudo_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    std::string conteudo((const char*)conteudo_ptr);
+
+    std::ofstream arquivo(caminho, std::ios::binary | std::ios::trunc);
+    if (!arquivo.is_open()) {
+        set_erro("Nao foi possivel criar: " + caminho);
+        return 0;
     }
-    return jp_bool(false);
+
+    arquivo.write(conteudo.c_str(), conteudo.size());
+    arquivo.close();
+    return 1;
 }
 
-// Deleta um arquivo
-JP_EXPORT JPValor jp_arquivo_deletar(JPValor* args, int numArgs) {
-    std::string caminho = get_string(args, 0, numArgs);
-    if (caminho.empty()) return jp_bool(false);
-    
-    if (remove(caminho.c_str()) == 0) {
-        return jp_bool(true);
+// arq_adicionar(caminho, conteudo) -> inteiro
+// Adiciona conteúdo ao final de um arquivo (cria se não existir)
+JP_EXPORT int64_t arq_adicionar(int64_t caminho_ptr, int64_t conteudo_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    std::string conteudo((const char*)conteudo_ptr);
+
+    std::ofstream arquivo(caminho, std::ios::binary | std::ios::app);
+    if (!arquivo.is_open()) {
+        set_erro("Nao foi possivel abrir para adicionar: " + caminho);
+        return 0;
     }
-    return jp_bool(false);
+
+    arquivo.write(conteudo.c_str(), conteudo.size());
+    arquivo.close();
+    return 1;
 }
 
-// Renomeia ou move um arquivo
-JP_EXPORT JPValor jp_arquivo_renomear(JPValor* args, int numArgs) {
-    std::string antigo = get_string(args, 0, numArgs);
-    std::string novo = get_string(args, 1, numArgs);
-    
-    if (antigo.empty() || novo.empty()) return jp_bool(false);
-    
-    if (rename(antigo.c_str(), novo.c_str()) == 0) {
-        return jp_bool(true);
+// arq_escrever_linha(caminho, conteudo) -> inteiro
+// Adiciona uma linha ao final de um arquivo (com \n)
+JP_EXPORT int64_t arq_escrever_linha(int64_t caminho_ptr, int64_t conteudo_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    std::string conteudo((const char*)conteudo_ptr);
+    conteudo += "\n";
+
+    std::ofstream arquivo(caminho, std::ios::binary | std::ios::app);
+    if (!arquivo.is_open()) {
+        set_erro("Nao foi possivel abrir para adicionar: " + caminho);
+        return 0;
     }
-    return jp_bool(false);
+
+    arquivo.write(conteudo.c_str(), conteudo.size());
+    arquivo.close();
+    return 1;
 }
 
-// Retorna o tamanho do arquivo em bytes
-JP_EXPORT JPValor jp_arquivo_tamanho(JPValor* args, int numArgs) {
-    std::string caminho = get_string(args, 0, numArgs);
-    
-    struct stat stat_buf;
-    int rc = stat(caminho.c_str(), &stat_buf);
-    
-    if (rc == 0) {
-        return jp_int((int64_t)stat_buf.st_size);
-    }
-    return jp_int(-1);
+// =============================================================================
+// FUNÇÕES EXPORTADAS - VERIFICAÇÃO
+// =============================================================================
+
+// arq_existe(caminho) -> inteiro
+// Verifica se um arquivo ou diretório existe (1 = sim, 0 = não)
+JP_EXPORT int64_t arq_existe(int64_t caminho_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    struct stat info;
+    return (stat(caminho.c_str(), &info) == 0) ? 1 : 0;
 }
 
-// Cria uma pasta (diretório)
-JP_EXPORT JPValor jp_arquivo_criar_pasta(JPValor* args, int numArgs) {
-    std::string caminho = get_string(args, 0, numArgs);
-    if (caminho.empty()) return jp_bool(false);
-    
-    if (MKDIR(caminho.c_str()) == 0) {
-        return jp_bool(true);
+// arq_tamanho(caminho) -> inteiro
+// Retorna o tamanho do arquivo em bytes (0 se não existir)
+JP_EXPORT int64_t arq_tamanho(int64_t caminho_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    struct stat info;
+    if (stat(caminho.c_str(), &info) != 0) {
+        set_erro("Arquivo nao encontrado: " + caminho);
+        return 0;
     }
-    return jp_bool(false);
+    return (int64_t)info.st_size;
 }
 
-// Deleta uma pasta (diretório deve estar vazio)
-JP_EXPORT JPValor jp_arquivo_deletar_pasta(JPValor* args, int numArgs) {
-    std::string caminho = get_string(args, 0, numArgs);
-    if (caminho.empty()) return jp_bool(false);
-    
-    if (RMDIR(caminho.c_str()) == 0) {
-        return jp_bool(true);
+// arq_eh_diretorio(caminho) -> inteiro
+// Verifica se o caminho é um diretório (1 = sim, 0 = não)
+JP_EXPORT int64_t arq_eh_diretorio(int64_t caminho_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    struct stat info;
+    if (stat(caminho.c_str(), &info) != 0) return 0;
+#if JP_WINDOWS
+    return (info.st_mode & _S_IFDIR) ? 1 : 0;
+#else
+    return S_ISDIR(info.st_mode) ? 1 : 0;
+#endif
+}
+
+// =============================================================================
+// FUNÇÕES EXPORTADAS - MANIPULAÇÃO
+// =============================================================================
+
+// arq_apagar(caminho) -> inteiro
+// Apaga um arquivo (1 = sucesso, 0 = falha)
+JP_EXPORT int64_t arq_apagar(int64_t caminho_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+    if (remove(caminho.c_str()) == 0) return 1;
+    set_erro("Nao foi possivel apagar: " + caminho);
+    return 0;
+}
+
+// arq_renomear(antigo, novo) -> inteiro
+// Renomeia ou move um arquivo (1 = sucesso, 0 = falha)
+JP_EXPORT int64_t arq_renomear(int64_t antigo_ptr, int64_t novo_ptr) {
+    std::string antigo((const char*)antigo_ptr);
+    std::string novo((const char*)novo_ptr);
+    if (rename(antigo.c_str(), novo.c_str()) == 0) return 1;
+    set_erro("Nao foi possivel renomear: " + antigo + " -> " + novo);
+    return 0;
+}
+
+// arq_copiar(origem, destino) -> inteiro
+// Copia um arquivo (1 = sucesso, 0 = falha)
+JP_EXPORT int64_t arq_copiar(int64_t origem_ptr, int64_t destino_ptr) {
+    std::string origem((const char*)origem_ptr);
+    std::string destino((const char*)destino_ptr);
+
+    std::ifstream src(origem, std::ios::binary);
+    if (!src.is_open()) {
+        set_erro("Nao foi possivel abrir origem: " + origem);
+        return 0;
     }
-    return jp_bool(false);
+
+    std::ofstream dst(destino, std::ios::binary | std::ios::trunc);
+    if (!dst.is_open()) {
+        set_erro("Nao foi possivel criar destino: " + destino);
+        return 0;
+    }
+
+    dst << src.rdbuf();
+    src.close();
+    dst.close();
+    return 1;
+}
+
+// =============================================================================
+// FUNÇÕES EXPORTADAS - DIRETÓRIOS
+// =============================================================================
+
+// arq_criar_dir(caminho) -> inteiro
+// Cria um diretório (1 = sucesso ou já existe, 0 = falha)
+JP_EXPORT int64_t arq_criar_dir(int64_t caminho_ptr) {
+    std::string caminho((const char*)caminho_ptr);
+
+    // Verifica se já existe
+    struct stat info;
+    if (stat(caminho.c_str(), &info) == 0) return 1;
+
+    if (MKDIR(caminho.c_str()) == 0) return 1;
+    set_erro("Nao foi possivel criar diretorio: " + caminho);
+    return 0;
+}
+
+// =============================================================================
+// FUNÇÕES EXPORTADAS - TEMPORÁRIOS
+// =============================================================================
+
+// arq_temp(extensao) -> texto
+// Gera um nome de arquivo temporário único com a extensão dada
+JP_EXPORT int64_t arq_temp(int64_t ext_ptr) {
+    std::string ext((const char*)ext_ptr);
+    static int counter = 0;
+    static std::mutex temp_mutex;
+
+    std::lock_guard<std::mutex> lock(temp_mutex);
+    counter++;
+
+    char buf[256];
+    snprintf(buf, sizeof(buf), "_jp_temp_%d_%d%s", (int)time(nullptr), counter, ext.c_str());
+    return retorna_str(std::string(buf));
+}
+
+// =============================================================================
+// FUNÇÕES EXPORTADAS - UTILITÁRIOS
+// =============================================================================
+
+// arq_erro() -> texto
+// Retorna o último erro ocorrido
+JP_EXPORT int64_t arq_erro() {
+    std::lock_guard<std::mutex> lock(erro_mutex);
+    return retorna_str(ultimo_erro);
+}
+
+// arq_versao() -> texto
+// Retorna a versão da biblioteca
+JP_EXPORT int64_t arq_versao() {
+    return retorna_str("arquivo.obj 1.0 - JPLang File I/O");
 }

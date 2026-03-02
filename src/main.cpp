@@ -1,227 +1,216 @@
 // main.cpp
-// JPLang - Compilador (bytecode -> C -> TCC)
-// Sem VM: toda execução passa por TCC
+// Entry point de TESTE do compilador JPLang — codegen unificado (só saida por enquanto)
+
+#include "src/frontend/lexer.hpp"
+#include "src/frontend/parser.hpp"
+#include "src/codegen_comum/codegen.hpp"
+
+// Linker ainda é por plataforma
+#ifdef _WIN32
+    #include "src/backend_windows/linker_windows.hpp"
+    #define JP_OBJ_EXT ".obj"
+    #define JP_EXE_EXT ".exe"
+    #define JP_PLATFORM "COFF/PE x64 — Windows (codegen unificado)"
+#else
+    #include "src/backend_linux/linker_linux.hpp"
+    #define JP_OBJ_EXT ".o"
+    #define JP_EXE_EXT ""
+    #define JP_PLATFORM "ELF x86-64 — Linux (codegen unificado)"
+#endif
+
+// Gerenciador de bibliotecas
+#include "src/jp_install.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <filesystem>
-
-// INCLUDES OBRIGATÓRIOS
-#include "lang_loader.hpp"
-#include "lexer.hpp"
-#include "parser.hpp"
-#include "opcodes.hpp"
-#include "import_processor.hpp"
-#include "jpc_compilador.hpp"
-#include "jp_install.hpp"
+#include <cstdlib>
 
 namespace fs = std::filesystem;
 
-// Configuração console UTF-8
-#ifdef _WIN32
-#include <windows.h>
-void setupConsole() {
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);
-    std::setvbuf(stdout, nullptr, _IOFBF, 1000);
-}
-#else
-#include <clocale>
-void setupConsole() {
-    std::setlocale(LC_ALL, "");
-    std::setlocale(LC_NUMERIC, "C");
-}
-#endif
+// ============================================================================
+// LEITURA DE ARQUIVO
+// ============================================================================
 
-void saveDebugFile(const std::string& originalFilename, const std::vector<Instruction>& code) {
-    if (!fs::exists("debug")) {
-        fs::create_directory("debug");
+static std::string read_file(const std::string& path) {
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        std::cerr << "Erro: Não foi possível abrir '" << path << "'" << std::endl;
+        return "";
+    }
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    return ss.str();
+}
+
+// ============================================================================
+// COMPILAÇÃO: fonte → .obj/.o
+// ============================================================================
+
+static bool compile_to_obj(const std::string& source,
+                           const std::string& obj_path,
+                           const std::string& base_dir,
+                           std::vector<std::string>& extra_objs,
+                           std::vector<std::string>& extra_libs,
+                           std::vector<std::string>& extra_lib_paths,
+                           std::vector<std::string>& extra_dlls) {
+    jplang::Lexer lexer(source, base_dir);
+    jplang::Parser parser(lexer, base_dir);
+
+    auto program = parser.parse();
+    if (!program.has_value()) {
+        std::cerr << "Compilação abortada devido a erros de sintaxe." << std::endl;
+        return false;
     }
 
-    fs::path p(originalFilename);
-    std::string debugName = "debug/" + p.stem().string() + ".jpdbg";
-
-    std::ofstream out(debugName);
-    if (out.is_open()) {
-        out << "--- BYTECODE JP ---\n";
-        int idx = 0;
-        for (const auto& inst : code) {
-            out << idx << "\t" << opToString(inst.op);
-            if (inst.operand.has_value()) {
-                out << "\t" << valToString(inst.operand.value());
-            }
-            out << "\n";
-            idx++;
-        }
-        out.close();
+    jplang::Codegen codegen;
+    if (!codegen.compile(program.value(), obj_path, base_dir, parser.lang_config())) {
+        std::cerr << "Erro na geração de código." << std::endl;
+        return false;
     }
+
+    extra_objs = codegen.extra_obj_paths();
+    extra_libs = codegen.extra_libs();
+    extra_lib_paths = codegen.extra_lib_paths();
+    extra_dlls = codegen.extra_dll_paths();
+
+    return true;
 }
 
-void mostrarAjuda() {
-    std::cout << "JPLang - Compilador\n\n";
-    std::cout << "Uso:\n";
-    std::cout << "  jp <arquivo.jp>              Executa o arquivo\n";
-    std::cout << "  jp build <arquivo.jp>        Compila para executavel\n";
-    std::cout << "  jp debug <arquivo.jp>        Executa e gera debug/opcodes\n";
-    std::cout << "  jp instalar <biblioteca>     Instala biblioteca do repositorio\n";
-    std::cout << "  jp desinstalar <biblioteca>  Remove biblioteca instalada\n";
-    std::cout << "  jp bibliotecas               Lista bibliotecas instaladas\n";
-    std::cout << "  jp <biblioteca>              Mostra info e funcoes da biblioteca\n";
-    std::cout << "\nOpcoes:\n";
-    std::cout << "  -w                           Modo janela (sem console)\n";
-    std::cout << "  -o                           Build otimizado (usa GCC/MinGW)\n";
-    std::cout << "\nExemplos:\n";
-    std::cout << "  jp meu_programa.jp           Compila e executa\n";
-    std::cout << "  jp build meu_programa.jp     Gera output/meu_programa/meu_programa.exe\n";
-    std::cout << "  jp build meu_programa.jp -o  Gera executavel otimizado com GCC\n";
-    std::cout << "  jp debug meu_programa.jp     Executa + gera debug/meu_programa.jpdbg\n";
-    std::cout << "  jp instalar yt               Instala a biblioteca yt\n";
-    std::cout << "  jp yt                        Mostra funcoes da biblioteca yt\n";
+// ============================================================================
+// MODO RUN: compila, linka, executa, apaga
+// ============================================================================
+
+static int mode_run(const std::string& input_path) {
+    std::string source = read_file(input_path);
+    if (source.empty()) return 1;
+
+    std::string base_dir = fs::path(input_path).parent_path().string();
+
+    fs::path temp_dir = "temp";
+    fs::create_directories(temp_dir);
+
+    fs::path stem = fs::path(input_path).stem();
+    fs::path obj_path = temp_dir / (stem.string() + JP_OBJ_EXT);
+    fs::path exe_path = temp_dir / (stem.string() + JP_EXE_EXT);
+
+    std::vector<std::string> extra_objs;
+    std::vector<std::string> extra_libs;
+    std::vector<std::string> extra_lib_paths;
+    std::vector<std::string> extra_dlls;
+    if (!compile_to_obj(source, obj_path.string(), base_dir,
+                        extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
+        fs::remove_all(temp_dir);
+        return 1;
+    }
+
+    if (!jplang::link_with_ld(obj_path.string(), exe_path.string(),
+                               extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
+        fs::remove_all(temp_dir);
+        return 1;
+    }
+
+    #ifdef _WIN32
+    int ret = std::system(exe_path.string().c_str());
+    #else
+    std::string run_cmd = "./" + exe_path.string();
+    int ret = std::system(run_cmd.c_str());
+    #endif
+
+    fs::remove_all(temp_dir);
+    return ret;
 }
+
+// ============================================================================
+// MODO BUILD: compila e linka em output/
+// ============================================================================
+
+static int mode_build(const std::string& input_path) {
+    std::string source = read_file(input_path);
+    if (source.empty()) return 1;
+
+    std::string base_dir = fs::path(input_path).parent_path().string();
+
+    fs::path stem = fs::path(input_path).stem();
+    fs::path out_dir = fs::path("output") / stem;
+    fs::create_directories(out_dir);
+
+    fs::path obj_path = out_dir / (stem.string() + JP_OBJ_EXT);
+    fs::path exe_path = out_dir / (stem.string() + JP_EXE_EXT);
+
+    std::vector<std::string> extra_objs;
+    std::vector<std::string> extra_libs;
+    std::vector<std::string> extra_lib_paths;
+    std::vector<std::string> extra_dlls;
+    if (!compile_to_obj(source, obj_path.string(), base_dir,
+                        extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
+        return 1;
+    }
+
+    std::cout << "Objeto gerado: " << obj_path.string() << std::endl;
+
+    if (!jplang::link_with_ld(obj_path.string(), exe_path.string(),
+                               extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
+        return 1;
+    }
+
+    std::cout << "Compilado: " << input_path << " -> " << exe_path.string() << std::endl;
+    return 0;
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
 
 int main(int argc, char* argv[]) {
-    setupConsole();
-
     if (argc < 2) {
-        mostrarAjuda();
+        std::cerr << "JPLang Compiler v1.0 (" << JP_PLATFORM << ")" << std::endl;
+        std::cerr << std::endl;
+        std::cerr << "Uso:" << std::endl;
+        std::cerr << "  jp <arquivo.jp>             Compila, linka, executa e apaga" << std::endl;
+        std::cerr << "  jp build <arquivo.jp>       Compila e linka em output/" << std::endl;
+        std::cerr << std::endl;
+        std::cerr << "Gerenciador de bibliotecas:" << std::endl;
+        std::cerr << "  jp instalar <nome>          Instala biblioteca do repositorio" << std::endl;
+        std::cerr << "  jp desinstalar <nome>       Remove biblioteca instalada" << std::endl;
+        std::cerr << "  jp listar                   Lista bibliotecas instaladas" << std::endl;
+        std::cerr << "  jp listar --remoto          Lista bibliotecas disponiveis" << std::endl;
         return 1;
     }
 
-    // Processa comandos de instalacao (instalar, desinstalar, info)
-    int installResult = jpinstall::processarComando(argc, argv);
-    if (installResult >= 0) {
-        return installResult;
-    }
+    std::string first_arg = argv[1];
 
-    std::string arg1 = argv[1];
-
-    // Verifica modo
-    bool modoBuild = (arg1 == "compilar" || arg1 == "build");
-    bool modoDebug = (arg1 == "debug");
-    bool modoJanela = false;
-    bool modoOtimizado = false;
-    std::string caminhoArquivo;
-
-    if (modoBuild || modoDebug) {
-        for (int i = 2; i < argc; i++) {
-            std::string arg = argv[i];
-            if (arg == "-w") {
-                modoJanela = true;
-            } else if (arg == "-o") {
-                modoOtimizado = true;
-            } else if (caminhoArquivo.empty()) {
-                caminhoArquivo = arg;
-            }
-        }
-        if (caminhoArquivo.empty()) {
-            std::cerr << "Erro: Nenhum arquivo especificado.\n";
-            std::cerr << "Uso: jp build <arquivo.jp>\n";
+    if (first_arg == "build") {
+        if (argc < 3) {
+            std::cerr << "Erro: Esperado arquivo após 'build'" << std::endl;
             return 1;
         }
-    } else {
-        caminhoArquivo = arg1;
+        return mode_build(argv[2]);
     }
 
-    fs::path filePath = caminhoArquivo;
-    if (!fs::exists(filePath)) {
-        std::cerr << "Erro: Arquivo nao encontrado: " << filePath << std::endl;
-        return 1;
+    if (first_arg == "instalar") {
+        if (argc < 3) {
+            std::cerr << "Erro: Esperado nome da biblioteca após 'instalar'" << std::endl;
+            std::cerr << "Exemplo: jp instalar texto" << std::endl;
+            return 1;
+        }
+        return jplang::install_lib(argv[2]);
     }
 
-    // Define o diretório base como o diretório do executável
-    fs::path exePath = fs::path(argv[0]).parent_path();
-    if (exePath.empty()) {
-        exePath = fs::current_path();
-    }
-    ImportProcessor::setBaseDir(exePath.string());
-
-    // Lê o arquivo fonte
-    std::ifstream file(filePath);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string source = buffer.str();
-
-    try {
-        // Limpa estado
-        ImportProcessor::reset();
-        functionTable.clear();
-        classTable.clear();
-        classMethodTable.clear();
-        nativeFuncTable.clear();
-
-        // Detecta e carrega idioma
-        std::string idioma = LangLoader::detectarIdioma(source);
-        bool temDiretiva = !source.empty() && source[0] == '$';
-        
-        if (!idioma.empty() && idioma != "portugues") {
-            if (!LangLoader::carregar(idioma, exePath.string())) {
-                std::cerr << "[JP] Idioma nao encontrado: " << idioma << ". Usando portugues." << std::endl;
-                LangLoader::carregarPadrao();
-            }
-        } else {
-            LangLoader::carregarPadrao();
+    if (first_arg == "desinstalar") {
+        if (argc < 3) {
+            std::cerr << "Erro: Esperado nome da biblioteca após 'desinstalar'" << std::endl;
+            return 1;
         }
-        
-        // Remove a primeira linha se era diretiva de idioma ($english, $portugues, etc.)
-        if (temDiretiva) {
-            size_t pos = source.find('\n');
-            if (pos != std::string::npos) {
-                source = source.substr(pos + 1);
-            } else {
-                source.clear();
-            }
-        }
-
-        // Tokeniza
-        Lexer lexer(source);
-        auto tokens = lexer.tokenize();
-
-        // Parseia (registra imports durante parsing)
-        Parser parser(tokens);
-        auto ast = parser.parse();
-
-        // Compila módulos primeiro (bytecode)
-        std::vector<Instruction> code;
-        ImportProcessor::processImports(code);
-
-        // Compila arquivo principal
-        ast->compile(code);
-        code.push_back({OpCode::HALT, std::nullopt});
-
-        // Salva debug apenas no modo debug
-        if (modoDebug) {
-            saveDebugFile(caminhoArquivo, code);
-        }
-
-        // Compila e executa/gera
-        CompiladorC compilador;
-        std::string nomeBase = filePath.stem().string();
-
-        if (modoBuild) {
-            // === BUILD: gera executável em output/ ===
-            std::cout << "[JP] Compilando: " << filePath << std::endl;
-            if (modoJanela) {
-                std::cout << "[JP] Modo: Janela (sem console)" << std::endl;
-            }
-
-            if (!compilador.compilar(code, nomeBase, modoJanela, modoOtimizado)) {
-                return 1;
-            }
-        } else {
-            // === RUN / DEBUG: compila em temp/ e executa ===
-            if (modoDebug) {
-                std::cout << "[JP] Debug: debug/" << nomeBase << ".jpdbg" << std::endl;
-            }
-            if (!compilador.executar(code, nomeBase)) {
-                return 1;
-            }
-        }
-
-    } catch (const std::exception& e) {
-        std::cerr << "Erro: " << e.what() << std::endl;
-        return 1;
+        return jplang::uninstall_lib(argv[2]);
     }
 
-    return 0;
+    if (first_arg == "listar") {
+        bool show_remote = (argc >= 3 && std::string(argv[2]) == "--remoto");
+        return jplang::list_libs(show_remote);
+    }
+
+    return mode_run(first_arg);
 }

@@ -1,0 +1,89 @@
+# teste_texto.jp
+# Teste completo de todas as funcoes da biblioteca texto
+
+nativo "bibliotecas/texto" importar txt_upper, txt_lower, txt_tamanho, txt_contem, txt_trim, txt_substituir, txt_repetir, txt_inverter, txt_substr, txt_comeca_com, txt_termina_com, txt_posicao, txt_char, txt_contar, txt_dividir, txt_dividir_contar
+
+saida("=== Teste Biblioteca Texto ===")
+saida("")
+
+saida("--- Conversao ---")
+up = txt_upper("hello world")
+saida("txt_upper(hello world) = {up}")
+
+lo = txt_lower("HELLO WORLD")
+saida("txt_lower(HELLO WORLD) = {lo}")
+
+saida("")
+saida("--- Tamanho e Busca ---")
+tam = txt_tamanho("JPLang")
+saida("txt_tamanho(JPLang) = {tam}")
+
+ct = txt_contem("Hello World", "World")
+saida("txt_contem(Hello World, World) = {ct}")
+
+ct2 = txt_contem("Hello World", "xyz")
+saida("txt_contem(Hello World, xyz) = {ct2}")
+
+saida("")
+saida("--- Manipulacao ---")
+tr = txt_trim("   espacos   ")
+saida("txt_trim(   espacos   ) = [{tr}]")
+
+sub = txt_substituir("banana", "na", "NO")
+saida("txt_substituir(banana, na, NO) = {sub}")
+
+rep = txt_repetir("ab", 4)
+saida("txt_repetir(ab, 4) = {rep}")
+
+inv = txt_inverter("JPLang")
+saida("txt_inverter(JPLang) = {inv}")
+
+saida("")
+saida("--- Substring ---")
+ss = txt_substr("Hello World", 6, 5)
+saida("txt_substr(Hello World, 6, 5) = {ss}")
+
+ch = txt_char("JPLang", 2)
+saida("txt_char(JPLang, 2) = {ch}")
+
+saida("")
+saida("--- Prefixo e Sufixo ---")
+cc = txt_comeca_com("JPLang", "JP")
+saida("txt_comeca_com(JPLang, JP) = {cc}")
+
+cc2 = txt_comeca_com("JPLang", "XX")
+saida("txt_comeca_com(JPLang, XX) = {cc2}")
+
+tc = txt_termina_com("arquivo.jp", ".jp")
+saida("txt_termina_com(arquivo.jp, .jp) = {tc}")
+
+tc2 = txt_termina_com("arquivo.jp", ".py")
+saida("txt_termina_com(arquivo.jp, .py) = {tc2}")
+
+saida("")
+saida("--- Posicao e Contagem ---")
+pos = txt_posicao("Hello World", "World")
+saida("txt_posicao(Hello World, World) = {pos}")
+
+pos2 = txt_posicao("Hello World", "xyz")
+saida("txt_posicao(Hello World, xyz) = {pos2}")
+
+cnt = txt_contar("banana", "na")
+saida("txt_contar(banana, na) = {cnt}")
+
+saida("")
+saida("--- Dividir ---")
+d0 = txt_dividir("um,dois,tres", ",", 0)
+saida("txt_dividir(um,dois,tres, ',', 0) = {d0}")
+
+d1 = txt_dividir("um,dois,tres", ",", 1)
+saida("txt_dividir(um,dois,tres, ',', 1) = {d1}")
+
+d2 = txt_dividir("um,dois,tres", ",", 2)
+saida("txt_dividir(um,dois,tres, ',', 2) = {d2}")
+
+dc = txt_dividir_contar("um,dois,tres", ",")
+saida("txt_dividir_contar(um,dois,tres, ',') = {dc}")
+
+saida("")
+saida("=== Fim ===")

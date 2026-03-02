@@ -1,0 +1,26 @@
+{
+    "tipo": "dinamico",
+    "funcoes": [
+        { "nome": "svs_meu_ip",           "retorno": "texto",   "params": [] },
+        { "nome": "svs_criar",             "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "svs_aguardar",          "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "svs_metodo",            "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "svs_caminho",           "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "svs_corpo",             "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "svs_fechar",            "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "svs_parar",             "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "svs_responder",         "retorno": "inteiro", "params": ["inteiro", "inteiro", "texto"] },
+        { "nome": "svs_responder_html",    "retorno": "inteiro", "params": ["inteiro", "inteiro", "texto"] },
+        { "nome": "svs_arquivo",           "retorno": "inteiro", "params": ["inteiro", "texto"] },
+        { "nome": "svs_pasta",             "retorno": "inteiro", "params": ["inteiro", "texto", "texto"] },
+        { "nome": "svs_servir_estatico",   "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "svs_ler_texto",         "retorno": "texto",   "params": ["texto"] },
+        { "nome": "svs_obter_cookie",      "retorno": "texto",   "params": ["inteiro", "texto"] },
+        { "nome": "svs_definir_cookie",    "retorno": "inteiro", "params": ["inteiro", "texto", "texto"] },
+        { "nome": "svs_sessao_iniciar",    "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "svs_sessao_id",         "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "svs_sessao_set",        "retorno": "inteiro", "params": ["texto", "texto", "texto"] },
+        { "nome": "svs_sessao_get",        "retorno": "texto",   "params": ["texto", "texto"] }
+    ],
+    "libs": ["pthread"]
+}

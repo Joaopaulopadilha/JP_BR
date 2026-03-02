@@ -1,0 +1,6 @@
+importar janela
+
+jn_criar("titulo", 300, 300)
+
+enquanto verdadeiro:
+    jn_exibir()

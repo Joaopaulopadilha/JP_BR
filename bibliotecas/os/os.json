@@ -1,0 +1,9 @@
+{
+  "funcoes": [
+    {
+      "nome":    "os_info",
+      "retorno": "texto",
+      "params":  []
+    }
+  ]
+}

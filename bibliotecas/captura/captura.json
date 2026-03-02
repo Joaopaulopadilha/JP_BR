@@ -1,0 +1,10 @@
+{
+  "funcoes": [
+    {
+      "nome":     "cap_capturar",
+      "retorno":  "nulo",
+      "params":   ["texto", "inteiro", "inteiro", "inteiro", "inteiro"]
+    }
+  ],
+  "libs": ["gdiplus", "gdi32", "ole32"]
+}

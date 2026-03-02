@@ -1,0 +1,21 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "txt_upper",          "retorno": "texto",   "params": ["texto"] },
+        { "nome": "txt_lower",          "retorno": "texto",   "params": ["texto"] },
+        { "nome": "txt_tamanho",        "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "txt_contem",         "retorno": "bool",    "params": ["texto", "texto"] },
+        { "nome": "txt_trim",           "retorno": "texto",   "params": ["texto"] },
+        { "nome": "txt_substituir",     "retorno": "texto",   "params": ["texto", "texto", "texto"] },
+        { "nome": "txt_repetir",        "retorno": "texto",   "params": ["texto", "inteiro"] },
+        { "nome": "txt_inverter",       "retorno": "texto",   "params": ["texto"] },
+        { "nome": "txt_substr",         "retorno": "texto",   "params": ["texto", "inteiro", "inteiro"] },
+        { "nome": "txt_comeca_com",     "retorno": "bool",    "params": ["texto", "texto"] },
+        { "nome": "txt_termina_com",    "retorno": "bool",    "params": ["texto", "texto"] },
+        { "nome": "txt_posicao",        "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "txt_char",           "retorno": "texto",   "params": ["texto", "inteiro"] },
+        { "nome": "txt_contar",         "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "txt_dividir",        "retorno": "texto",   "params": ["texto", "texto", "inteiro"] },
+        { "nome": "txt_dividir_contar", "retorno": "inteiro", "params": ["texto", "texto"] }
+    ]
+}

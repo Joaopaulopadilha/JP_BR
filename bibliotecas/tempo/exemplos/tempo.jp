@@ -1,0 +1,4 @@
+nativo "bibliotecas/tempo/tempo.jpd" importar tm_sleep
+
+saida("aguardando 3 segundos")
+tm_sleep(10000)

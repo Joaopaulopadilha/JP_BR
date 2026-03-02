@@ -4,3 +4,6 @@ debug/
 .vs/
 .vscode/
 *.user
+bibliotecas/opencv_jp
+bibliotecas/imgui
+gitpush.md

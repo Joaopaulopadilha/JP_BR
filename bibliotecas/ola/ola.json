@@ -1,0 +1,14 @@
+{
+    "funcoes": [
+        {
+            "nome": "ola_mundo",
+            "retorno": "inteiro",
+            "params": []
+        },
+        {
+            "nome": "ola_nome",
+            "retorno": "inteiro",
+            "params": ["texto"]
+        }
+    ]
+}

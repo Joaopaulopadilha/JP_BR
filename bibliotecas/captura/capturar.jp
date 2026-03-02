@@ -1,0 +1,6 @@
+importar captura
+
+se cap_capturar("src/captura.png", 350, 350, 400, 400) == 0:
+    saida("Captura salva com sucesso!")
+senao:
+    saida("Erro ao capturar a tela.")

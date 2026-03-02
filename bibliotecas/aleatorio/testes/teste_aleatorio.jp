@@ -1,0 +1,54 @@
+# teste_aleatorio.jp
+# Teste completo de todas as funcoes da biblioteca aleatorio
+
+importar aleatorio
+saidal_verde("=== Teste Biblioteca Aleatorio ===")
+saida("")
+
+saidal_verde("al_numero(1, 100): ")
+n = al_numero(1, 100)
+saida(n)
+
+saidal_verde("al_decimal(0, 10): ")
+d = al_decimal(0, 10)
+saida(d)
+
+saidal_verde("al_letra(a, z): ")
+l = al_letra("a", "z")
+saida(l)
+
+saidal_verde("al_booleano(): ")
+b = al_booleano()
+saida(b)
+
+saidal_verde("al_indice(10): ")
+i = al_indice(10)
+saida(i)
+
+saidal_verde("al_texto(8): ")
+t = al_texto(8)
+saida(t)
+
+saidal_verde("al_alfanumerico(10): ")
+a = al_alfanumerico(10)
+saida(a)
+
+saidal_verde("al_embaralhar(): ")
+el = al_embaralhar()
+saida(el)
+
+saidal_verde("al_chance(50): ")
+c = al_chance(50)
+saida(c)
+
+saidal_verde("al_dado(20): ")
+dd = al_dado(20)
+saida(dd)
+
+saidal_verde("al_semente(42): ")
+s = al_semente(42)
+saida(s)
+
+saida("")
+saidal_verde("=== Fim ===")
+saida("")

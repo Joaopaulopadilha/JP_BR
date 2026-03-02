@@ -1,0 +1,10 @@
+{
+  "funcoes": [
+    {
+      "nome":     "cap_capturar",
+      "retorno":  "nulo",
+      "params":   ["texto", "inteiro", "inteiro", "inteiro", "inteiro"]
+    }
+  ],
+  "libs": ["X11", "xcb", "Xau", "Xdmcp", "pthread", "dl"]
+}

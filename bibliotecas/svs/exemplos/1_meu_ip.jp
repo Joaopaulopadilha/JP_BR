@@ -1,0 +1,5 @@
+importar svs
+
+ip = svs_meu_ip()
+
+saida("meu ip local é: {ip}")
