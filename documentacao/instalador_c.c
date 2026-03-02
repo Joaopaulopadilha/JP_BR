@@ -91,17 +91,11 @@ void install_linux() {
         "if [ -n \"$SUB\" ]; then cp -r \"$SUB\"* /usr/local/share/jp/; "
         "else cp -r /tmp/jp_install_temp/* /usr/local/share/jp/; fi");
 
-    /* Permissoes */
+    /* Permissoes - apenas o interpretador/compilador principal */
     if (access("/usr/local/share/jp/jp.elf", F_OK) == 0) {
         run("chmod +x /usr/local/share/jp/jp.elf");
     } else {
         run("chmod +x /usr/local/share/jp/jp");
-    }
-
-    if (access("/usr/local/share/jp/jp.elf", F_OK) == 0) {
-        run("chmod +x /usr/local/share/jp/compilador/linux/tcc.elf");
-    } else {
-        run("chmod +x /usr/local/share/jp/compilador/linux/tcc");
     }
 
     /* Script Desinstalacao */
@@ -253,7 +247,7 @@ int main() {
         #else
             // No Linux, ainda e melhor pedir sudo explicitamente no terminal
             fprintf(stderr, "Este instalador precisa ser executado como root.\n");
-            fprintf(stderr, "Execute: sudo ./instalador\n");
+            fprintf(stderr, "Execute: sudo ./instalador_jp_linux\n");
             return 1;
         #endif
     }

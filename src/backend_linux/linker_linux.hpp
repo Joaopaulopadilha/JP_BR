@@ -72,7 +72,7 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
     std::string cmd = "LD_LIBRARY_PATH=\"" + ld_dir + "\" ";
 
     // Comando do linker
-    cmd += ld_exe;
+    cmd += "\"" + ld_exe + "\"";
     cmd += " -m elf_x86_64 --hash-style=gnu";
 
     if (has_dynamic) {
@@ -82,28 +82,28 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
         // ================================================================
         cmd += " -z relro";
         cmd += " --dynamic-linker /lib64/ld-linux-x86-64.so.2";
-        cmd += " -o " + exe_path;
+        cmd += " -o \"" + exe_path + "\"";
 
         // CRT startup dinâmico
         std::string crt1 = ld_dir + "/crt1_dyn.o";
         std::string crti = ld_dir + "/crti_dyn.o";
-        cmd += " " + (fs::exists(crt1) ? crt1 : ld_dir + "/crt1.o");
-        cmd += " " + (fs::exists(crti) ? crti : ld_dir + "/crti.o");
+        cmd += " \"" + (fs::exists(crt1) ? crt1 : ld_dir + "/crt1.o") + "\"";
+        cmd += " \"" + (fs::exists(crti) ? crti : ld_dir + "/crti.o") + "\"";
         std::string crtbeginS = ld_dir + "/crtbeginS.o";
         if (fs::exists(crtbeginS)) {
-            cmd += " " + crtbeginS;
+            cmd += " \"" + crtbeginS + "\"";
         }
 
         // Search path para libs — ld_linker/ primeiro
-        cmd += " -L" + ld_dir;
+        cmd += " -L\"" + ld_dir + "\"";
 
         // Objeto principal
-        cmd += " " + obj_path;
+        cmd += " \"" + obj_path + "\"";
 
         // Objetos extras (bibliotecas .o estáticas)
         for (auto& obj : extra_objs) {
             if (fs::exists(obj)) {
-                cmd += " " + obj;
+                cmd += " \"" + obj + "\"";
             }
         }
 
@@ -112,14 +112,14 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
         // encontre a dll em bibliotecas/<nome>/lib<nome>.jpd relativo ao CWD
         for (auto& dll : extra_dlls) {
             if (fs::exists(dll)) {
-                cmd += " " + dll;
+                cmd += " \"" + dll + "\"";
             } else {
                 std::cerr << "Aviso: Biblioteca dinâmica não encontrada: " << dll << std::endl;
             }
         }
 
         // libstdc++ estático (evita dependência de .so em runtime)
-        cmd += " " + ld_dir + "/libstdc++.a";
+        cmd += " \"" + ld_dir + "/libstdc++.a\"";
         cmd += " -lm";
 
         // Libs extras declaradas nos JSONs
@@ -132,36 +132,36 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
         // CRT finalization dinâmico
         std::string crtend = ld_dir + "/crtend_dyn.o";
         if (fs::exists(crtend)) {
-            cmd += " " + crtend;
+            cmd += " \"" + crtend + "\"";
         } else {
             std::string crtendS = ld_dir + "/crtendS.o";
-            cmd += " " + (fs::exists(crtendS) ? crtendS : ld_dir + "/crtend.o");
+            cmd += " \"" + (fs::exists(crtendS) ? crtendS : ld_dir + "/crtend.o") + "\"";
         }
         std::string crtn = ld_dir + "/crtn_dyn.o";
-        cmd += " " + (fs::exists(crtn) ? crtn : ld_dir + "/crtn.o");
+        cmd += " \"" + (fs::exists(crtn) ? crtn : ld_dir + "/crtn.o") + "\"";
 
     } else {
         // ================================================================
         // LINKAGEM ESTÁTICA (como antes)
         // ================================================================
         cmd += " -static -z relro";
-        cmd += " -o " + exe_path;
+        cmd += " -o \"" + exe_path + "\"";
 
         // CRT startup estático
-        cmd += " " + ld_dir + "/crt1.o";
-        cmd += " " + ld_dir + "/crti.o";
-        cmd += " " + ld_dir + "/crtbeginT.o";
+        cmd += " \"" + ld_dir + "/crt1.o\"";
+        cmd += " \"" + ld_dir + "/crti.o\"";
+        cmd += " \"" + ld_dir + "/crtbeginT.o\"";
 
         // Search path
-        cmd += " -L" + ld_dir;
+        cmd += " -L\"" + ld_dir + "\"";
 
         // Objeto principal
-        cmd += " " + obj_path;
+        cmd += " \"" + obj_path + "\"";
 
         // Objetos extras
         for (auto& obj : extra_objs) {
             if (fs::exists(obj)) {
-                cmd += " " + obj;
+                cmd += " \"" + obj + "\"";
             }
         }
 
@@ -176,8 +176,8 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
         cmd += " --start-group -lgcc -lgcc_eh -lc --end-group";
 
         // CRT finalization estático
-        cmd += " " + ld_dir + "/crtend.o";
-        cmd += " " + ld_dir + "/crtn.o";
+        cmd += " \"" + ld_dir + "/crtend.o\"";
+        cmd += " \"" + ld_dir + "/crtn.o\"";
     }
 
     int ret = std::system(cmd.c_str());

@@ -114,25 +114,25 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
     std::string norm_exe = normalize_path(exe_path);
 
     // Montar comando replicando a ordem exata do g++ -static
-    std::string cmd = ld_exe;
+    std::string cmd = "\"" + ld_exe + "\"";
     cmd += " -m i386pep -Bstatic";
-    cmd += " -o " + norm_exe;
+    cmd += " -o \"" + norm_exe + "\"";
 
     // CRT startup objects
-    cmd += " " + ld_dir + "\\crt2.o";
-    cmd += " " + ld_dir + "\\crtbegin.o";
+    cmd += " \"" + ld_dir + "\\crt2.o\"";
+    cmd += " \"" + ld_dir + "\\crtbegin.o\"";
 
     // Objeto principal do programa
-    cmd += " " + norm_obj;
+    cmd += " \"" + norm_obj + "\"";
 
     // Objetos extras (bibliotecas .obj compiladas, ex: aleatorio.obj)
     for (auto& obj : extra_objs) {
         if (fs::exists(obj)) {
-            cmd += " " + normalize_path(obj);
+            cmd += " \"" + normalize_path(obj) + "\"";
         }
     }
 
-    cmd += " -L " + ld_dir;
+    cmd += " -L \"" + ld_dir + "\"";
 
     // Libs na ordem exata do g++ (primeiro bloco)
     cmd += " -lstdc++ -lmingw32 -lgcc -lgcc_eh -lmingwex -lmsvcrt";
@@ -140,7 +140,7 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
 
     // Caminhos extras de busca de libs (-L)
     for (auto& lpath : extra_lib_paths) {
-        cmd += " -L " + normalize_path(lpath);
+        cmd += " -L \"" + normalize_path(lpath) + "\"";
     }
 
     // Libs extras declaradas nos JSONs das bibliotecas nativas
@@ -151,7 +151,7 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
     // DLLs .jpd — o ld do MinGW aceita DLLs diretamente como input
     for (auto& dll : extra_dlls) {
         if (fs::exists(dll)) {
-            cmd += " " + normalize_path(dll);
+            cmd += " \"" + normalize_path(dll) + "\"";
         } else {
             std::cerr << "Aviso: DLL não encontrada: " << dll << std::endl;
         }
@@ -161,12 +161,12 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
     cmd += " -lmingw32 -lgcc -lgcc_eh -lmingwex -lmsvcrt -lkernel32";
 
     // CRT finalization objects
-    cmd += " " + ld_dir + "\\default-manifest.o";
-    cmd += " " + ld_dir + "\\crtend.o";
+    cmd += " \"" + ld_dir + "\\default-manifest.o\"";
+    cmd += " \"" + ld_dir + "\\crtend.o\"";
 
     cmd += " -e main";
 
-    int ret = std::system(cmd.c_str());
+    int ret = std::system(("\"" + cmd + "\"").c_str());
 
     if (ret != 0) {
         std::cerr << "Erro: Linkagem falhou (código " << ret << ")" << std::endl;
