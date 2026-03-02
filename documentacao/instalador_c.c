@@ -1,3 +1,5 @@
+/* instalador_c.c */
+/* Instalador da linguagem JP - Baixa a ultima tag do GitHub e instala no sistema */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,8 +19,9 @@
     #define PATH_SEP "/"
 #endif
 
-/* URL da API do GitHub */
-#define GITHUB_API_URL "https://api.github.com/repos/Joaopaulopadilha/JP_BR/releases/latest"
+/* URL da API do GitHub - Usa endpoint de tags ao inves de releases */
+#define GITHUB_TAGS_URL "https://api.github.com/repos/Joaopaulopadilha/JP_BR/tags"
+#define GITHUB_ZIP_BASE "https://github.com/Joaopaulopadilha/JP_BR/archive/refs/tags/"
 
 void run(const char *cmd) {
     printf(">> %s\n", cmd);
@@ -61,12 +64,15 @@ void elevate_windows() {
 }
 
 void install_linux() {
-    printf("--- Buscando atualizacao no GitHub (Linux) ---\n");
+    printf("--- Buscando ultima tag no GitHub (Linux) ---\n");
 
-    char download_cmd[512];
-    sprintf(download_cmd, 
-        "curl -s %s | grep \"browser_download_url\" | grep \".zip\" | cut -d '\"' -f 4 | xargs curl -L -o /tmp/jp_latest.zip", 
-        GITHUB_API_URL);
+    /* Pega o nome da ultima tag via API e baixa o zipball correspondente */
+    char download_cmd[1024];
+    sprintf(download_cmd,
+        "TAG=$(curl -s %s | grep '\"name\"' | head -1 | cut -d '\"' -f 4) && "
+        "echo \"Ultima tag: $TAG\" && "
+        "curl -L -o /tmp/jp_latest.zip \"%s${TAG}.zip\"",
+        GITHUB_TAGS_URL, GITHUB_ZIP_BASE);
     run(download_cmd);
 
     printf("--- Instalando ---\n");
@@ -79,9 +85,11 @@ void install_linux() {
     /* Limpeza Versao Anterior */
     run("rm -rf /usr/local/share/jp");
 
-    /* Instalação */
+    /* Instalação - entra na subpasta criada pelo GitHub (ex: JP_BR-3.0/) */
     run("mkdir -p /usr/local/share/jp");
-    run("cp -r /tmp/jp_install_temp/*/* /usr/local/share/jp/ 2>/dev/null || cp -r /tmp/jp_install_temp/* /usr/local/share/jp/");
+    run("SUB=$(ls -d /tmp/jp_install_temp/*/ 2>/dev/null | head -1) && "
+        "if [ -n \"$SUB\" ]; then cp -r \"$SUB\"* /usr/local/share/jp/; "
+        "else cp -r /tmp/jp_install_temp/* /usr/local/share/jp/; fi");
 
     /* Permissoes */
     if (access("/usr/local/share/jp/jp.elf", F_OK) == 0) {
@@ -138,12 +146,19 @@ void install_linux() {
 }
 
 void install_windows() {
-    printf("--- Buscando atualizacao no GitHub (Windows) ---\n");
+    printf("--- Buscando ultima tag no GitHub (Windows) ---\n");
 
-    /* Usa a pasta TEMP do Windows para baixar, evitando problemas de permissao na pasta atual */
+    /* Pega o nome da ultima tag via API e baixa o zip do codigo-fonte dessa tag */
     char ps_cmd[2048];
-    // Nota: Usamos $env:TEMP para garantir um local gravavel
-    sprintf(ps_cmd, "powershell -command \"$u=(Invoke-RestMethod %s).assets | Where-Object name -like '*.zip' | select -First 1 -ExpandProperty browser_download_url; Write-Host 'Baixando: ' $u; Invoke-WebRequest -Uri $u -OutFile $env:TEMP\\jp_latest.zip\"", GITHUB_API_URL);
+    sprintf(ps_cmd,
+        "powershell -command \""
+        "$tag = (Invoke-RestMethod '%s')[0].name; "
+        "Write-Host 'Ultima tag:' $tag; "
+        "$url = '%s' + $tag + '.zip'; "
+        "Write-Host 'Baixando:' $url; "
+        "Invoke-WebRequest -Uri $url -OutFile $env:TEMP\\jp_latest.zip"
+        "\"",
+        GITHUB_TAGS_URL, GITHUB_ZIP_BASE);
     run(ps_cmd);
 
     printf("--- Instalando ---\n");
@@ -165,9 +180,14 @@ void install_windows() {
 
     system("mkdir \"C:\\Program Files\\JP\" 2>nul");
 
-    // Copia do TEMP para Program Files
-    char copy_cmd[512];
-    sprintf(copy_cmd, "xcopy /E /Y \"%%TEMP%%\\jp_temp_install\\*\" \"C:\\Program Files\\JP\\\"");
+    // Copia do TEMP para Program Files (entra na subpasta criada pelo GitHub, ex: JP_BR-3.0)
+    char copy_cmd[1024];
+    sprintf(copy_cmd,
+        "powershell -command \""
+        "$sub = Get-ChildItem $env:TEMP\\jp_temp_install | Where-Object { $_.PSIsContainer } | Select-Object -First 1; "
+        "if ($sub) { xcopy /E /Y ($sub.FullName + '\\*') 'C:\\Program Files\\JP\\' } "
+        "else { xcopy /E /Y $env:TEMP\\jp_temp_install\\* 'C:\\Program Files\\JP\\' }"
+        "\"");
     run(copy_cmd);
 
     /* Script Desinstalacao INTELIGENTE (Pede Admin sozinho) */
@@ -201,20 +221,20 @@ void install_windows() {
             "\n"
             "set \"JP_HOME=C:\\Program Files\\JP\"\n"
             "\n"
-            "if \"%1\"==\"desinstalar\" (\n"
-            "    call \"%JP_HOME%\\desinstalar-jp.cmd\"\n"
+            "if \"%%1\"==\"desinstalar\" (\n"
+            "    call \"%%JP_HOME%%\\desinstalar-jp.cmd\"\n"
             "    exit /b\n"
             ")\n"
             "\n"
-            "set \"EXE=%JP_HOME%\\jp.exe\"\n"
+            "set \"EXE=%%JP_HOME%%\\jp.exe\"\n"
             "\n"
-            "if not exist \"%EXE%\" (\n"
-            "    echo Erro: jp.exe nao encontrado em %JP_HOME%\n"
+            "if not exist \"%%EXE%%\" (\n"
+            "    echo Erro: jp.exe nao encontrado em %%JP_HOME%%\n"
             "    exit /b 1\n"
             ")\n"
             "\n"
             "REM Apenas repassa todos os argumentos exatamente como digitados\n"
-            "\"%EXE%\" %*\n"
+            "\"%%EXE%%\" %%*\n"
         );
         fclose(launcher);
     }
