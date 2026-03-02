@@ -1,5 +1,0 @@
-# windows
-g++ -std=c++17 -Wall -Wextra -static -I. -o jp.exe src/main.cpp
-
-# linux
-g++ -std=c++17 -Wall -Wextra -static -I. -o jp src/main.cpp
