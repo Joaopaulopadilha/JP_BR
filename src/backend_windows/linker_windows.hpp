@@ -1,5 +1,5 @@
 // linker_windows.hpp
-// Linkagem Windows x64 — resolve caminhos do ld.exe embutido, monta comando COFF/PE, suporta DLLs .jpd
+// Linkagem Windows x64 resolve caminhos do ld.exe embutido, monta comando COFF/PE, suporta DLLs .jpd
 
 #ifndef JPLANG_LINKER_WINDOWS_HPP
 #define JPLANG_LINKER_WINDOWS_HPP
@@ -23,7 +23,7 @@ namespace fs = std::filesystem;
 
 namespace jplang {
 
-// Normaliza barras para o padrão do sistema
+// Normaliza barras para o padrao do sistema
 static std::string normalize_path(const std::string& path) {
     std::string result = path;
     #ifdef _WIN32
@@ -35,7 +35,7 @@ static std::string normalize_path(const std::string& path) {
 }
 
 // ============================================================================
-// CÓPIA DE DLLs .jpd PARA O DIRETÓRIO DO EXECUTÁVEL
+// COPIA DE DLLs .jpd PARA O DIRETORIO DO EXECUTAVEL
 // ============================================================================
 
 static void copy_dlls_to_exe_dir(const std::string& exe_path,
@@ -48,7 +48,7 @@ static void copy_dlls_to_exe_dir(const std::string& exe_path,
     for (auto& dll : dll_paths) {
         fs::path src(dll);
         if (!fs::exists(src)) {
-            std::cerr << "Aviso: DLL não encontrada para copiar: " << dll << std::endl;
+            std::cerr << "Aviso: DLL nao encontrada para copiar: " << dll << std::endl;
             continue;
         }
         fs::path dst = exe_dir / src.filename();
@@ -61,7 +61,7 @@ static void copy_dlls_to_exe_dir(const std::string& exe_path,
 }
 
 // ============================================================================
-// LINKAGEM: .obj → .exe via ld embutido (src/backend_windows/ld_linker/)
+// LINKAGEM: .obj -> .exe via ld embutido (src/backend_windows/ld_linker/)
 // ============================================================================
 
 static bool link_with_ld(const std::string& obj_path, const std::string& exe_path,
@@ -70,12 +70,12 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
                           const std::vector<std::string>& extra_lib_paths = {},
                           const std::vector<std::string>& extra_dlls = {}) {
 
-    // Procurar ld.exe relativo ao diretório atual
+    // Procurar ld.exe relativo ao diretorio atual
     std::string ld_dir = "src\\backend_windows\\ld_linker";
     std::string ld_exe = ld_dir + "\\ld.exe";
 
     if (!fs::exists(ld_exe)) {
-        // Tentar relativo ao executável do compilador
+        // Tentar relativo ao executavel do compilador
         #ifdef _WIN32
         char buf[MAX_PATH];
         GetModuleFileNameA(nullptr, buf, MAX_PATH);
@@ -86,7 +86,7 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
     }
 
     if (!fs::exists(ld_exe)) {
-        std::cerr << "Erro: ld.exe não encontrado em 'src/backend_windows/ld_linker/'" << std::endl;
+        std::cerr << "Erro: ld.exe nao encontrado em 'src/backend_windows/ld_linker/'" << std::endl;
         return false;
     }
 
@@ -128,16 +128,16 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
         cmd += " -l" + lib;
     }
 
-    // DLLs .jpd — o ld do MinGW aceita DLLs diretamente como input
+    // DLLs .jpd - o ld do MinGW aceita DLLs diretamente como input
     for (auto& dll : extra_dlls) {
         if (fs::exists(dll)) {
             cmd += " \"" + normalize_path(dll) + "\"";
         } else {
-            std::cerr << "Aviso: DLL não encontrada: " << dll << std::endl;
+            std::cerr << "Aviso: DLL nao encontrada: " << dll << std::endl;
         }
     }
 
-    // Segundo bloco (repetido para resolver dependências circulares)
+    // Segundo bloco (repetido para resolver dependencias circulares)
     cmd += " -lmingw32 -lgcc -lgcc_eh -lmingwex -lmsvcrt -lkernel32";
 
     // CRT finalization objects
@@ -146,17 +146,31 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
 
     cmd += " -e main";
 
-    // Prepend: adiciona ld_dir ao PATH para que o ld.exe encontre suas DLLs
-    std::string full_cmd = "set \"PATH=" + ld_dir + ";%PATH%\" && " + cmd;
+    // Adiciona ld_dir ao PATH para que o ld.exe encontre suas DLLs
+    // (libintl-8.dll, libwinpthread-1.dll, zlib1.dll, libzstd.dll)
+    #ifdef _WIN32
+    std::string old_path;
+    {
+        char* env_path = getenv("PATH");
+        if (env_path) old_path = env_path;
+        std::string new_path = ld_dir + ";" + old_path;
+        SetEnvironmentVariableA("PATH", new_path.c_str());
+    }
+    #endif
 
-    int ret = std::system(("\"" + full_cmd + "\"").c_str());
+    int ret = std::system(("\"" + cmd + "\"").c_str());
+
+    #ifdef _WIN32
+    // Restaurar PATH original
+    SetEnvironmentVariableA("PATH", old_path.c_str());
+    #endif
 
     if (ret != 0) {
-        std::cerr << "Erro: Linkagem falhou (código " << ret << ")" << std::endl;
+        std::cerr << "Erro: Linkagem falhou (codigo " << ret << ")" << std::endl;
         return false;
     }
 
-    // Copiar DLLs .jpd para o diretório do executável
+    // Copiar DLLs .jpd para o diretorio do executavel
     copy_dlls_to_exe_dir(exe_path, extra_dlls);
 
     return true;
@@ -165,4 +179,3 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
 } // namespace jplang
 
 #endif // JPLANG_LINKER_WINDOWS_HPP
-//comentario
