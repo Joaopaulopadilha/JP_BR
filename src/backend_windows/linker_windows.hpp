@@ -146,7 +146,10 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
 
     cmd += " -e main";
 
-    int ret = std::system(("\"" + cmd + "\"").c_str());
+    // Prepend: adiciona ld_dir ao PATH para que o ld.exe encontre suas DLLs
+    std::string full_cmd = "set \"PATH=" + ld_dir + ";%PATH%\" && " + cmd;
+
+    int ret = std::system(("\"" + full_cmd + "\"").c_str());
 
     if (ret != 0) {
         std::cerr << "Erro: Linkagem falhou (código " << ret << ")" << std::endl;
