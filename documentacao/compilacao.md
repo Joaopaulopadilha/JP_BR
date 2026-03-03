@@ -14,4 +14,4 @@ g++ -std=c++17 -Wall -Wextra -static -I. -o jp src/main.cpp
 gcc documentacao\instalador_c.c -o instalar_jp.exe
 
 # linux
-gcc install.c -o instalar_jp
+gcc documentacao/instalador_c.c -o instalador_jp_linux

@@ -17,21 +17,6 @@ namespace fs = std::filesystem;
 namespace jplang {
 
 // ============================================================================
-// HELPERS
-// ============================================================================
-
-// Retorna o diretório do executável do compilador
-static std::string get_exe_dir() {
-    char buf[PATH_MAX];
-    ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
-    if (len != -1) {
-        buf[len] = '\0';
-        return fs::path(buf).parent_path().string();
-    }
-    return ".";
-}
-
-// ============================================================================
 // LINKAGEM: .o → executável via ld embutido (src/backend_linux/ld_linker/)
 //
 // Suporta:
@@ -56,9 +41,14 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
 
     if (!fs::exists(ld_exe)) {
         // Tentar relativo ao executável do compilador
-        std::string exe_dir = get_exe_dir();
-        ld_dir = exe_dir + "/src/backend_linux/ld_linker";
-        ld_exe = ld_dir + "/ld";
+        char exe_buf[PATH_MAX];
+        ssize_t exe_len = readlink("/proc/self/exe", exe_buf, sizeof(exe_buf) - 1);
+        if (exe_len > 0) {
+            exe_buf[exe_len] = '\0';
+            std::string exe_dir = fs::path(exe_buf).parent_path().string();
+            ld_dir = exe_dir + "/src/backend_linux/ld_linker";
+            ld_exe = ld_dir + "/ld";
+        }
     }
 
     if (!fs::exists(ld_exe)) {
@@ -96,6 +86,12 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
 
         // Search path para libs — ld_linker/ primeiro
         cmd += " -L\"" + ld_dir + "\"";
+
+        // Diretórios extras de busca em runtime (-rpath)
+        for (auto& lpath : extra_lib_paths) {
+            cmd += " -rpath \"" + lpath + "\"";
+            cmd += " -L\"" + lpath + "\"";
+        }
 
         // Objeto principal
         cmd += " \"" + obj_path + "\"";
@@ -154,6 +150,11 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
 
         // Search path
         cmd += " -L\"" + ld_dir + "\"";
+
+        // Diretórios extras de busca de libs
+        for (auto& lpath : extra_lib_paths) {
+            cmd += " -L\"" + lpath + "\"";
+        }
 
         // Objeto principal
         cmd += " \"" + obj_path + "\"";

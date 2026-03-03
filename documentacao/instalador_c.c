@@ -91,12 +91,15 @@ void install_linux() {
         "if [ -n \"$SUB\" ]; then cp -r \"$SUB\"* /usr/local/share/jp/; "
         "else cp -r /tmp/jp_install_temp/* /usr/local/share/jp/; fi");
 
-    /* Permissoes - apenas o interpretador/compilador principal */
+    /* Permissoes - executavel principal */
     if (access("/usr/local/share/jp/jp.elf", F_OK) == 0) {
         run("chmod +x /usr/local/share/jp/jp.elf");
     } else {
         run("chmod +x /usr/local/share/jp/jp");
     }
+
+    /* Permissoes - linker embutido e demais binários auxiliares */
+    run("find /usr/local/share/jp/src -name 'ld' -type f -exec chmod +x {} +");
 
     /* Script Desinstalacao */
     FILE *uninstall = fopen("/usr/local/share/jp/desinstalar-jp.sh", "w");

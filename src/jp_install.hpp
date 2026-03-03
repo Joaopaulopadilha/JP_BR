@@ -280,7 +280,17 @@ static int install_lib(const std::string& lib_name, const std::string& exe_dir =
     }
 
     // Criar diretório e baixar
-    fs::create_directories(lib_path);
+    try {
+        fs::create_directories(lib_path);
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Erro: Sem permissão para criar '" << lib_path.string() << "'" << std::endl;
+        #ifndef _WIN32
+        std::cerr << "Execute: sudo jp instalar " << lib_name << std::endl;
+        #else
+        std::cerr << "Execute o terminal como Administrador." << std::endl;
+        #endif
+        return 1;
+    }
 
     if (!download_directory(lib_name, lib_path.string())) {
         std::cerr << "Erro ao baixar biblioteca." << std::endl;
@@ -307,7 +317,17 @@ static int uninstall_lib(const std::string& lib_name, const std::string& exe_dir
     }
 
     std::cout << "Desinstalando '" << lib_name << "'..." << std::endl;
-    fs::remove_all(lib_path);
+    try {
+        fs::remove_all(lib_path);
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Erro: Sem permissão para remover '" << lib_path.string() << "'" << std::endl;
+        #ifndef _WIN32
+        std::cerr << "Execute: sudo jp desinstalar " << lib_name << std::endl;
+        #else
+        std::cerr << "Execute o terminal como Administrador." << std::endl;
+        #endif
+        return 1;
+    }
     std::cout << "Biblioteca '" << lib_name << "' removida." << std::endl;
     return 0;
 }

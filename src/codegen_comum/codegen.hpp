@@ -57,7 +57,7 @@ enum class RuntimeType {
 
 struct FuncInfo {
     std::string name;
-    uint32_t symbol_index;
+    uint32_t symbol_index = 0;
     std::vector<std::string> params;
     std::vector<RuntimeType> param_types;
 };
