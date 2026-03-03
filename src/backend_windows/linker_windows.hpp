@@ -14,34 +14,14 @@
 namespace fs = std::filesystem;
 
 // ============================================================================
-// DECLARAÇÃO DIRETA WIN32 (evita incluir windows.h)
+// INCLUDE WINDOWS
 // ============================================================================
 
 #ifdef _WIN32
-extern "C" {
-    __declspec(dllimport) unsigned long __stdcall GetModuleFileNameA(void* hModule, char* lpFilename, unsigned long nSize);
-}
-#ifndef MAX_PATH
-#define MAX_PATH 260
-#endif
+    #include <windows.h>
 #endif
 
 namespace jplang {
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-// Retorna o diretório do executável do compilador
-static std::string get_exe_dir() {
-    #ifdef _WIN32
-    char buf[MAX_PATH];
-    GetModuleFileNameA(nullptr, buf, MAX_PATH);
-    return fs::path(buf).parent_path().string();
-    #else
-    return ".";
-    #endif
-}
 
 // Normaliza barras para o padrão do sistema
 static std::string normalize_path(const std::string& path) {

@@ -167,6 +167,12 @@ public:
     }
 
     // ======================================================================
+    // DIRETÓRIO DO EXECUTÁVEL (para resolver bibliotecas/)
+    // ======================================================================
+
+    void set_exe_dir(const std::string& dir) { exe_dir_ = dir; }
+
+    // ======================================================================
     // ACESSORES PARA LINKAGEM
     // ======================================================================
 
@@ -213,6 +219,7 @@ private:
     std::vector<std::string> extra_lib_paths_;
     std::vector<std::string> extra_dll_paths_;
     std::string base_dir_;
+    std::string exe_dir_;
     LangConfig lang_config_;
     std::unordered_map<std::string, std::string> var_instance_class_;
 

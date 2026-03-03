@@ -30,7 +30,15 @@ namespace jplang {
 #endif
 
 static const std::string REPO_BRANCH = "main";
-static const std::string LIB_DIR     = "bibliotecas";
+
+// Resolve diretório de bibliotecas: exe_dir/bibliotecas (se exe_dir fornecido)
+// Caso contrário, fallback para "bibliotecas" (relativo ao CWD)
+static std::string resolve_lib_dir(const std::string& exe_dir) {
+    if (!exe_dir.empty()) {
+        return exe_dir + "/bibliotecas";
+    }
+    return "bibliotecas";
+}
 
 // ============================================================================
 // HELPERS
@@ -240,13 +248,14 @@ static bool download_directory(const std::string& remote_path,
 // INSTALAR BIBLIOTECA
 // ============================================================================
 
-static int install_lib(const std::string& lib_name) {
+static int install_lib(const std::string& lib_name, const std::string& exe_dir = "") {
     if (!has_curl()) {
         std::cerr << "Erro: 'curl' não encontrado. Instale curl para usar este comando." << std::endl;
         return 1;
     }
 
-    fs::path lib_path = fs::path(LIB_DIR) / lib_name;
+    std::string lib_dir = resolve_lib_dir(exe_dir);
+    fs::path lib_path = fs::path(lib_dir) / lib_name;
 
     if (fs::exists(lib_path)) {
         std::cerr << "Biblioteca '" << lib_name << "' já está instalada." << std::endl;
@@ -288,8 +297,9 @@ static int install_lib(const std::string& lib_name) {
 // DESINSTALAR BIBLIOTECA
 // ============================================================================
 
-static int uninstall_lib(const std::string& lib_name) {
-    fs::path lib_path = fs::path(LIB_DIR) / lib_name;
+static int uninstall_lib(const std::string& lib_name, const std::string& exe_dir = "") {
+    std::string lib_dir = resolve_lib_dir(exe_dir);
+    fs::path lib_path = fs::path(lib_dir) / lib_name;
 
     if (!fs::exists(lib_path)) {
         std::cerr << "Biblioteca '" << lib_name << "' não está instalada." << std::endl;
@@ -306,15 +316,17 @@ static int uninstall_lib(const std::string& lib_name) {
 // LISTAR BIBLIOTECAS
 // ============================================================================
 
-static int list_libs(bool show_remote) {
+static int list_libs(bool show_remote, const std::string& exe_dir = "") {
+    std::string lib_dir = resolve_lib_dir(exe_dir);
+
     // Listar instaladas
     std::cout << "Bibliotecas instaladas:" << std::endl;
 
-    if (!fs::exists(LIB_DIR)) {
+    if (!fs::exists(lib_dir)) {
         std::cout << "  (nenhuma)" << std::endl;
     } else {
         bool found = false;
-        for (auto& entry : fs::directory_iterator(LIB_DIR)) {
+        for (auto& entry : fs::directory_iterator(lib_dir)) {
             if (entry.is_directory()) {
                 std::cout << "  " << entry.path().filename().string() << std::endl;
                 found = true;
@@ -339,7 +351,7 @@ static int list_libs(bool show_remote) {
         } else {
             for (auto& lib : libs) {
                 // Marcar se já instalada
-                fs::path lib_path = fs::path(LIB_DIR) / lib;
+                fs::path lib_path = fs::path(lib_dir) / lib;
                 std::string status = fs::exists(lib_path) ? " [instalada]" : "";
                 std::cout << "  " << lib << status << std::endl;
             }

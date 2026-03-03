@@ -28,7 +28,53 @@
 #include <filesystem>
 #include <cstdlib>
 
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <unistd.h>
+#endif
+
 namespace fs = std::filesystem;
+
+// ============================================================================
+// DIRETÓRIO DO EXECUTÁVEL
+// ============================================================================
+
+static std::string g_exe_dir;
+
+static std::string get_exe_dir(const char* argv0) {
+    // Tenta via /proc/self/exe (Linux) ou argv[0] absoluto (Windows)
+    #ifdef _WIN32
+    {
+        char buf[MAX_PATH];
+        DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
+        if (len > 0 && len < MAX_PATH) {
+            fs::path p(buf);
+            return p.parent_path().string();
+        }
+    }
+    #else
+    {
+        // Linux: /proc/self/exe
+        char buf[4096];
+        ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+        if (len > 0) {
+            buf[len] = '\0';
+            fs::path p(buf);
+            return p.parent_path().string();
+        }
+    }
+    #endif
+
+    // Fallback: usa argv[0]
+    fs::path p(argv0);
+    if (p.has_parent_path()) {
+        return fs::absolute(p.parent_path()).string();
+    }
+
+    // Último recurso: diretório atual
+    return fs::current_path().string();
+}
 
 // ============================================================================
 // LEITURA DE ARQUIVO
@@ -52,6 +98,7 @@ static std::string read_file(const std::string& path) {
 static bool compile_to_obj(const std::string& source,
                            const std::string& obj_path,
                            const std::string& base_dir,
+                           const std::string& exe_dir,
                            std::vector<std::string>& extra_objs,
                            std::vector<std::string>& extra_libs,
                            std::vector<std::string>& extra_lib_paths,
@@ -66,6 +113,7 @@ static bool compile_to_obj(const std::string& source,
     }
 
     jplang::Codegen codegen;
+    codegen.set_exe_dir(exe_dir);
     if (!codegen.compile(program.value(), obj_path, base_dir, parser.lang_config())) {
         std::cerr << "Erro na geração de código." << std::endl;
         return false;
@@ -100,7 +148,7 @@ static int mode_run(const std::string& input_path) {
     std::vector<std::string> extra_libs;
     std::vector<std::string> extra_lib_paths;
     std::vector<std::string> extra_dlls;
-    if (!compile_to_obj(source, obj_path.string(), base_dir,
+    if (!compile_to_obj(source, obj_path.string(), base_dir, g_exe_dir,
                         extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
         fs::remove_all(temp_dir);
         return 1;
@@ -144,7 +192,7 @@ static int mode_build(const std::string& input_path) {
     std::vector<std::string> extra_libs;
     std::vector<std::string> extra_lib_paths;
     std::vector<std::string> extra_dlls;
-    if (!compile_to_obj(source, obj_path.string(), base_dir,
+    if (!compile_to_obj(source, obj_path.string(), base_dir, g_exe_dir,
                         extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
         return 1;
     }
@@ -165,6 +213,8 @@ static int mode_build(const std::string& input_path) {
 // ============================================================================
 
 int main(int argc, char* argv[]) {
+    g_exe_dir = get_exe_dir(argv[0]);
+
     if (argc < 2) {
         std::cerr << "JPLang Compiler v1.0 (" << JP_PLATFORM << ")" << std::endl;
         std::cerr << std::endl;
@@ -196,7 +246,7 @@ int main(int argc, char* argv[]) {
             std::cerr << "Exemplo: jp instalar texto" << std::endl;
             return 1;
         }
-        return jplang::install_lib(argv[2]);
+        return jplang::install_lib(argv[2], g_exe_dir);
     }
 
     if (first_arg == "desinstalar") {
@@ -204,12 +254,12 @@ int main(int argc, char* argv[]) {
             std::cerr << "Erro: Esperado nome da biblioteca após 'desinstalar'" << std::endl;
             return 1;
         }
-        return jplang::uninstall_lib(argv[2]);
+        return jplang::uninstall_lib(argv[2], g_exe_dir);
     }
 
     if (first_arg == "listar") {
         bool show_remote = (argc >= 3 && std::string(argv[2]) == "--remoto");
-        return jplang::list_libs(show_remote);
+        return jplang::list_libs(show_remote, g_exe_dir);
     }
 
     return mode_run(first_arg);

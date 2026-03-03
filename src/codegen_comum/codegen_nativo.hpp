@@ -66,6 +66,19 @@ void emit_nativo(const NativoStmt& node) {
         }
     }
 
+    // Fallback: tentar relativo ao diretório do executável (exe_dir_)
+    {
+        std::ifstream test(json_path);
+        if (!test.is_open() && !exe_dir_.empty()) {
+            std::string try_json = exe_dir_ + "/" + json_path;
+            std::ifstream test2(try_json);
+            if (test2.is_open()) {
+                json_path = try_json;
+                lib_dir = exe_dir_ + "/" + lib_dir;
+            }
+        }
+    }
+
     // Ler JSON
     std::ifstream json_file(json_path);
     if (!json_file.is_open()) {
