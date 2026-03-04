@@ -1,0 +1,106 @@
+# teste_hdw.jp
+# Teste completo da biblioteca de hardware para JPLang
+
+importar hdw
+
+saidal_verde("========================================")
+saidal_verde("   Informacoes de Hardware - JPLang")
+saidal_verde("========================================")
+saida("")
+
+# --- Processador ---
+saidal_amarelo("--- PROCESSADOR ---")
+saida("")
+
+saidal_verde("CPU: ")
+v = hdw_cpu_nome()
+saida(v)
+
+saidal_verde("Nucleos/Threads: ")
+v = hdw_cpu_nucleos()
+saida(v)
+
+saidal_verde("Uso da CPU: ")
+v = hdw_cpu_uso()
+saidal(v)
+saida("%")
+
+saida("")
+
+# --- Memoria ---
+saidal_amarelo("--- MEMORIA ---")
+saida("")
+
+saidal_verde("Total: ")
+v = hdw_mem_total()
+saidal(v)
+saida(" MB")
+
+saidal_verde("Livre: ")
+v = hdw_mem_livre()
+saidal(v)
+saida(" MB")
+
+saidal_verde("Usada: ")
+v = hdw_mem_usada()
+saidal(v)
+saida(" MB")
+
+saidal_verde("Uso: ")
+v = hdw_mem_uso()
+saidal(v)
+saida("%")
+
+saida("")
+
+# --- Armazenamento ---
+saidal_amarelo("--- ARMAZENAMENTO ---")
+saida("")
+
+saidal_verde("Total: ")
+v = hdw_disco_total()
+saidal(v)
+saida(" MB")
+
+saidal_verde("Livre: ")
+v = hdw_disco_livre()
+saidal(v)
+saida(" MB")
+
+saidal_verde("Usado: ")
+v = hdw_disco_usado()
+saidal(v)
+saida(" MB")
+
+saidal_verde("Uso: ")
+v = hdw_disco_uso()
+saidal(v)
+saida("%")
+
+saida("")
+
+# --- Sistema ---
+saidal_amarelo("--- SISTEMA ---")
+saida("")
+
+saidal_verde("OS: ")
+v = hdw_os_nome()
+saida(v)
+
+saidal_verde("Hostname: ")
+v = hdw_hostname()
+saida(v)
+
+saidal_verde("Uptime: ")
+v = hdw_uptime_str()
+saida(v)
+
+saidal_verde("Uptime (segundos): ")
+v = hdw_uptime()
+saida(v)
+
+saida("")
+saidal_verde("========================================")
+saidal_verde("   Fim do teste")
+saidal_verde("========================================")
+saida("")

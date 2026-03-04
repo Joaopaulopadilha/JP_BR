@@ -1,0 +1,21 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "hdw_cpu_nome",     "retorno": "texto",   "params": [] },
+        { "nome": "hdw_cpu_nucleos",  "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_cpu_threads",  "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_cpu_uso",      "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_mem_total",    "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_mem_livre",    "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_mem_usada",    "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_mem_uso",      "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_disco_total",  "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_disco_livre",  "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_disco_usado",  "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_disco_uso",    "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_os_nome",      "retorno": "texto",   "params": [] },
+        { "nome": "hdw_hostname",     "retorno": "texto",   "params": [] },
+        { "nome": "hdw_uptime",       "retorno": "inteiro", "params": [] },
+        { "nome": "hdw_uptime_str",   "retorno": "texto",   "params": [] }
+    ]
+}

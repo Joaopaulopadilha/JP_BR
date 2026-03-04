@@ -1,0 +1,12 @@
+importar rota
+
+cidade_a = "Cascavel, Parana"
+cidade_b = "São Paulo, São Paulo"
+
+resultado = rota_calcular(cidade_a, cidade_b)
+
+se (resultado == 0):
+    saida("A distancia entre {cidade_a}, PR e {cidade_b} é: {rota_distancia()} km")
+    saida("o tempo de viajem é: {rota_tempo()} minutos")
+    horas = rota_tempo() / 60
+    saida("convertendo em horas: {horas} horas")

@@ -1,0 +1,24 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        {
+            "nome": "rota_calcular",
+            "retorno": "inteiro",
+            "params": ["texto", "texto"]
+        },
+        {
+            "nome": "rota_distancia",
+            "retorno": "inteiro",
+            "params": []
+        },
+        {
+            "nome": "rota_tempo",
+            "retorno": "inteiro",
+            "params": []
+        }
+    ],
+    "libs": {
+        "windows": ["winhttp"],
+        "linux": ["curl"]
+    }
+}
