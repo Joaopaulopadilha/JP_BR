@@ -1,0 +1,34 @@
+# teste_servidor.jp
+# Exemplo de servidor HTTP com callbacks
+
+importar servidor
+
+# Handler para requisições
+funcao on_request(metodo, caminho, corpo):
+    saida_azul("[{metodo}] {caminho}")
+    
+    se caminho == "/":
+        retorna "<html><body><h1>Bem vindo ao JPLang Server!</h1><p>Rotas disponiveis:</p><ul><li>/api/ola</li><li>/api/dados</li></ul></body></html>"
+    
+    ou_se caminho == "/api/ola":
+        retorna '{"mensagem": "Ola do JPLang!", "status": "ok"}'
+    
+    ou_se caminho == "/api/dados":
+        retorna '{"valor": 42, "lista": [1, 2, 3]}'
+    
+    senao:
+        retorna "<html><body><h1>404 - Pagina nao encontrada</h1></body></html>"
+
+# Registra o callback
+callback "request" on_request
+
+# Inicia o servidor
+saida_verde("Iniciando servidor na porta 8080...")
+servidor.iniciar(8080)
+
+saida("Servidor rodando! Acesse http://localhost:8080")
+saida("Pressione Ctrl+C para encerrar")
+
+# Loop de eventos - processa callbacks enquanto servidor ativo
+enquanto servidor.ativo():
+    __processar_eventos()

@@ -1,0 +1,16 @@
+x = 6
+y = 6
+
+
+
+se x > 5 e y > 5:
+    saida("teste 1 passou")
+
+se x > 5 ou y > 5:
+    saida("teste 2 passou")
+
+senao se x == 5 e y == 5:
+    saida("teste 3 passou")
+
+senao:
+    saida_amarelo("alguma condicao nao deu certo")

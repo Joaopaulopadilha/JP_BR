@@ -1,0 +1,30 @@
+
+x = 20
+y = 20
+massa = "joao"
+boleano ativo = verdadeiro
+
+se x > y:
+    saida("x é maior que y")
+ou_se x < y:
+    saida("x é menor que y")
+senao:
+    saida_verde("x é igual a y")
+
+idade = 17
+se idade >= 18:
+    saida("Maior de idade")
+    saida("Pode dirigir")
+senao:
+    saida("Menor de idade")
+    saida_vermelho("Não pode dirigir")
+
+se massa == "joao":
+    saida("acesso liberado")
+senao:
+    saida("nao permitido")
+
+se ativo == verdadeiro:
+    saida_amarelo("conteudo verdadeiro")
+senao:
+    saida("conteudo falso")

@@ -1,0 +1,16 @@
+classe Carro:
+    funcao criar(marca, modelo):
+        auto.marca = marca
+        auto.modelo = modelo
+        retorna auto
+    
+    funcao buzinar():
+        saida_verde("Beep beep! Sou um {auto.marca} {auto.modelo}")
+    
+    funcao info():
+        saida("Carro: {auto.marca} {auto.modelo}")
+
+saida("=== Teste de Classes ===")
+meu_carro = Carro.criar("Toyota", "Corolla")
+meu_carro.info()
+meu_carro.buzinar()

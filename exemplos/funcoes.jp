@@ -1,0 +1,34 @@
+funcao somar(a, b):
+    res = a + b
+    retorna res
+
+x = somar(10, 20)
+saida("Total: {x}")
+
+funcao saudar(nome):
+    saida("Ola {nome}!")
+
+saudar("João")
+
+funcao bom_dia():
+    saida("Bom dia!")
+
+bom_dia()
+
+funcao calcular_area(l, a):
+    area = l * a
+    saida("Calculando area...")
+    saida("Area = {area}")
+    retorna area
+
+calcular_area(3, 4)
+
+funcao fatorial(n):
+    r = 1    
+    para i em intervalo(1, n + 1):
+        r = r * i
+    
+    retorna r
+
+f = fatorial(5)
+saida("Fatorial de 5 = {f}")

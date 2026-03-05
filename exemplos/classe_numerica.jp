@@ -1,0 +1,27 @@
+# Arquivo: teste_numeros.jp
+# Descrição: Teste de classe com atributos numéricos
+
+classe Retangulo:
+    funcao criar(int largura, int altura):
+        auto.largura = largura
+        auto.altura = altura
+        retorna auto
+    
+    funcao area():
+        saida("Área: {auto.largura * auto.altura}")
+        retorna auto
+    
+    funcao perimetro():
+        saida("Perímetro: {(auto.largura + auto.altura) * 2}")
+        retorna auto
+    
+    funcao info():
+        saida_azul("Retângulo: {auto.largura}x{auto.altura}")
+        retorna auto
+
+saida_verde("=== Teste de Classe com Números ===")
+
+int meu_ret = Retangulo.criar(10, 5)
+meu_ret.info()
+meu_ret.area()
+meu_ret.perimetro()

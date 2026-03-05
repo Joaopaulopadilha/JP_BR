@@ -1,0 +1,77 @@
+# code_parser.jp
+# Extrai blocos de codigo, teste e flags da resposta do modelo Ollama
+
+importar texto
+
+funcao parser_extrair_bloco(resposta, marcador):
+    # Procura ```marcador\n ... ```
+    # Ex: marcador = "cpp" procura ```cpp
+    inicio = txt_posicao(resposta, "```" + marcador)
+    se inicio == -1:
+        retorna ""
+
+    # Pula o ```marcador e a quebra de linha
+    inicio = inicio + 3 + txt_tamanho(marcador)
+    # Pula a quebra de linha apos o marcador
+    proximo = txt_posicao(txt_substr(resposta, inicio, txt_tamanho(resposta) - inicio), "\n")
+    se proximo != -1:
+        inicio = inicio + proximo + 1
+
+    # Procura o ``` de fechamento
+    resto = txt_substr(resposta, inicio, txt_tamanho(resposta) - inicio)
+    fim = txt_posicao(resto, "```")
+    se fim == -1:
+        retorna ""
+
+    bloco = txt_substr(resposta, inicio, fim)
+    bloco = txt_trim(bloco)
+    retorna bloco
+
+
+funcao parser_extrair_codigo(resposta):
+    # Tenta extrair bloco com linguagem explicita
+    codigo = parser_extrair_bloco(resposta, "cpp")
+    se codigo != "":
+        retorna codigo
+
+    codigo = parser_extrair_bloco(resposta, "c")
+    se codigo != "":
+        retorna codigo
+
+    codigo = parser_extrair_bloco(resposta, "python")
+    se codigo != "":
+        retorna codigo
+
+    # Tenta bloco generico ```\n ... ```
+    codigo = parser_extrair_bloco(resposta, "\n")
+    retorna codigo
+
+
+funcao parser_extrair_linguagem(resposta):
+    se txt_posicao(resposta, "```cpp") != -1:
+        retorna "cpp"
+    se txt_posicao(resposta, "```c\n") != -1:
+        retorna "c"
+    se txt_posicao(resposta, "```python") != -1:
+        retorna "python"
+    retorna "cpp"
+
+
+funcao parser_extrair_teste(resposta):
+    retorna parser_extrair_bloco(resposta, "test")
+
+
+funcao parser_extrair_flags(resposta):
+    retorna parser_extrair_bloco(resposta, "flags")
+
+
+funcao parser_extrair_pensamento(resposta):
+    inicio = txt_posicao(resposta, "<think>")
+    se inicio == -1:
+        retorna ""
+    inicio = inicio + 7
+    resto = txt_substr(resposta, inicio, txt_tamanho(resposta) - inicio)
+    fim = txt_posicao(resto, "</think>")
+    se fim == -1:
+        retorna ""
+    retorna txt_trim(txt_substr(resposta, inicio, fim))

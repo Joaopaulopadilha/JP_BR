@@ -1,0 +1,31 @@
+# ollama_client.jp
+# Modulo de comunicacao com o Ollama via biblioteca jp_ollama
+
+importar "config.jp"
+importar jp_ollama
+
+funcao ollama_inicializar():
+    llm_config_modelo(config_modelo())
+    llm_config_temperatura(config_temperatura())
+    llm_config_timeout(config_timeout())
+    status = llm_iniciar()
+    se status == 1:
+        saida("Ollama iniciado com sucesso!")
+    senao se status == 2:
+        saida("Ollama ja estava rodando.")
+    senao:
+        saida("Erro ao iniciar Ollama: " + llm_erro())
+    retorna status
+
+funcao ollama_enviar(prompt):
+    resposta = llm_gerar(prompt)
+    se resposta == "":
+        erro = llm_erro()
+        se erro != "":
+            retorna "[ERRO] " + erro
+        retorna "[ERRO] Resposta vazia do Ollama."
+    retorna resposta
+
+funcao ollama_finalizar():
+    llm_encerrar()
+    saida("Ollama encerrado.")

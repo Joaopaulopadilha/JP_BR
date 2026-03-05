@@ -1,0 +1,8 @@
+
+
+enquanto verdadeiro:
+    nome = entrada("digite seu nome:")
+    saida(nome)
+    se nome == "sair":
+        parar
+

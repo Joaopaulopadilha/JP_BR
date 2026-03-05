@@ -1,0 +1,8 @@
+x = nulo
+saida(x)
+se x == nulo:
+    saida("x eh nulo")
+
+x = 42
+se x != nulo:
+    saida("x agora vale: " + x)

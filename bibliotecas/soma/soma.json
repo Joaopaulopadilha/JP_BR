@@ -1,0 +1,12 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "mat_somar", "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "mat_subtrair", "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "mat_multiplicar", "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "mat_dividir", "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
+        { "nome": "mat_nome", "retorno": "inteiro", "params": [] }
+    ],
+    "libs": [],
+    "libs_linux": []
+}

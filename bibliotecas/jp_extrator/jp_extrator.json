@@ -1,0 +1,14 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "ext_extrair",   "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "ext_json",      "retorno": "texto",   "params": [] },
+        { "nome": "ext_total",     "retorno": "inteiro", "params": [] },
+        { "nome": "ext_nome",      "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "ext_retorno",   "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "ext_params",    "retorno": "texto",   "params": ["inteiro"] },
+        { "nome": "ext_versao",    "retorno": "texto",   "params": [] }
+    ],
+    "libs": [],
+    "libs_linux": []
+}

@@ -1,0 +1,98 @@
+# executor.jp
+# Compila e executa codigo C/C++ em subprocess com captura de saida e erro
+
+importar arquivo
+importar cmd
+
+funcao executor_compilar_cpp(codigo, flags):
+    # Salva codigo num arquivo temporario
+    arq_tmp = arq_temp(".cpp")
+    arq_escrever(arq_tmp, codigo)
+
+    # Define saida do executavel
+    arq_bin = txt_substituir(arq_tmp, ".cpp", ".exe")
+
+    # Compila
+    se flags != "":
+        cmd_compilar_flags(arq_tmp, arq_bin, flags)
+    senao:
+        cmd_compilar_cpp(arq_tmp, arq_bin)
+
+    ret = cmd_retorno()
+    erro = cmd_stderr()
+
+    # Limpa fonte temporario
+    arq_apagar(arq_tmp)
+
+    se ret != 0:
+        retorna "ERRO_COMPILACAO:" + erro
+
+    retorna arq_bin
+
+
+funcao executor_rodar(arq_bin):
+    cmd_executar(arq_bin)
+    ret = cmd_retorno()
+    txt_saida = cmd_stdout()
+    erro = cmd_stderr()
+
+    # Limpa executavel temporario
+    arq_apagar(arq_bin)
+
+    se ret != 0:
+        retorna "ERRO_EXECUCAO:" + erro
+
+    retorna txt_saida
+
+
+funcao executor_compilar_e_rodar(codigo, flags):
+    resultado = executor_compilar_cpp(codigo, flags)
+
+    # Verifica se compilacao falhou
+    se txt_comeca_com(resultado, "ERRO_COMPILACAO:") == 1:
+        retorna resultado
+
+    # Compilou ok, executa
+    arq_bin = resultado
+    resultado = executor_rodar(arq_bin)
+    retorna resultado
+
+
+funcao executor_compilar_obj(codigo, flags):
+    # Compila como biblioteca estatica .obj
+    arq_tmp = arq_temp(".cpp")
+    arq_escrever(arq_tmp, codigo)
+
+    arq_obj = txt_substituir(arq_tmp, ".cpp", ".obj")
+
+    se flags != "":
+        cmd_compilar_flags(arq_tmp, arq_obj, "-c " + flags)
+    senao:
+        cmd_compilar_flags(arq_tmp, arq_obj, "-c")
+
+    ret = cmd_retorno()
+    erro = cmd_stderr()
+
+    arq_apagar(arq_tmp)
+
+    se ret != 0:
+        retorna "ERRO_COMPILACAO:" + erro
+
+    retorna arq_obj
+
+
+funcao executor_eh_erro(resultado):
+    se txt_comeca_com(resultado, "ERRO_COMPILACAO:") == 1:
+        retorna 1
+    se txt_comeca_com(resultado, "ERRO_EXECUCAO:") == 1:
+        retorna 1
+    retorna 0
+
+
+funcao executor_extrair_erro(resultado):
+    # Remove o prefixo ERRO_COMPILACAO: ou ERRO_EXECUCAO:
+    se txt_comeca_com(resultado, "ERRO_COMPILACAO:") == 1:
+        retorna txt_substr(resultado, 16, txt_tamanho(resultado) - 16)
+    se txt_comeca_com(resultado, "ERRO_EXECUCAO:") == 1:
+        retorna txt_substr(resultado, 14, txt_tamanho(resultado) - 14)
+    retorna resultado

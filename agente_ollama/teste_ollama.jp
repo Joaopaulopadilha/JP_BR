@@ -1,0 +1,9 @@
+importar jp_extrator
+
+codigo = "JP_EXPORT int64_t mat_somar(int64_t a, int64_t b) \{ return a + b; \}"
+total = ext_extrair(codigo)
+saida("Total: " + total)
+saida("JSON: " + ext_json())
+saida("Nome: " + ext_nome(0))
+saida("Retorno: " + ext_retorno(0))
+saida("Params: " + ext_params(0))

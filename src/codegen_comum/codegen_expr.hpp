@@ -28,6 +28,9 @@ void emit_expr(const Expr& expr) {
         else if constexpr (std::is_same_v<T, BoolLit>) {
             emit_mov_reg_imm32(reg::RAX, node.value ? 1 : 0);
         }
+        else if constexpr (std::is_same_v<T, NullLit>) {
+            emit_mov_reg_imm32(reg::RAX, 0);
+        }
         else if constexpr (std::is_same_v<T, VarExpr>) {
             RuntimeType type = RuntimeType::Unknown;
             auto it = var_types_.find(node.name);
@@ -358,10 +361,14 @@ void emit_binop_float(const BinOpExpr& node, RuntimeType lt, RuntimeType rt) {
 void emit_cmpop(const CmpOpExpr& node) {
     RuntimeType lt = infer_expr_type(*node.left);
     RuntimeType rt = infer_expr_type(*node.right);
+    bool is_null = (lt == RuntimeType::Null || rt == RuntimeType::Null);
     bool is_float = (lt == RuntimeType::Float || rt == RuntimeType::Float);
     bool is_string = (lt == RuntimeType::String || rt == RuntimeType::String);
 
-    if (is_string) {
+    if (is_null) {
+        // Comparação com nulo: sempre usa inteiro (nulo = 0)
+        emit_cmpop_int(node);
+    } else if (is_string) {
         emit_cmpop_string(node);
     } else if (is_float) {
         emit_cmpop_float(node);

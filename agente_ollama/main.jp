@@ -1,0 +1,41 @@
+# main.jp
+# Interface CLI do agente de codigo autonomo
+
+importar "lib_manager.jp"
+
+saida("==================================================")
+saida("  Agente de Codigo Autonomo - JPLang + Ollama")
+saida("==================================================")
+saida("Comandos:")
+saida("  Descreva uma tarefa para gerar codigo C++")
+saida("  Use 'biblioteca', 'lib' ou 'obj' para criar libs")
+saida("  sair - encerrar o agente")
+saida("")
+
+ollama_inicializar()
+saida("")
+
+enquanto verdadeiro:
+    tarefa = entrada(">>> ")
+
+    se tarefa == "sair":
+        parar
+
+    se tarefa == "":
+        nada = 1
+    senao:
+        se lib_eh_biblioteca(tarefa) == 1:
+            resultado = lib_executar_tarefa(tarefa)
+        senao:
+            resultado = retry_executar_tarefa(tarefa)
+
+        se resultado != "":
+            saida("")
+            saida("Tarefa concluida com sucesso!")
+        senao:
+            saida("")
+            saida("Nao foi possivel completar a tarefa.")
+
+        saida("")
+
+ollama_finalizar()

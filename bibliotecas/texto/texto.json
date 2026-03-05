@@ -16,6 +16,8 @@
         { "nome": "txt_char",           "retorno": "texto",   "params": ["texto", "inteiro"] },
         { "nome": "txt_contar",         "retorno": "inteiro", "params": ["texto", "texto"] },
         { "nome": "txt_dividir",        "retorno": "texto",   "params": ["texto", "texto", "inteiro"] },
-        { "nome": "txt_dividir_contar", "retorno": "inteiro", "params": ["texto", "texto"] }
+        { "nome": "txt_dividir_contar", "retorno": "inteiro", "params": ["texto", "texto"] },
+        { "nome": "txt_inicial",        "retorno": "texto",   "params": ["texto"] },
+        { "nome": "txt_inicial_nome",   "retorno": "texto",   "params": ["texto"] }
     ]
 }

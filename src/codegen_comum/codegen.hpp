@@ -48,6 +48,7 @@ enum class RuntimeType {
     Float,
     String,
     Bool,
+    Null,
     Unknown
 };
 
@@ -814,6 +815,7 @@ private:
             else if constexpr (std::is_same_v<T, StringLit>)    return RuntimeType::String;
             else if constexpr (std::is_same_v<T, StringInterp>) return RuntimeType::String;
             else if constexpr (std::is_same_v<T, BoolLit>)      return RuntimeType::Bool;
+            else if constexpr (std::is_same_v<T, NullLit>)      return RuntimeType::Null;
             else if constexpr (std::is_same_v<T, VarExpr>) {
                 auto it = var_types_.find(node.name);
                 return (it != var_types_.end()) ? it->second : RuntimeType::Unknown;

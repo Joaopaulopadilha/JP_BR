@@ -1,0 +1,49 @@
+importar mouse
+importar tempo
+
+saida_verde("====Testando mouse====")
+saida("")
+saida_azul("1")
+saida("obtendo posicao do mouse")
+texto x = mouse.posicaox()
+texto y = mouse.posicaoy()
+saida("posicão: {x}, {y}")
+
+tempo.dormir(2000)
+
+#mover relativamente
+mouse.relmover(100, 100)
+saida("relativo")
+texto x = mouse.posicaox()
+texto y = mouse.posicaoy()
+saida("moveu para: {x}, {y}")
+tempo.dormir(5000)
+
+#mover relativo com passo (x,y,pixel por vez, tempo ms)
+mouse.relmover_passo(100, 100, 1, 10)
+saida("relativo com passo")
+texto x = mouse.posicaox()
+texto y = mouse.posicaoy()
+saida("moveu para: {x}, {y}")
+tempo.dormir(5000)
+
+#mover absoluto
+mouse.absmover(100, 100)
+saida("absoluto")
+texto x = mouse.posicaox()
+texto y = mouse.posicaoy()
+saida("moveu para: {x}, {y}")
+tempo.dormir(5000)
+
+#mover absoluto com passo (x,y,pixel por vez, tempo ms)
+mouse.absmover_passo(600, 600, 1, 10)
+saida("absoluto com passo")
+texto x = mouse.posicaox()
+texto y = mouse.posicaoy()
+saida("moveu para: {x}, {y}")
+tempo.dormir(5000)
+
+enquanto verdadeiro:
+    texto x = mouse.posicaox()
+    texto y = mouse.posicaoy()
+    saida("moveu para: {x}, {y}")

@@ -1,0 +1,24 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "llm_iniciar",              "retorno": "inteiro", "params": [] },
+        { "nome": "llm_encerrar",             "retorno": "inteiro", "params": [] },
+        { "nome": "llm_config_host",          "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "llm_config_porta",         "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "llm_config_modelo",        "retorno": "inteiro", "params": ["texto"] },
+        { "nome": "llm_config_temperatura",   "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "llm_config_timeout",       "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "llm_status",               "retorno": "inteiro", "params": [] },
+        { "nome": "llm_gerar",                "retorno": "texto",   "params": ["texto"] },
+        { "nome": "llm_chat",                 "retorno": "texto",   "params": ["texto"] },
+        { "nome": "llm_listar",               "retorno": "texto",   "params": [] },
+        { "nome": "llm_get",                  "retorno": "texto",   "params": ["texto"] },
+        { "nome": "llm_post",                 "retorno": "texto",   "params": ["texto", "texto"] },
+        { "nome": "llm_post_texto",           "retorno": "texto",   "params": ["texto", "texto"] },
+        { "nome": "llm_json_campo",           "retorno": "texto",   "params": ["texto", "texto"] },
+        { "nome": "llm_erro",                 "retorno": "texto",   "params": [] },
+        { "nome": "llm_versao",               "retorno": "texto",   "params": [] }
+    ],
+    "libs": ["ws2_32"],
+    "libs_linux": []
+}

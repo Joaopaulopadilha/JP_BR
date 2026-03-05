@@ -1,0 +1,7 @@
+x = 5
+se x > 3 && x < 10:
+    saida("x esta entre 3 e 10")
+
+y = nulo
+se y == nulo || x == 5:
+    saida("y eh nulo ou x eh 5")

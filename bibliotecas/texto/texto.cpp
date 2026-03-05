@@ -3,7 +3,7 @@
 // Linkagem estática via .obj/.o — extern "C" puro
 //
 // Compilação:
-//   Windows: g++ -std=c++17 -c -O2 -o texto.obj texto.cpp
+//   Windows: g++ -std=c++17 -c -O2 -o bibliotecas/texto/texto.obj bibliotecas/texto/texto.cpp -static
 //   Linux:   g++ -std=c++17 -c -O2 -fPIC -o bibliotecas/texto/texto.o bibliotecas/texto/texto.cpp
 
 #include <string>
@@ -219,3 +219,72 @@ extern "C" int64_t txt_dividir_contar(const char* texto,
     }
     return static_cast<int64_t>(count);
 }
+
+extern "C" const char* txt_inicial(const char* texto) {
+    if (!texto || *texto == '\0') return retorna_str("");
+
+    std::string original(texto);
+    std::string resultado = "";
+
+    if (original.length() > 0) {
+        char c = original[0];
+        // Converte para maiúsculo se for letra minúscula
+        if (c >= 'a' && c <= 'z') {
+            resultado += static_cast<char>(toupper(static_cast<unsigned char>(c)));
+        } else {
+            resultado += c; // Já é maiúsculo ou não alfabético
+        }
+
+        // Adiciona o resto da string original (mantém minúsculo)
+        if (original.length() > 1) {
+            resultado.append(original.substr(1));
+        }
+    }
+
+    return retorna_str(resultado); // Copia para pool e retorna ponteiro
+}
+
+// ---------------------------------------------
+// NOVA FUNÇÃO: TXT_INICIAL_NOME
+// Formata nome em "Title Case" (Primeira letra de cada palavra Maiúscula)
+// Exemplo: txt_inicial_nome("joao paulo") -> "Joao Paulo"
+// ---------------------------------------------
+extern "C" const char* txt_inicial_nome(const char* texto)
+{
+    if (!texto || *texto == '\0') return retorna_str("");
+
+    std::string str(texto);
+    
+    // Lógica para capitalizar a primeira letra de cada nova palavra (nome ou frase)
+    for (size_t i = 0; i < str.length(); ++i) {
+        unsigned char c = static_cast<unsigned char>(str[i]);
+        
+        if (isalpha(c)) {
+            // Capitaliza se for o início da string OU se o anterior foi espaço/pontuação
+            bool e_inicio_palavra = (i == 0);
+            
+            // Verifica se o caractere ANTERIOR era um delimitador de palavra (espaço, tab, etc)
+            if (!e_inicio_palavra) {
+                // Atenção: str[i-1] é seguro porque i >= 1 no bloco !e_inicio_palavra
+                unsigned char anterior = static_cast<unsigned char>(str[i - 1]);
+                e_inicio_palavra = (isspace(anterior) || ispunct(anterior));
+            }
+
+            if (e_inicio_palavra) {
+                // Primeiro letra maiúscula
+                str[i] = toupper(c);
+            } else {
+                // Letras do meio da palavra ficam minúsculas (padrão de formatação de nomes)
+                str[i] = tolower(c);
+            }
+        }
+        // Se não for letra (espaço/pontuação), mantém como está no string original
+    }
+
+    return retorna_str(str);
+}
+
+
+// ---------------------------------------------------------------------------
+// FIM DAS FUNÇÕES EXPORTADAS
+// ---------------------------------------------------------------------------

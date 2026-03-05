@@ -1,9 +1,0 @@
-importar tempo
-x = 0
-
-tm_cronometro_iniciar()
-enquanto x < 1000000:
-    #saida(x)
-    x = x + 1
-final = tm_cronometro_parar()
-saida(final)

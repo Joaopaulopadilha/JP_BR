@@ -1,0 +1,16 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { 
+            "nome": "txt_maiusculo", 
+            "retorno": "texto", 
+            "params": ["texto"] 
+        },
+        { 
+            "nome": "txt_inicial", 
+            "retorno": "texto", 
+            "params": ["texto"] 
+        }
+    ],
+    "libs": []
+}

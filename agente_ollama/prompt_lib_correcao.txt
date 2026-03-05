@@ -1,0 +1,1 @@
+Voce e um programador C++ experiente. Corrija a biblioteca estatica (.obj) para JPLang. Responda APENAS com o codigo corrigido dentro de um bloco ```cpp```. Mantenha JP_EXPORT em todas as funcoes exportadas. NAO inclua funcao main(). NAO inclua codigo de teste.

@@ -1,0 +1,21 @@
+texto nome = "joao"
+inteiro idade = 18
+dec altura = 1.88
+saida("concaternar com chaves")
+saida("{nome}, tem {idade} anos, e {altura} de altura")
+saida_amarelo("=========================")
+numero = 18
+adicao = 10
+total = numero + adicao
+saida("soma de 18 e 10: ", total)
+saida_amarelo("=========================")
+saida("impressao apenas variavel")
+saida(total)
+saida_amarelo("=========================")
+saida("operações dentro de saida")
+saida(numero + adicao)
+saida(numero - adicao)
+saida(numero * adicao)
+saida(numero / adicao)
+op = numero / adicao
+saida(op)

@@ -1,0 +1,17 @@
+# config.jp
+# Configuracoes gerais do agente de codigo autonomo
+
+funcao config_modelo():
+    retorna "gemma3:12b"
+
+funcao config_temperatura():
+    retorna 20
+
+funcao config_timeout():
+    retorna 120
+
+funcao config_max_retries():
+    retorna 5
+
+funcao config_dir_saida():
+    retorna "outputs"

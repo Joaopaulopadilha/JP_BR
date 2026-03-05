@@ -1,0 +1,101 @@
+# retry_manager.jp
+# Loop de geracao, execucao e autocorrecao de codigo
+
+importar "ollama_client.jp"
+importar "code_parser.jp"
+importar "executor.jp"
+importar tempo
+
+funcao retry_salvar_codigo(codigo, tarefa):
+    arq_criar_dir("outputs")
+    arq_escrever("outputs/ultimo_codigo.cpp", codigo)
+    saida("Codigo salvo em: outputs/ultimo_codigo.cpp")
+
+
+funcao retry_montar_prompt(tarefa):
+    prompt = "Voce e um programador experiente em C++. "
+    prompt = prompt + "Responda APENAS com o codigo dentro de um bloco ```cpp```. "
+    prompt = prompt + "Sem explicacoes antes ou depois do codigo. "
+    prompt = prompt + "Se precisar de flags de compilacao extras, inclua um bloco ```flags``` com as flags separadas por espaco. "
+    prompt = prompt + "Tarefa: " + tarefa
+    retorna prompt
+
+
+funcao retry_montar_prompt_correcao(tarefa, codigo, erro, tentativa):
+    prompt = "Voce e um programador experiente em C++. "
+    prompt = prompt + "Corrija o codigo abaixo. "
+    prompt = prompt + "Responda APENAS com o codigo corrigido dentro de um bloco ```cpp```. "
+    prompt = prompt + "Sem explicacoes antes ou depois do codigo. "
+    prompt = prompt + "Tarefa original: " + tarefa + " "
+    prompt = prompt + "Tentativa " + tentativa + " falhou. "
+    prompt = prompt + "Codigo que deu erro: ```cpp " + codigo + " ``` "
+    prompt = prompt + "Erro: " + erro + " "
+    prompt = prompt + "Corrija o codigo."
+    retorna prompt
+
+
+funcao retry_executar_tarefa(tarefa):
+    max_tentativas = config_max_retries()
+    saida("")
+    saida("Tarefa: " + tarefa)
+    saida("Modelo: " + config_modelo())
+    saida("Max tentativas: " + max_tentativas)
+    saida("")
+
+    prompt = retry_montar_prompt(tarefa)
+    codigo = ""
+    ultimo_erro = ""
+    tentativa = 1
+
+    enquanto tentativa <= max_tentativas:
+        saida("--- Tentativa " + tentativa + "/" + max_tentativas + " ---")
+
+        # Gera ou corrige codigo
+        saida("Gerando codigo...")
+        resposta = ollama_enviar(prompt)
+
+        # Verifica erro do Ollama
+        se txt_comeca_com(resposta, "[ERRO]") == 1:
+            saida(resposta)
+            retorna ""
+
+        # Extrai pensamento se houver
+        pensamento = parser_extrair_pensamento(resposta)
+        se pensamento != "":
+            saida("Pensamento: " + pensamento)
+            saida("")
+
+        # Extrai codigo
+        codigo = parser_extrair_codigo(resposta)
+        flags = parser_extrair_flags(resposta)
+
+        se codigo == "":
+            saida("Modelo nao retornou codigo valido. Tentando novamente...")
+            prompt = retry_montar_prompt(tarefa)
+            tentativa = tentativa + 1
+        senao:
+            saida("Codigo extraido. Compilando e executando...")
+            se flags != "":
+                saida("Flags: " + flags)
+
+            # Compila e executa
+            resultado = executor_compilar_e_rodar(codigo, flags)
+
+            # Verifica se deu erro
+            se executor_eh_erro(resultado) == 1:
+                ultimo_erro = executor_extrair_erro(resultado)
+                saida("Erro: " + ultimo_erro)
+                saida("")
+
+                # Monta prompt de correcao para proxima tentativa
+                prompt = retry_montar_prompt_correcao(tarefa, codigo, ultimo_erro, tentativa)
+                tentativa = tentativa + 1
+            senao:
+                saida("Sucesso!")
+                saida("Saida: " + resultado)
+                retry_salvar_codigo(codigo, tarefa)
+                retorna resultado
+
+    saida("")
+    saida("Falhou apos " + max_tentativas + " tentativas.")
+    retorna ""

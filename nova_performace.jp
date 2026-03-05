@@ -1,0 +1,24 @@
+importar tempo
+tm_cronometro_iniciar()
+x = 0
+n = 2
+total = 0
+
+enquanto n < 1000000:
+    primo = verdadeiro
+    d = 2
+    enquanto d * d <= n:
+        se n % d == 0:
+            primo = falso
+            parar
+        d = d + 1
+    
+    se primo:
+        total = total + 1
+
+    n = n + 1
+
+
+saida("Total de primos: {total}")
+final = tm_cronometro_parar()
+saida(final)

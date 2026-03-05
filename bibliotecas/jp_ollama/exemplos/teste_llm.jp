@@ -1,0 +1,33 @@
+# teste_llm.jp
+# Exemplo minimo: inicia o Ollama, configura modelo e temperatura, gera uma resposta e encerra
+
+importar jp_ollama
+
+saida("=== Teste LLM ===")
+saida("")
+
+saida("Iniciando Ollama...")
+status = llm_iniciar()
+
+se status == 1:
+    saida("Ollama iniciado com sucesso!")
+senao se status == 2:
+    saida("Ollama ja estava rodando.")
+senao:
+    saida("Erro ao iniciar: " + llm_erro())
+
+saida("")
+llm_config_modelo("gemma3:12b")
+llm_config_temperatura(20)
+saida("Modelo: gemma3:12b | Temperatura: 0.20")
+
+saida("")
+saida("Gerando resposta...")
+resposta = llm_gerar("Diga ola em japones, apenas a palavra")
+saida("Resposta: " + resposta)
+saida("Erro: " + llm_erro())
+
+saida("")
+saida("Encerrando Ollama...")
+llm_encerrar()
+saida("Finalizado.")

@@ -1,0 +1,9 @@
+importar soma
+importar texto
+
+resultado = soma(3, 6)
+saida(resultado)
+nome = txt_upper("nome")
+saida(nome)
+inicial = txt_inicial_nome("joao paulo padilha")
+saida(inicial)

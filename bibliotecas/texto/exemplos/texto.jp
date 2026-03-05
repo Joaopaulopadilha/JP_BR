@@ -1,3 +1,0 @@
-nativo "bibliotecas/texto"
-out = txt_upper("texto minusculo")
-saida(out)

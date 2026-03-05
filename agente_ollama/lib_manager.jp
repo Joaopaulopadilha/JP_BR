@@ -1,0 +1,119 @@
+# lib_manager.jp
+# Gerenciador de criacao de bibliotecas nativas (.obj + .json) para JPLang
+
+importar "retry_manager.jp"
+importar jp_extrator
+
+funcao lib_eh_biblioteca(tarefa):
+    t = txt_lower(tarefa)
+    se txt_contem(t, "biblioteca") == 1:
+        retorna 1
+    se txt_contem(t, " lib ") == 1:
+        retorna 1
+    se txt_contem(t, ".obj") == 1:
+        retorna 1
+    se txt_contem(t, "nativa") == 1:
+        retorna 1
+    retorna 0
+
+
+funcao lib_montar_prompt(tarefa):
+    base = arq_ler("agente_ollama/prompt_lib.txt")
+    retorna base + tarefa
+
+
+funcao lib_montar_prompt_correcao(tarefa, codigo, erro, tentativa):
+    base = arq_ler("agente_ollama/prompt_lib_correcao.txt")
+    prompt = base + " "
+    prompt = prompt + "Tarefa original: " + tarefa + " "
+    prompt = prompt + "Tentativa " + tentativa + " falhou. "
+    prompt = prompt + "Codigo que deu erro: " + codigo + " "
+    prompt = prompt + "Erro: " + erro + " "
+    prompt = prompt + "Corrija o codigo."
+    retorna prompt
+
+
+funcao lib_executar_tarefa(tarefa):
+    max_tentativas = config_max_retries()
+    saida("")
+    saida("Tarefa (biblioteca): " + tarefa)
+    saida("Modelo: " + config_modelo())
+    saida("Max tentativas: " + max_tentativas)
+    saida("")
+
+    prompt = lib_montar_prompt(tarefa)
+    codigo = ""
+    tentativa = 1
+
+    enquanto tentativa <= max_tentativas:
+        saida("--- Tentativa " + tentativa + "/" + max_tentativas + " ---")
+
+        saida("Gerando codigo da biblioteca...")
+        resposta = ollama_enviar(prompt)
+
+        se txt_comeca_com(resposta, "[ERRO]") == 1:
+            saida(resposta)
+            retorna ""
+
+        pensamento = parser_extrair_pensamento(resposta)
+        se pensamento != "":
+            saida("Pensamento: " + pensamento)
+            saida("")
+
+        codigo = parser_extrair_codigo(resposta)
+        flags = parser_extrair_flags(resposta)
+
+        se codigo == "":
+            saida("Modelo nao retornou codigo valido. Tentando novamente...")
+            prompt = lib_montar_prompt(tarefa)
+            tentativa = tentativa + 1
+        senao:
+            saida("Codigo extraido. Compilando como .obj...")
+            se flags != "":
+                saida("Flags: " + flags)
+
+            resultado = executor_compilar_obj(codigo, flags)
+
+            se executor_eh_erro(resultado) == 1:
+                erro = executor_extrair_erro(resultado)
+                saida("Erro compilacao: " + erro)
+                saida("")
+                prompt = lib_montar_prompt_correcao(tarefa, codigo, erro, tentativa)
+                tentativa = tentativa + 1
+            senao:
+                saida("Compilacao OK!")
+                saida("")
+
+                # Extrai funcoes e gera JSON com a biblioteca nativa
+                total = ext_extrair(codigo)
+
+                se total > 0:
+                    arq_criar_dir("outputs")
+                    arq_escrever("outputs/ultima_lib.cpp", codigo)
+                    saida("Codigo salvo em: outputs/ultima_lib.cpp")
+
+                    arq_escrever("outputs/ultima_lib.json", ext_json())
+                    saida("JSON salvo em: outputs/ultima_lib.json")
+
+                    # Copia o .obj gerado para outputs/
+                    arq_copiar(resultado, "outputs/ultima_lib.obj")
+                    arq_apagar(resultado)
+                    saida("Objeto salvo em: outputs/ultima_lib.obj")
+
+                    saida("")
+                    saida("Funcoes detectadas (" + total + "):")
+                    fi = 0
+                    enquanto fi < total:
+                        saida("  " + ext_nome(fi) + "(" + ext_params(fi) + ") -> " + ext_retorno(fi))
+                        fi = fi + 1
+                senao:
+                    saida("Nenhuma funcao JP_EXPORT detectada.")
+                    arq_criar_dir("outputs")
+                    arq_escrever("outputs/ultima_lib.cpp", codigo)
+                    saida("Codigo salvo em: outputs/ultima_lib.cpp")
+
+                retorna "ok"
+
+    saida("")
+    saida("Falhou apos " + max_tentativas + " tentativas.")
+    retorna ""

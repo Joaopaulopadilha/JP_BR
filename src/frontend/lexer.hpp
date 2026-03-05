@@ -27,6 +27,7 @@ enum class TK {
     STRING_INTERP,      // string com interpolação (partes separadas)
     NUMBER,
     BOOL,
+    NULO,               // nulo (null)
 
     // Símbolos
     LPAREN,             // (
@@ -125,11 +126,10 @@ inline std::unordered_map<std::string, TK> default_keywords() {
     return {
         {"verdadeiro", TK::BOOL},
         {"falso",      TK::BOOL},
+        {"nulo",       TK::NULO},
         {"se",         TK::SE},
         {"ou_se",      TK::OU_SE},
         {"senao",      TK::SENAO},
-        {"e",          TK::AND},
-        {"ou",         TK::OR},
         {"repetir",    TK::REPETIR},
         {"enquanto",   TK::ENQUANTO},
         {"para",       TK::PARA},
@@ -154,6 +154,7 @@ inline TK tk_from_internal_name(const std::string& name) {
     static const std::unordered_map<std::string, TK> map = {
         {"TRUE",       TK::BOOL},
         {"FALSE",      TK::BOOL},
+        {"NULO",       TK::NULO},
         {"SE",         TK::SE},
         {"SENAO",      TK::SENAO},
         {"OU_SE",      TK::OU_SE},
@@ -206,6 +207,7 @@ struct LangConfig {
     // ex (PT): "verdadeiro" / "falso", (ES): "verdadero" / "falso", (EN): "true" / "false"
     std::string bool_true = "verdadeiro";
     std::string bool_false = "falso";
+    std::string null_keyword = "nulo";
 
     // Mapa de cor interna → Cor (para o parser)
     // ex: "YELLOW" → "amarelo", "RED" → "vermelho"
@@ -354,6 +356,7 @@ inline LangConfig load_lang_config(const std::string& lang_name, const std::stri
             // Capturar nomes de booleanos no idioma
             if (internal == "TRUE")  config.bool_true = word;
             if (internal == "FALSE") config.bool_false = word;
+            if (internal == "NULO")  config.null_keyword = word;
         }
     }
 
@@ -669,6 +672,25 @@ public:
                 return Token(TK::LE, "<=", line_);
             }
             return Token(TK::LT, "<", line_);
+        }
+
+        // Operadores lógicos simbólicos
+        if (c == '&') {
+            advance();
+            if (peek() == '&') {
+                advance();
+                return Token(TK::AND, "&&", line_);
+            }
+            return Token(TK::ERROR, "Esperado '&' apos '&'", line_);
+        }
+
+        if (c == '|') {
+            advance();
+            if (peek() == '|') {
+                advance();
+                return Token(TK::OR, "||", line_);
+            }
+            return Token(TK::ERROR, "Esperado '|' apos '|'", line_);
         }
 
         // String

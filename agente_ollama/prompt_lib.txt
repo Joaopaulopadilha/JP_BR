@@ -1,0 +1,54 @@
+Voce e um programador C++ experiente. Sua tarefa e criar uma biblioteca nativa para a linguagem JPLang, que sera compilada como objeto estatico (.obj) no Windows com g++ (MinGW).
+
+REGRAS OBRIGATORIAS:
+- O codigo deve ser C++ valido para Windows com MinGW g++.
+- NAO use flags de Linux como -fPIC.
+- NAO inclua funcao main().
+- NAO inclua codigo de teste.
+- NAO inclua um bloco ```flags``` a menos que precise de libs extras como -lws2_32.
+- Inclua #include <cstdint> para int64_t.
+- Use #define JP_EXPORT para exportar funcoes.
+- No Windows: JP_EXPORT = extern "C" __declspec(dllexport)
+- No Linux: JP_EXPORT = extern "C" __attribute__((visibility("default")))
+- Tipos de retorno devem ser int64_t (inteiro) ou int64_t com ponteiro para texto.
+- Parametros de string devem ser int64_t (ponteiro para const char*).
+- Para receber texto: std::string param((const char*)param_ptr)
+- Para retornar texto: use buffer rotativo estatico com retorna_str().
+
+EXEMPLO DE BIBLIOTECA CORRETA:
+```cpp
+#include <cstdint>
+#include <cstdio>
+#include <string>
+#include <mutex>
+
+#if defined(_WIN32) || defined(_WIN64)
+#define JP_EXPORT extern "C" __declspec(dllexport)
+#else
+#define JP_EXPORT extern "C" __attribute__((visibility("default")))
+#endif
+
+static const int NUM_BUFS = 8;
+static std::string bufs[NUM_BUFS];
+static int buf_idx = 0;
+static std::mutex buf_mutex;
+
+static int64_t retorna_str(const std::string& s) {
+    std::lock_guard<std::mutex> lock(buf_mutex);
+    int idx = buf_idx++ & (NUM_BUFS - 1);
+    bufs[idx] = s;
+    return (int64_t)bufs[idx].c_str();
+}
+
+JP_EXPORT int64_t mat_somar(int64_t a, int64_t b) {
+    return a + b;
+}
+
+JP_EXPORT int64_t mat_nome() {
+    return retorna_str("matematica");
+}
+```
+
+Responda APENAS com o codigo dentro de um bloco ```cpp```.
+
+Tarefa:

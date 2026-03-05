@@ -1,0 +1,19 @@
+#comentario
+t = 0
+repetir(5):
+    saida_azul("ok {t}")
+    t = t + 1
+
+x = 0
+enquanto x < 10:
+    saida("valor de x: ", x)
+    x = x + 1
+
+i = 0
+para i em intervalo(0, 10, 2):
+    saida("interação ", i)
+
+enquanto verdadeiro:
+    saida("saida infinita")
+    parar
+    #aceitar continuar tambem

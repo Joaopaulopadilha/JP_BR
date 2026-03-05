@@ -467,6 +467,12 @@ private:
             });
         }
 
+        // Nulo
+        if (tk.type == TK::NULO) {
+            do_advance();
+            return std::make_unique<Expr>(NullLit{tk.line});
+        }
+
         // Auto (self)
         if (tk.type == TK::AUTO) {
             do_advance();

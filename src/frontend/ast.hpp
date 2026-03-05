@@ -109,6 +109,10 @@ struct BoolLit {
     int line;
 };
 
+struct NullLit {
+    int line;
+};
+
 struct VarExpr {
     std::string name;
     int line;
@@ -186,6 +190,7 @@ struct Expr {
         StringLit,
         StringInterp,
         BoolLit,
+        NullLit,
         VarExpr,
         BinOpExpr,
         CmpOpExpr,

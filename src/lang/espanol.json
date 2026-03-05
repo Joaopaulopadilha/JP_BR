@@ -6,8 +6,6 @@
         "si": "SE",
         "sino": "SENAO",
         "o_si": "OU_SE",
-        "y": "AND",
-        "o": "OR",
         "bucle": "LOOP",
         "mientras": "ENQUANTO",
         "repetir": "REPETIR",
@@ -27,7 +25,8 @@
         "nativo": "NATIVO",
         "importar": "IMPORTAR",
         "de": "DE",
-        "como": "COMO"
+        "como": "COMO",
+        "nulo": "NULO"
     },
     "builtins": {
         "entrada": "entrada",
