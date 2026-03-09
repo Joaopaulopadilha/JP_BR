@@ -1,0 +1,80 @@
+importar sml3d
+
+janela = sm_window("Follow Camera", 800, 600)
+sm_background(janela, 30, 30, 50)
+
+cam = sm_camera(janela, 0, 5, 15, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 12)
+sm_camera_orbital_angles(cam, 0, 25)
+
+jogador = sm_cube(janela)
+sm_color(jogador, 50, 150, 255)
+sm_position(jogador, 0, 5, 0)
+sm_gravity(jogador, 1)
+
+plano = sm_plane(janela)
+sm_position(plano, 0, -0.5, 0)
+sm_scale(plano, 20, 1, 20)
+sm_color(plano, 60, 60, 60)
+sm_solid(plano, 1)
+
+obs1 = sm_cube(janela)
+sm_color(obs1, 255, 80, 50)
+sm_position(obs1, 3, 0, -2)
+sm_solid(obs1, 1)
+
+# Vincular câmera ao jogador
+sm_camera_follow(cam, jogador)
+
+vel = 5.0
+angH = 0.0
+angV = 25.0
+dist = 12.0
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    # Movimento relativo à câmera
+    frente = 0.0
+    lado = 0.0
+    se sm_key_pressed("w"):
+        frente = frente + vel * dt
+    se sm_key_pressed("s"):
+        frente = frente - vel * dt
+    se sm_key_pressed("a"):
+        lado = lado - vel * dt
+    se sm_key_pressed("d"):
+        lado = lado + vel * dt
+
+    se frente != 0.0:
+        sm_move_relative(jogador, cam, frente, 0)
+    se lado != 0.0:
+        sm_move_relative(jogador, cam, 0, lado)
+
+    # Pulo
+    se sm_key_pressed("space"):
+        se sm_on_ground(jogador):
+            sm_velocity(jogador, 0, 6, 0)
+
+    # Câmera orbital
+    dx = sm_mouse_dx()
+    dy = sm_mouse_dy()
+    scr = sm_mouse_scroll()
+
+    se sm_mouse_button(1):
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - scr
+    se dist < 3.0:
+        dist = 3.0
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+
+    # Atualizar follow (pra quando a física move o jogador)
+    sm_camera_follow_update(cam)
+
+    sm_physics_update(janela)
+    sm_display(janela)

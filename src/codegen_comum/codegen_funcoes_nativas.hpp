@@ -130,6 +130,7 @@ static const char* runtime_type_name(RuntimeType type) {
         case RuntimeType::Float:   return "decimal";
         case RuntimeType::String:  return "texto";
         case RuntimeType::Bool:    return "booleano";
+        case RuntimeType::Null:    return "nulo";
         case RuntimeType::Unknown: return "desconhecido";
     }
     return "desconhecido";

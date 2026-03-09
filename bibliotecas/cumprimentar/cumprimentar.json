@@ -1,0 +1,9 @@
+{
+    "tipo": "estatico",
+    "funcoes": [
+        { "nome": "cumpr_cumprimentar", "retorno": "texto", "params": ["texto"] },
+        { "nome": "cumpr_versao", "retorno": "texto", "params": [] }
+    ],
+    "libs": [],
+    "libs_linux": []
+}

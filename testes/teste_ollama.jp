@@ -1,0 +1,34 @@
+# Calculadora simples em sua linguagem
+
+funcao calcular(num1, num2, op):
+    se op == "+":
+        retorna num1 + num2
+    ou_se op == "-":
+        retorna num1 - num2
+    ou_se op == "*":
+        retorna num1 * num2
+    ou_se op == "/":
+        se num2 == 0:
+            saida_vermelho("Erro: divisão por zero")
+            retorna 0
+        retorna num1 / num2
+    ou_se op == "%":
+        retorna num1 % num2
+    senao:
+        saida_vermelho("Operador desconhecido")
+        retorna 0
+
+enquanto verdadeiro:
+    saida("Digite 'sair' para encerrar a calculadora")
+    op = entrada("Digite o operador (+, -, *, /, %) ou 'sair': ")
+
+    se op == "sair":
+        saida_verde("Encerrando a calculadora")
+        parar
+
+    num1 = int(entrada("Digite o primeiro número inteiro: "))
+    num2 = int(entrada("Digite o segundo número inteiro: "))
+
+    resultado = calcular(num1, num2, op)
+    saida("Resultado: {resultado}")
+    saida("=========================")

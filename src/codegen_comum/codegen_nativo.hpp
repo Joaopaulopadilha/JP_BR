@@ -187,6 +187,42 @@ void parse_lib_json(const std::string& json, const std::string& lib_dir = "") {
 
         func_return_types_[func_name] = ret_type;
 
+        // Parsear campo "params": ["inteiro", "decimal", ...]
+        size_t params_key = json.find("\"params\"", nome_key);
+        // Garantir que "params" pertence a esta função (antes do próximo "nome")
+        size_t next_nome = json.find("\"nome\"", ret_key + 9);
+        if (params_key != std::string::npos &&
+            (next_nome == std::string::npos || params_key < next_nome)) {
+
+            size_t bracket = json.find('[', params_key + 8);
+            if (bracket != std::string::npos) {
+                std::vector<RuntimeType> param_types;
+                size_t p = bracket + 1;
+                while (p < json.size()) {
+                    // Pular espaços e vírgulas
+                    while (p < json.size() && (json[p] == ' ' || json[p] == '\t' ||
+                           json[p] == '\n' || json[p] == '\r' || json[p] == ',')) {
+                        p++;
+                    }
+                    if (p >= json.size() || json[p] == ']') break;
+
+                    if (json[p] == '"') {
+                        p++;
+                        std::string type_str;
+                        while (p < json.size() && json[p] != '"') {
+                            type_str += json[p];
+                            p++;
+                        }
+                        if (p < json.size()) p++;
+                        param_types.push_back(parse_type_name(type_str));
+                    } else {
+                        p++;
+                    }
+                }
+                func_param_types_[func_name] = param_types;
+            }
+        }
+
         pos = ret_key + 9;
     }
 
@@ -206,10 +242,18 @@ void parse_lib_json(const std::string& json, const std::string& lib_dir = "") {
 // ======================================================================
 
 void parse_lib_json_libs(const std::string& json) {
-    size_t libs_key = json.find("\"libs\"");
+    // Seleciona o campo correto por plataforma
+    std::string field;
+    if constexpr (PlatformDefs::is_windows) {
+        field = "\"libs\"";
+    } else {
+        field = "\"libs_linux\"";
+    }
+
+    size_t libs_key = json.find(field);
     if (libs_key == std::string::npos) return;
 
-    size_t bracket = json.find('[', libs_key + 5);
+    size_t bracket = json.find('[', libs_key + field.size());
     if (bracket == std::string::npos) return;
 
     size_t pos = bracket + 1;
@@ -318,6 +362,7 @@ RuntimeType parse_type_name(const std::string& name) {
     if (name == "texto")    return RuntimeType::String;
     if (name == "inteiro")  return RuntimeType::Int;
     if (name == "float")    return RuntimeType::Float;
+    if (name == "decimal")  return RuntimeType::Float;
     if (name == "bool")     return RuntimeType::Bool;
     return RuntimeType::Unknown;
 }

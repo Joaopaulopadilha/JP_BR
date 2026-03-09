@@ -68,7 +68,8 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
                           const std::vector<std::string>& extra_objs = {},
                           const std::vector<std::string>& extra_libs = {},
                           const std::vector<std::string>& extra_lib_paths = {},
-                          const std::vector<std::string>& extra_dlls = {}) {
+                          const std::vector<std::string>& extra_dlls = {},
+                          bool windowed = false) {
 
     // Procurar ld.exe relativo ao diretorio atual
     std::string ld_dir = "src\\backend_windows\\ld_linker";
@@ -96,6 +97,12 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
     // Montar comando replicando a ordem exata do g++ -static
     std::string cmd = "\"" + ld_exe + "\"";
     cmd += " -m i386pep -Bstatic";
+
+    // Subsystem GUI (sem console)
+    if (windowed) {
+        cmd += " --subsystem windows";
+    }
+
     cmd += " -o \"" + norm_exe + "\"";
 
     // CRT startup objects

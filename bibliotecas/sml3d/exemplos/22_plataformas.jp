@@ -1,0 +1,257 @@
+# 22_plataformas.jp
+# Exemplo com caixas para subir — idle, walk, jump + plataformas
+
+importar sml3d
+
+janela = sm_window("Plataformas", 800, 600)
+sm_background(janela, 100, 150, 200)
+
+cam = sm_camera(janela, 0, 5, 10, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 8)
+sm_camera_orbital_angles(cam, 0, 20)
+
+# Hitbox invisivel (cubo) — controla fisica e posicao
+hitbox = sm_cube(janela)
+sm_scale(hitbox, 0.6, 1.8, 0.6)
+sm_position(hitbox, 0, 3, 0)
+sm_visible(hitbox, 0)
+sm_gravity(hitbox, 1)
+
+# Modelos visuais
+idle = sm_model(janela, "bibliotecas/sml3d/modelos/Idle.fbx")
+sm_scale(idle, 5, 5, 5)
+sm_color(idle, 220, 180, 150)
+
+walk = sm_model(janela, "bibliotecas/sml3d/modelos/Walking.fbx")
+sm_scale(walk, 5, 5, 5)
+sm_color(walk, 220, 180, 150)
+sm_visible(walk, 0)
+
+jump = sm_model(janela, "bibliotecas/sml3d/modelos/Jump.fbx")
+sm_scale(jump, 5, 5, 5)
+sm_color(jump, 220, 180, 150)
+sm_visible(jump, 0)
+
+run = sm_model(janela, "bibliotecas/sml3d/modelos/Fast Run.fbx")
+sm_scale(run, 5, 5, 5)
+sm_color(run, 220, 180, 150)
+sm_visible(run, 0)
+
+strafe_l = sm_model(janela, "bibliotecas/sml3d/modelos/Left Strafe Walking.fbx")
+sm_scale(strafe_l, 5, 5, 5)
+sm_color(strafe_l, 220, 180, 150)
+sm_visible(strafe_l, 0)
+
+strafe_r = sm_model(janela, "bibliotecas/sml3d/modelos/Right Strafe Walking.fbx")
+sm_scale(strafe_r, 5, 5, 5)
+sm_color(strafe_r, 220, 180, 150)
+sm_visible(strafe_r, 0)
+
+sm_anim_loop(jump, 0)
+
+# Offset Y visual (ajuste ate os pes tocarem o chao)
+offsetY = -0.9
+
+# Piso
+piso = sm_plane(janela)
+sm_position(piso, 0, 0, 0)
+sm_scale(piso, 40, 1, 40)
+sm_texture(piso, "bibliotecas/sml3d/imagens/textura_grama.png")
+sm_texture_tile(piso, 20, 20)
+sm_solid(piso, 1)
+
+# Escadaria de caixas
+cx1 = sm_cube(janela)
+sm_position(cx1, 3, 0.5, 0)
+sm_scale(cx1, 2, 1, 2)
+sm_color(cx1, 180, 120, 60)
+sm_solid(cx1, 1)
+
+cx2 = sm_cube(janela)
+sm_position(cx2, 6, 1.0, 0)
+sm_scale(cx2, 2, 2, 2)
+sm_color(cx2, 160, 100, 50)
+sm_solid(cx2, 1)
+
+cx3 = sm_cube(janela)
+sm_position(cx3, 9, 1.5, 0)
+sm_scale(cx3, 2, 3, 2)
+sm_color(cx3, 140, 85, 40)
+sm_solid(cx3, 1)
+
+# Plataforma no topo
+plat = sm_cube(janela)
+sm_position(plat, 12, 2.0, 0)
+sm_scale(plat, 4, 4, 4)
+sm_color(plat, 120, 70, 35)
+sm_solid(plat, 1)
+
+# Caixas espalhadas
+cx4 = sm_cube(janela)
+sm_position(cx4, -3, 0.5, -3)
+sm_scale(cx4, 2, 1, 2)
+sm_color(cx4, 100, 160, 100)
+sm_solid(cx4, 1)
+
+cx5 = sm_cube(janela)
+sm_position(cx5, -3, 1.5, -3)
+sm_scale(cx5, 1.5, 1, 1.5)
+sm_color(cx5, 80, 140, 80)
+sm_solid(cx5, 1)
+
+# Torre
+t1 = sm_cube(janela)
+sm_position(t1, -6, 0.5, 4)
+sm_scale(t1, 2, 1, 2)
+sm_color(t1, 100, 100, 180)
+sm_solid(t1, 1)
+
+t2 = sm_cube(janela)
+sm_position(t2, -6, 1.5, 4)
+sm_scale(t2, 2, 1, 2)
+sm_color(t2, 90, 90, 170)
+sm_solid(t2, 1)
+
+t3 = sm_cube(janela)
+sm_position(t3, -6, 2.5, 4)
+sm_scale(t3, 2, 1, 2)
+sm_color(t3, 80, 80, 160)
+sm_solid(t3, 1)
+
+t4 = sm_cube(janela)
+sm_position(t4, -6, 3.5, 4)
+sm_scale(t4, 2, 1, 2)
+sm_color(t4, 70, 70, 150)
+sm_solid(t4, 1)
+
+# Ponte entre torre e plataforma
+ponte = sm_cube(janela)
+sm_position(ponte, 3, 3.5, 4)
+sm_scale(ponte, 16, 0.3, 2)
+sm_color(ponte, 200, 180, 140)
+sm_solid(ponte, 1)
+
+sm_camera_follow(cam, hitbox)
+sm_mouse_grab(janela, 1)
+sm_mouse_grab_toggle(janela, "escape")
+
+vel = 5.0
+angH = 0.0
+angV = 20.0
+dist = 8.0
+
+# Estados: 0=parado, 1=andando, 2=saltando, 3=correndo, 4=strafe esq, 5=strafe dir
+estado = 0
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    correndo = sm_key_pressed("shift")
+    speed = vel
+    se correndo:
+        speed = vel * 2.5
+
+    frente = 0.0
+    lado = 0.0
+    se sm_key_pressed("w"):
+        frente = frente + speed * dt
+    se sm_key_pressed("s"):
+        frente = frente - speed * dt
+    se sm_key_pressed("a"):
+        lado = lado - speed * dt
+    se sm_key_pressed("d"):
+        lado = lado + speed * dt
+
+    se frente != 0.0:
+        sm_move_relative(hitbox, cam, frente, 0)
+    se lado != 0.0:
+        sm_move_relative(hitbox, cam, 0, lado)
+
+    se sm_key_pressed("space"):
+        se sm_on_ground(hitbox):
+            sm_velocity(hitbox, 0, 6, 0)
+
+    # Decidir estado: salto > corrida > strafe > walk > idle
+    no_chao = sm_on_ground(hitbox)
+    novo = 0
+
+    se no_chao == 0:
+        novo = 2
+    senao:
+        se frente != 0.0 && correndo:
+            novo = 3
+        senao:
+            se frente != 0.0:
+                novo = 1
+            senao:
+                se lado < 0.0:
+                    novo = 4
+                senao:
+                    se lado > 0.0:
+                        novo = 5
+                    senao:
+                        novo = 0
+
+    # Trocar modelo se estado mudou
+    se novo != estado:
+        sm_visible(idle, 0)
+        sm_visible(walk, 0)
+        sm_visible(jump, 0)
+        sm_visible(run, 0)
+        sm_visible(strafe_l, 0)
+        sm_visible(strafe_r, 0)
+
+        se novo == 0:
+            sm_visible(idle, 1)
+            sm_anim_reset(idle)
+        se novo == 1:
+            sm_visible(walk, 1)
+            sm_anim_reset(walk)
+        se novo == 2:
+            sm_visible(jump, 1)
+            sm_anim_reset(jump)
+        se novo == 3:
+            sm_visible(run, 1)
+            sm_anim_reset(run)
+        se novo == 4:
+            sm_visible(strafe_l, 1)
+            sm_anim_reset(strafe_l)
+        se novo == 5:
+            sm_visible(strafe_r, 1)
+            sm_anim_reset(strafe_r)
+
+        estado = novo
+
+    # Posicionar todos os modelos visuais na hitbox
+    px = sm_position_x(hitbox)
+    py = sm_position_y(hitbox) + offsetY
+    pz = sm_position_z(hitbox)
+    ry = sm_rotation_y(hitbox) * 57.2958
+    sm_position(idle, px, py, pz)
+    sm_rotation(idle, 0, ry, 0)
+    sm_position(walk, px, py, pz)
+    sm_rotation(walk, 0, ry, 0)
+    sm_position(jump, px, py, pz)
+    sm_rotation(jump, 0, ry, 0)
+    sm_position(run, px, py, pz)
+    sm_rotation(run, 0, ry, 0)
+    sm_position(strafe_l, px, py, pz)
+    sm_rotation(strafe_l, 0, ry, 0)
+    sm_position(strafe_r, px, py, pz)
+    sm_rotation(strafe_r, 0, ry, 0)
+
+    se sm_mouse_grabbed():
+        dx = sm_mouse_dx()
+        dy = sm_mouse_dy()
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - sm_mouse_scroll()
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+    sm_camera_follow_update(cam)
+
+    sm_physics_update(janela)
+    sm_display(janela)

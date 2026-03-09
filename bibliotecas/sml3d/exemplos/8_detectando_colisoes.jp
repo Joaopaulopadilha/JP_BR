@@ -1,0 +1,56 @@
+importar sml3d
+
+janela = sm_window("Teste Colisão", 800, 600)
+sm_background(janela, 30, 30, 50)
+
+cam = sm_camera(janela, 0, 3, 10, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 12)
+sm_camera_orbital_angles(cam, 0, 25)
+
+# Cubo vermelho (controlado pelo jogador)
+jogador = sm_cube(janela)
+sm_color(jogador, 50, 150, 255)
+sm_position(jogador, -3, 0, 0)
+
+# Cubo verde (parado)
+obstaculo = sm_cube(janela)
+sm_color(obstaculo, 50, 255, 100)
+sm_position(obstaculo, 2, 0, 0)
+
+# Chão
+plano = sm_plane(janela)
+sm_position(plano, 0, -0.5, 0)
+sm_scale(plano, 15, 1, 15)
+sm_color(plano, 80, 80, 80)
+
+px = -3.0
+py = 0.0
+pz = 0.0
+vel = 0.05
+
+enquanto verdadeiro:
+    se sm_key_pressed("w"):
+        pz = pz - vel
+    se sm_key_pressed("s"):
+        pz = pz + vel
+    se sm_key_pressed("a"):
+        px = px - vel
+    se sm_key_pressed("d"):
+        px = px + vel
+
+    sm_position(jogador, px, py, pz)
+
+    se sm_collision(jogador, obstaculo):
+        sm_color(jogador, 255, 50, 50)
+        sm_color(obstaculo, 255, 50, 50)
+    senao:
+        sm_color(jogador, 50, 150, 255)
+        sm_color(obstaculo, 50, 255, 100)
+
+    d = sm_distance(jogador, obstaculo)
+
+    se sm_raycast(cam, obstaculo):
+        sm_color(obstaculo, 255, 255, 0)
+
+    sm_display(janela)

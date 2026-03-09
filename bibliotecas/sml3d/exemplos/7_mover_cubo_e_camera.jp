@@ -1,0 +1,57 @@
+importar sml3d
+
+janela = sm_window("Motor 3D", 800, 600)
+sm_background(janela, 30, 30, 50)
+
+cam = sm_camera(janela, 3, 3, 6, 0, 0, 0)
+sm_camera_mode(cam, 1)
+
+cubo = sm_cube(janela)
+sm_color(cubo, 255, 100, 50)
+
+plano = sm_plane(janela)
+sm_position(plano, 0, -1, 0)
+sm_scale(plano, 10, 1, 10)
+sm_color(plano, 100, 100, 100)
+
+# Cubo
+cx = 0.0
+cy = 0.0
+cz = 0.0
+vel = 0.05
+
+# Câmera orbital
+angH = 0.0
+angV = 20.0
+dist = 10.0
+
+enquanto verdadeiro:
+    # ---- MOVER CUBO (WASD + Space/Shift) ----
+    se sm_key_pressed("w"):
+        cz = cz - vel
+    se sm_key_pressed("s"):
+        cz = cz + vel
+    se sm_key_pressed("a"):
+        cx = cx - vel
+    se sm_key_pressed("d"):
+        cx = cx + vel
+    se sm_key_pressed("space"):
+        cy = cy + vel
+    se sm_key_pressed("shift"):
+        cy = cy - vel
+
+    sm_position(cubo, cx, cy, cz)
+
+    # ---- CÂMERA ORBITAL (mouse direito + scroll) ----
+    se sm_mouse_button(1):
+        angH = angH - sm_mouse_dx() * 0.3
+        angV = angV + sm_mouse_dy() * 0.3
+
+    dist = dist - sm_mouse_scroll()
+    se dist < 2.0:
+        dist = 2.0
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+
+    sm_display(janela)

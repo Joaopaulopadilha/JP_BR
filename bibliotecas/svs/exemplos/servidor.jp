@@ -1,0 +1,68 @@
+# servidor.jp
+# Servidor web para Ollama Chat - serve o index.html e faz proxy para o Ollama
+
+importar svs
+importar http
+
+# ── Configuração ──
+porta_servidor = 8080
+http_config_host("127.0.0.1")
+http_config_porta(11434)
+http_config_timeout(300)
+
+# ── Verificar Ollama ──
+se http_ollama_status() == 0:
+    saida("ERRO: Ollama nao esta rodando em 127.0.0.1:11434")
+    saida("Inicie o Ollama primeiro e tente novamente.")
+senao:
+    saida("Ollama conectado com sucesso!")
+
+# ── Iniciar servidor ──
+servidor = svs_criar(porta_servidor)
+ip = svs_meu_ip()
+saida("Servidor rodando em: http://{ip}:{porta_servidor}")
+saida("Abra o navegador e acesse: http://localhost:{porta_servidor}")
+saida("Pressione Ctrl+C para parar")
+saida("")
+
+# ── Loop principal ──
+enquanto verdadeiro:
+    req = svs_aguardar(servidor)
+    caminho = svs_caminho(req)
+    metodo = svs_metodo(req)
+
+    # Rota principal - serve o index.html
+    se caminho == "/" || caminho == "/index.html":
+        svs_arquivo(req, "index.html")
+
+    # API - Listar modelos (proxy pro Ollama)
+    senao se caminho == "/api/tags":
+        resposta = http_ollama_listar()
+        se resposta != "":
+            svs_responder(req, 200, resposta)
+        senao:
+            svs_responder(req, 502, "{\"error\":\"Ollama nao respondeu\"}")
+
+    # API - Chat (proxy pro Ollama)
+    senao se caminho == "/api/chat":
+        corpo = svs_corpo(req)
+        resposta = http_post("http://127.0.0.1:11434/api/chat", corpo)
+        se resposta != "":
+            svs_responder(req, 200, resposta)
+        senao:
+            erro = http_erro()
+            saida("Erro no chat: {erro}")
+            svs_responder(req, 502, "{\"error\":\"Ollama nao respondeu: {erro}\"}")
+
+    # API - Generate (proxy pro Ollama)
+    senao se caminho == "/api/generate":
+        corpo = svs_corpo(req)
+        resposta = http_post("http://127.0.0.1:11434/api/generate", corpo)
+        se resposta != "":
+            svs_responder(req, 200, resposta)
+        senao:
+            svs_responder(req, 502, "{\"error\":\"Ollama nao respondeu\"}")
+
+    # Arquivos estáticos (CSS, JS, imagens se necessário)
+    senao:
+        svs_responder(req, 404, "Pagina nao encontrada")

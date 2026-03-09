@@ -175,7 +175,7 @@ static int mode_run(const std::string& input_path) {
 // MODO BUILD: compila e linka em output/
 // ============================================================================
 
-static int mode_build(const std::string& input_path) {
+static int mode_build(const std::string& input_path, bool windowed = false) {
     std::string source = read_file(input_path);
     if (source.empty()) return 1;
 
@@ -200,11 +200,12 @@ static int mode_build(const std::string& input_path) {
     std::cout << "Objeto gerado: " << obj_path.string() << std::endl;
 
     if (!jplang::link_with_ld(obj_path.string(), exe_path.string(),
-                               extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
+                               extra_objs, extra_libs, extra_lib_paths, extra_dlls, windowed)) {
         return 1;
     }
 
-    std::cout << "Compilado: " << input_path << " -> " << exe_path.string() << std::endl;
+    std::string modo = windowed ? " (GUI, sem console)" : "";
+    std::cout << "Compilado: " << input_path << " -> " << exe_path.string() << modo << std::endl;
     return 0;
 }
 
@@ -221,6 +222,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Uso:" << std::endl;
         std::cerr << "  jp <arquivo.jp>             Compila, linka, executa e apaga" << std::endl;
         std::cerr << "  jp build <arquivo.jp>       Compila e linka em output/" << std::endl;
+        std::cerr << "  jp build <arquivo.jp> -w    Compila como aplicativo GUI (sem console)" << std::endl;
         std::cerr << std::endl;
         std::cerr << "Gerenciador de bibliotecas:" << std::endl;
         std::cerr << "  jp instalar <nome>          Instala biblioteca do repositorio" << std::endl;
@@ -237,7 +239,16 @@ int main(int argc, char* argv[]) {
             std::cerr << "Erro: Esperado arquivo após 'build'" << std::endl;
             return 1;
         }
-        return mode_build(argv[2]);
+        // Verifica flag -w (windowed, sem console)
+        bool windowed = false;
+        std::string build_file = argv[2];
+        for (int i = 3; i < argc; i++) {
+            std::string flag = argv[i];
+            if (flag == "-w" || flag == "--windowed") {
+                windowed = true;
+            }
+        }
+        return mode_build(build_file, windowed);
     }
 
     if (first_arg == "instalar") {

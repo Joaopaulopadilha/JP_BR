@@ -13,6 +13,8 @@
 #include <memory>
 #include <fstream>
 #include <sstream>
+#include <set>
+#include <filesystem>
 
 namespace jplang {
 
@@ -34,10 +36,16 @@ inline Cor cor_from_name(const std::string& name) {
 
 class Parser {
 public:
-    explicit Parser(Lexer& lexer, const std::string& base_dir = "")
+    explicit Parser(Lexer& lexer, const std::string& base_dir = "",
+                    std::shared_ptr<std::set<std::string>> imported_files = nullptr)
         : lex_(lexer), had_error_(false), base_dir_(base_dir),
           lang_config_(lexer.lang_config())
     {
+        if (imported_files) {
+            imported_files_ = imported_files;
+        } else {
+            imported_files_ = std::make_shared<std::set<std::string>>();
+        }
         current_ = lex_.next();
         next_token_ = std::nullopt;
     }
@@ -88,6 +96,7 @@ private:
     StmtList pending_imports_;  // statements de arquivos importados
     std::string base_dir_;     // diretório base para resolver imports
     LangConfig lang_config_;   // configuração do idioma ativo
+    std::shared_ptr<std::set<std::string>> imported_files_;  // include guard
 
     // ========================================================================
     // AUXILIARES
@@ -935,6 +944,13 @@ private:
 
             // Sem extensão: importar janela → bibliotecas/janela (estático .obj)
             std::string lib_path = "bibliotecas/" + name;
+
+            // Include guard: pula se já foi importado
+            if (imported_files_->count(lib_path)) {
+                return nullptr;
+            }
+            imported_files_->insert(lib_path);
+
             return std::make_unique<Stmt>(NativoStmt{
                 lib_path, {}, true, line
             });
@@ -957,6 +973,20 @@ private:
                     error("Não foi possível abrir: " + path);
                     return nullptr;
                 }
+
+                // Include guard: pula se já foi importado
+                // Normaliza o caminho para evitar duplicatas
+                std::string canonical = full_path;
+                #if __cplusplus >= 201703L
+                try {
+                    canonical = std::filesystem::weakly_canonical(full_path).string();
+                } catch (...) {}
+                #endif
+                if (imported_files_->count(canonical)) {
+                    return nullptr;  // já importado, pula
+                }
+                imported_files_->insert(canonical);
+
                 std::stringstream buf;
                 buf << file.rdbuf();
                 std::string source = buf.str();
@@ -968,7 +998,7 @@ private:
                 if (last_sep != std::string::npos) {
                     imp_dir = full_path.substr(0, last_sep);
                 }
-                Parser imp_parser(imp_lex, imp_dir);
+                Parser imp_parser(imp_lex, imp_dir, imported_files_);
                 auto result = imp_parser.parse();
 
                 if (!result || imp_parser.had_error()) {

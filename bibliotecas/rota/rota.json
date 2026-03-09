@@ -1,5 +1,5 @@
 {
-    "tipo": "estatico",
+    "tipo": "dinamico",
     "funcoes": [
         {
             "nome": "rota_calcular",
@@ -17,8 +17,6 @@
             "params": []
         }
     ],
-    "libs": {
-        "windows": ["winhttp"],
-        "linux": ["curl"]
-    }
+    "libs": ["winhttp"],
+    "libs_linux": ["curl"]
 }

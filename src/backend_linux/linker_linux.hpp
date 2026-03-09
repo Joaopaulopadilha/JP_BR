@@ -188,7 +188,10 @@ static bool link_with_ld(const std::string& obj_path, const std::string& exe_pat
                           const std::vector<std::string>& extra_objs = {},
                           const std::vector<std::string>& extra_libs = {},
                           const std::vector<std::string>& extra_lib_paths = {},
-                          const std::vector<std::string>& extra_dlls = {}) {
+                          const std::vector<std::string>& extra_dlls = {},
+                          bool windowed = false) {
+
+    (void)windowed; // Ignorado no Linux
 
     LinkerInfo linker = find_linker();
 

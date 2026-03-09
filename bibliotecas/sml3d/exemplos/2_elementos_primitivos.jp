@@ -1,0 +1,16 @@
+importar sml3d
+
+janela = sm_window("Motor 3D", 800, 600)
+sm_background(janela, 30, 30, 50)
+
+cubo = sm_cube(janela)
+sm_position(cubo, 0, 0, -5)
+sm_color(cubo, 255, 100, 50)
+
+plano = sm_plane(janela)
+sm_position(plano, 0, -1, -5)
+sm_scale(plano, 10, 1, 10)
+sm_color(plano, 100, 100, 100)
+
+enquanto verdadeiro:
+    sm_display(janela)

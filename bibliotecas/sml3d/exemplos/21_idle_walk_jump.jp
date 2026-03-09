@@ -1,0 +1,149 @@
+# 21_idle_walk_jump.jp
+# Exemplo com tres modelos animados: Idle, Walking e Jump
+
+importar sml3d
+
+janela = sm_window("Idle + Walk + Jump", 800, 600)
+sm_background(janela, 100, 150, 200)
+
+cam = sm_camera(janela, 0, 5, 10, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 5)
+sm_camera_orbital_angles(cam, 0, 15)
+
+# Hitbox invisível (cubo pequeno) — controla física e posição
+hitbox = sm_cube(janela)
+sm_scale(hitbox, 0.6, 1.8, 0.6)
+sm_position(hitbox, 0, 3, 0)
+sm_visible(hitbox, 0)
+sm_gravity(hitbox, 1)
+
+# Carregar os tres modelos visuais
+idle = sm_model(janela, "bibliotecas/sml3d/modelos/Idle.fbx")
+sm_scale(idle, 5, 5, 5)
+sm_color(idle, 220, 180, 150)
+
+walk = sm_model(janela, "bibliotecas/sml3d/modelos/Walking.fbx")
+sm_scale(walk, 5, 5, 5)
+sm_color(walk, 220, 180, 150)
+sm_visible(walk, 0)
+
+jump = sm_model(janela, "bibliotecas/sml3d/modelos/Jump.fbx")
+sm_scale(jump, 5, 5, 5)
+sm_color(jump, 220, 180, 150)
+sm_visible(jump, 0)
+
+# Loop desligado no jump (toca uma vez e para)
+sm_anim_loop(jump, 0)
+
+# Offset Y — ajuste ate os pes tocarem o chao
+# Com escala 5, tente valores como -0.5, -1.0, -1.5 etc
+offsetY = -0.9
+
+# Piso
+piso = sm_plane(janela)
+sm_position(piso, 0, 0, 0)
+sm_scale(piso, 40, 1, 40)
+sm_texture(piso, "bibliotecas/sml3d/imagens/textura_grama.png")
+sm_texture_tile(piso, 20, 20)
+sm_solid(piso, 1)
+
+sm_camera_follow(cam, hitbox)
+sm_mouse_grab(janela, 1)
+sm_mouse_grab_toggle(janela, "escape")
+
+vel = 5.0
+angH = 0.0
+angV = 15.0
+dist = 5.0
+
+# Estados: 0=parado, 1=andando, 2=saltando
+estado = 0
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    speed = vel
+    se sm_key_pressed("shift"):
+        speed = vel * 2.5
+
+    frente = 0.0
+    lado = 0.0
+    se sm_key_pressed("w"):
+        frente = frente + speed * dt
+    se sm_key_pressed("s"):
+        frente = frente - speed * dt
+    se sm_key_pressed("a"):
+        lado = lado - speed * dt
+    se sm_key_pressed("d"):
+        lado = lado + speed * dt
+
+    se frente != 0.0:
+        sm_move_relative(hitbox, cam, frente, 0)
+    se lado != 0.0:
+        sm_move_relative(hitbox, cam, 0, lado)
+
+    # Pular
+    se sm_key_pressed("space"):
+        se sm_on_ground(hitbox):
+            sm_velocity(hitbox, 0, 6, 0)
+
+    # Decidir estado: salto tem prioridade
+    no_chao = sm_on_ground(hitbox)
+
+    se no_chao == 0:
+        # No ar = salto
+        se estado != 2:
+            sm_visible(idle, 0)
+            sm_visible(walk, 0)
+            sm_visible(jump, 1)
+            sm_anim_reset(jump)
+            estado = 2
+    senao:
+        se frente != 0.0 || lado != 0.0:
+            # Andando
+            se estado != 1:
+                sm_visible(idle, 0)
+                sm_visible(walk, 1)
+                sm_visible(jump, 0)
+                sm_anim_reset(walk)
+                estado = 1
+            se sm_key_pressed("shift"):
+                sm_anim_speed(walk, 2.0)
+            senao:
+                sm_anim_speed(walk, 1.0)
+        senao:
+            # Parado
+            se estado != 0:
+                sm_visible(idle, 1)
+                sm_visible(walk, 0)
+                sm_visible(jump, 0)
+                sm_anim_reset(idle)
+                estado = 0
+
+    # Posicionar modelos visuais na hitbox + offset
+    px = sm_position_x(hitbox)
+    py = sm_position_y(hitbox) + offsetY
+    pz = sm_position_z(hitbox)
+    ry = sm_rotation_y(hitbox) * 57.2958
+    sm_position(idle, px, py, pz)
+    sm_rotation(idle, 0, ry, 0)
+    sm_position(walk, px, py, pz)
+    sm_rotation(walk, 0, ry, 0)
+    sm_position(jump, px, py, pz)
+    sm_rotation(jump, 0, ry, 0)
+
+    se sm_mouse_grabbed():
+        dx = sm_mouse_dx()
+        dy = sm_mouse_dy()
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - sm_mouse_scroll()
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+    sm_camera_follow_update(cam)
+
+    sm_physics_update(janela)
+    sm_display(janela)

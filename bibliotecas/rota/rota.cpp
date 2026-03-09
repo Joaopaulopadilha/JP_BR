@@ -1,15 +1,11 @@
 // rota.cpp
 // Biblioteca de rotas para JPLang — calcula distância (km) e tempo (min) entre cidades via OSRM + Nominatim
 //
-// Multiplataforma: WinHTTP (Windows) / libcurl (Linux), linkagem estática via .obj/.o, extern "C" puro
+// Multiplataforma: WinHTTP (Windows) / libcurl (Linux), linkagem dinâmica via .jpd, extern "C" puro
 //
 // Compilação:
-//   Windows: g++ -std=c++17 -c -o bibliotecas/rota/rota.obj bibliotecas/rota/rota.cpp
-//   Linux:   g++ -std=c++17 -c -o bibliotecas/rota/rota.o   bibliotecas/rota/rota.cpp
-//
-// Linkagem automática via rota.json:
-//   Windows: -lwinhttp
-//   Linux:   -lcurl
+//   Windows: g++ -shared -o bibliotecas/rota/rota.jpd bibliotecas/rota/rota.cpp -lwinhttp -O2 -static
+//   Linux:   g++ -shared -fPIC -o bibliotecas/rota/librota.jpd bibliotecas/rota/rota.cpp -lcurl -O2
 
 #include <cstdint>
 #include <cstdlib>
@@ -18,7 +14,7 @@
 #include <string>
 
 // =============================================================================
-// PLATAFORMA
+// PLATAFORMA E EXPORT
 // =============================================================================
 
 #ifdef _WIN32
@@ -26,9 +22,13 @@
 #include <windows.h>
 #include <winhttp.h>
 
+#define JP_EXPORT extern "C" __declspec(dllexport)
+
 #else
 
 #include <curl/curl.h>
+
+#define JP_EXPORT extern "C" __attribute__((visibility("default")))
 
 #endif
 
@@ -317,14 +317,16 @@ static bool calcular_rota_osrm(double lat1, double lon1, double lat2, double lon
 // FUNÇÕES EXPORTADAS
 // =============================================================================
 
-extern "C" int64_t rota_calcular(const char* origem, const char* destino)
+JP_EXPORT int64_t rota_calcular(int64_t origem, int64_t destino)
 {
-    if (!origem || !destino) return -1;
+    const char* o = (const char*)origem;
+    const char* d = (const char*)destino;
+    if (!o || !d) return -1;
 
-    Coordenada c1 = geocode(std::string(origem));
+    Coordenada c1 = geocode(std::string(o));
     if (!c1.ok) return -1;
 
-    Coordenada c2 = geocode(std::string(destino));
+    Coordenada c2 = geocode(std::string(d));
     if (!c2.ok) return -2;
 
     if (!calcular_rota_osrm(c1.lat, c1.lon, c2.lat, c2.lon))
@@ -333,12 +335,12 @@ extern "C" int64_t rota_calcular(const char* origem, const char* destino)
     return 0;
 }
 
-extern "C" int64_t rota_distancia()
+JP_EXPORT int64_t rota_distancia()
 {
     return resultado_distancia_km;
 }
 
-extern "C" int64_t rota_tempo()
+JP_EXPORT int64_t rota_tempo()
 {
     return resultado_tempo_min;
 }

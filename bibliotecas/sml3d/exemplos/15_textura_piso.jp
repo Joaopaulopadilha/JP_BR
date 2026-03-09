@@ -1,0 +1,92 @@
+importar sml3d
+
+janela = sm_window("Textura no Piso", 800, 600)
+sm_background(janela, 100, 150, 200)
+
+cam = sm_camera(janela, 0, 5, 10, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 12)
+sm_camera_orbital_angles(cam, 0, 25)
+
+# Jogador
+jogador = sm_cube(janela)
+sm_color(jogador, 50, 150, 255)
+sm_position(jogador, 0, 1, 0)
+sm_gravity(jogador, 2)
+
+# Piso com textura de grama
+piso = sm_plane(janela)
+sm_position(piso, 0, -0.5, 0)
+sm_scale(piso, 100, 1, 100)
+sm_texture(piso, "bibliotecas/sml3d/imagens/textura_grama.png")
+sm_texture_tile(piso, 20, 20)
+sm_solid(piso, 1)
+
+# Cubo decorativo
+cubo = sm_cube(janela)
+sm_position(cubo, 3, 0.5, -2)
+sm_color(cubo, 200, 100, 50)
+sm_solid(cubo, 1)
+
+# Esfera decorativa
+esfera = sm_sphere(janela)
+sm_position(esfera, -2, 0.5, -3)
+sm_color(esfera, 50, 255, 100)
+sm_solid(esfera, 1)
+
+# Caixa empurravel
+caixa = sm_cube(janela)
+sm_color(caixa, 200, 150, 50)
+sm_position(caixa, 0, 0.5, -4)
+sm_pushable(caixa, 1)
+sm_gravity(caixa, 1)
+
+sm_camera_follow(cam, jogador)
+sm_mouse_grab(janela, 1)
+sm_mouse_grab_toggle(janela, "escape")
+
+vel = 5.0
+angH = 0.0
+angV = 25.0
+dist = 12.0
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    speed = vel
+    se sm_key_pressed("shift"):
+        speed = vel * 2.5
+
+    frente = 0.0
+    lado = 0.0
+    se sm_key_pressed("w"):
+        frente = frente + speed * dt
+    se sm_key_pressed("s"):
+        frente = frente - speed * dt
+    se sm_key_pressed("a"):
+        lado = lado - speed * dt
+    se sm_key_pressed("d"):
+        lado = lado + speed * dt
+
+    se frente != 0.0:
+        sm_move_relative(jogador, cam, frente, 0)
+    se lado != 0.0:
+        sm_move_relative(jogador, cam, 0, lado)
+    se sm_key_pressed("space"):
+        se sm_on_ground(jogador):
+            sm_velocity(jogador, 0, 6, 0)
+
+    se sm_mouse_grabbed():
+        dx = sm_mouse_dx()
+        dy = sm_mouse_dy()
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - sm_mouse_scroll()
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+    sm_camera_follow_update(cam)
+
+    sm_physics_update(janela)
+    sm_display(janela)

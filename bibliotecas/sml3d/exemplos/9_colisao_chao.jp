@@ -1,0 +1,28 @@
+importar sml3d
+
+janela = sm_window("Gravidade", 800, 600)
+sm_background(janela, 30, 30, 50)
+
+cam = sm_camera(janela, 0, 3, 10, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 12)
+sm_camera_orbital_angles(cam, 0, 25)
+
+cubo = sm_cube(janela)
+sm_color(cubo, 50, 150, 255)
+sm_position(cubo, 0, 5, 0)
+sm_gravity(cubo, 1)
+
+plano = sm_plane(janela)
+sm_position(plano, 0, -1, 0)
+sm_scale(plano, 15, 1, 15)
+sm_color(plano, 80, 80, 80)
+sm_solid(plano, 1)
+
+enquanto verdadeiro:
+    se sm_key_pressed("space"):
+        se sm_on_ground(cubo):
+            sm_velocity(cubo, 0, 5, 0)
+
+    sm_physics_update(janela)
+    sm_display(janela)

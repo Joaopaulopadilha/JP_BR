@@ -1,0 +1,103 @@
+# exemplo_barras.jp
+# Exemplo de gráfico de barras com atualização dinâmica
+
+importar jpk
+importar tempo
+
+janela1 = jpk_janela("Gráfico de Barras - Votação", 500, 450)
+
+# Título
+titulo = jpk_etiqueta(janela1, "Resultado da Votação", 180, 20)
+jpk_etiqueta_cor(titulo, 0, 0, 0)
+
+# Etiquetas para os candidatos
+jpk_etiqueta(janela1, "Candidato A:", 20, 70)
+jpk_etiqueta(janela1, "Candidato B:", 20, 120)
+jpk_etiqueta(janela1, "Candidato C:", 20, 170)
+
+# Etiquetas para mostrar os valores
+lblValorA = jpk_etiqueta(janela1, "0%", 440, 70)
+lblValorB = jpk_etiqueta(janela1, "0%", 440, 120)
+lblValorC = jpk_etiqueta(janela1, "0%", 440, 170)
+jpk_etiqueta_cor(lblValorA, 0, 0, 0)
+jpk_etiqueta_cor(lblValorB, 0, 0, 0)
+jpk_etiqueta_cor(lblValorC, 0, 0, 0)
+
+# Barras horizontais
+barraA = jpk_barra(janela1, 130, 70, 300, 25, 0, 100, "h")
+jpk_barra_cor(barraA, 0, 180, 0)
+jpk_barra_cor_fundo(barraA, 200, 200, 200)
+
+barraB = jpk_barra(janela1, 130, 120, 300, 25, 0, 100, "h")
+jpk_barra_cor(barraB, 0, 100, 200)
+jpk_barra_cor_fundo(barraB, 200, 200, 200)
+
+barraC = jpk_barra(janela1, 130, 170, 300, 25, 0, 100, "h")
+jpk_barra_cor(barraC, 200, 50, 0)
+jpk_barra_cor_fundo(barraC, 200, 200, 200)
+
+# Botões para votar
+btnVotarA = jpk_botao(janela1, "Votar A", 50, 230, 120, 40)
+btnVotarB = jpk_botao(janela1, "Votar B", 190, 230, 120, 40)
+btnVotarC = jpk_botao(janela1, "Votar C", 330, 230, 120, 40)
+
+jpk_botao_cor_fundo(btnVotarA, 0, 180, 0)
+jpk_botao_cor_fundo(btnVotarB, 0, 100, 200)
+jpk_botao_cor_fundo(btnVotarC, 200, 50, 0)
+jpk_botao_cor_fonte(btnVotarA, 255, 255, 255)
+jpk_botao_cor_fonte(btnVotarB, 255, 255, 255)
+jpk_botao_cor_fonte(btnVotarC, 255, 255, 255)
+
+# Botão reset
+btnReset = jpk_botao(janela1, "Resetar", 190, 290, 120, 40)
+jpk_botao_cor_fundo(btnReset, 150, 150, 150)
+jpk_botao_cor_fonte(btnReset, 255, 255, 255)
+
+# Contadores de votos
+votosA = 0
+votosB = 0
+votosC = 0
+
+enquanto verdadeiro:
+    jpk_exibir(janela1)
+    tm_sleep(30)
+    
+    # Voto no candidato A
+    se jpk_clicado(btnVotarA):
+        votosA = votosA + 1
+    
+    # Voto no candidato B
+    se jpk_clicado(btnVotarB):
+        votosB = votosB + 1
+    
+    # Voto no candidato C
+    se jpk_clicado(btnVotarC):
+        votosC = votosC + 1
+    
+    # Reset
+    se jpk_clicado(btnReset):
+        votosA = 0
+        votosB = 0
+        votosC = 0
+    
+    # Calcula total e porcentagens
+    total = votosA + votosB + votosC
+    
+    se total > 0:
+        pctA = int((votosA * 100) / total)
+        pctB = int((votosB * 100) / total)
+        pctC = int((votosC * 100) / total)
+    senao:
+        pctA = 0
+        pctB = 0
+        pctC = 0
+    
+    # Atualiza as barras
+    jpk_barra_valor(barraA, pctA)
+    jpk_barra_valor(barraB, pctB)
+    jpk_barra_valor(barraC, pctC)
+    
+    # Atualiza os labels com porcentagem
+    jpk_etiqueta_texto(lblValorA, pctA + "%")
+    jpk_etiqueta_texto(lblValorB, pctB + "%")
+    jpk_etiqueta_texto(lblValorC, pctC + "%")

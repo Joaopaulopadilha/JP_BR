@@ -2,7 +2,7 @@
 # Configuracoes gerais do agente de codigo autonomo
 
 funcao config_modelo():
-    retorna "gemma3:12b"
+    retorna "qwen3.5:9b"
 
 funcao config_temperatura():
     retorna 20

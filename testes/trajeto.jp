@@ -1,0 +1,43 @@
+importar rota
+importar jpk
+
+janela1 = jpk_janela("Distancia entre cidades", 400, 200)
+jpk_etiqueta(janela1, "Cidade origem:", 20, 20)
+jpk_etiqueta(janela1, "Cidade destino:", 20, 70)
+
+input_origem = jpk_input(janela1, "origem", 150, 20, 200, 30)
+input_destino = jpk_input(janela1, "destino", 150, 70, 200, 30)
+
+btnCalcular = jpk_botao(janela1, "Calcular", 20, 120, 120, 40)
+lblResultado = jpk_etiqueta(janela1, "Distancia:", 160, 130)
+
+#origem = "curitiba, pr"
+#destino = "santos, sp"
+#rota_calcular(origem, destino)
+#km = rota_distancia()
+#minutos = rota_tempo()
+#saida("a distancia é {km} kilometros")
+#saida("o tempo é {minutos} minutos")
+
+enquanto verdadeiro:
+    jpk_exibir(janela1)
+    origem = jpk_input_valor(input_origem)
+    destino = jpk_input_valor(input_destino)
+
+    se jpk_clicado(btnCalcular):
+        saida(origem)
+        saida(destino)
+        resultado = rota_calcular(origem, destino)
+
+        se (resultado == 0):
+            saida("A distancia entre {origem}, PR e {destino} é: {rota_distancia()} km")
+            saida("o tempo de viajem é: {rota_tempo()} minutos")
+            horas = rota_tempo() / 60
+            saida("convertendo em horas: {horas} horas")
+            
+            km = rota_distancia()
+            tempo = rota_tempo()
+            km_txt = texto(km)
+            saida(tipo(km_txt))
+
+            jpk_etiqueta_texto(lblResultado, "distancia " + km_txt + " km")

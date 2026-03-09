@@ -1,0 +1,109 @@
+# 20_idle_walking.jp
+# Exemplo com dois modelos animados: Idle (parado) e Walking (andando)
+
+importar sml3d
+
+janela = sm_window("Idle + Walking", 800, 600)
+sm_background(janela, 100, 150, 200)
+
+cam = sm_camera(janela, 0, 5, 10, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 5)
+sm_camera_orbital_angles(cam, 0, 15)
+
+# Carregar os dois modelos na mesma posição
+idle = sm_model(janela, "bibliotecas/sml3d/modelos/Idle.fbx")
+sm_scale(idle, 8, 8, 8)
+sm_color(idle, 220, 180, 150)
+
+walk = sm_model(janela, "bibliotecas/sml3d/modelos/Walking.fbx")
+sm_scale(walk, 8, 8, 8)
+sm_color(walk, 220, 180, 150)
+sm_visible(walk, 0)
+
+sm_position(idle, 0, 0, 0)
+sm_position(walk, 0, 0, 0)
+
+# Gravidade só no idle (modelo principal que recebe física)
+sm_gravity(idle, 1)
+
+# Piso
+piso = sm_plane(janela)
+sm_position(piso, 0, -0.5, 0)
+sm_scale(piso, 40, 1, 40)
+sm_texture(piso, "bibliotecas/sml3d/imagens/textura_grama.png")
+sm_texture_tile(piso, 20, 20)
+sm_solid(piso, 1)
+
+sm_camera_follow(cam, idle)
+sm_mouse_grab(janela, 1)
+sm_mouse_grab_toggle(janela, "escape")
+
+vel = 5.0
+angH = 0.0
+angV = 15.0
+dist = 5.0
+estado = 0  # 0=parado, 1=andando
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    speed = vel
+    se sm_key_pressed("shift"):
+        speed = vel * 2.5
+
+    frente = 0.0
+    lado = 0.0
+    se sm_key_pressed("w"):
+        frente = frente + speed * dt
+    se sm_key_pressed("s"):
+        frente = frente - speed * dt
+    se sm_key_pressed("a"):
+        lado = lado - speed * dt
+    se sm_key_pressed("d"):
+        lado = lado + speed * dt
+
+    se frente != 0.0:
+        sm_move_relative(idle, cam, frente, 0)
+    se lado != 0.0:
+        sm_move_relative(idle, cam, 0, lado)
+    se sm_key_pressed("space"):
+        se sm_on_ground(idle):
+            sm_velocity(idle, 0, 6, 0)
+
+    # Trocar modelo baseado no movimento
+    se frente != 0.0 || lado != 0.0:
+        se estado == 0:
+            sm_visible(idle, 0)
+            sm_visible(walk, 1)
+            sm_anim_reset(walk)
+            estado = 1
+        se sm_key_pressed("shift"):
+            sm_anim_speed(walk, 2.0)
+        senao:
+            sm_anim_speed(walk, 1.0)
+    senao:
+        se estado == 1:
+            sm_visible(idle, 1)
+            sm_visible(walk, 0)
+            sm_anim_reset(idle)
+            estado = 0
+
+    # Sincronizar posição e rotação do walk com o idle
+    sm_position(walk, sm_position_x(idle), sm_position_y(idle), sm_position_z(idle))
+    sm_rotation(walk, 0, sm_rotation_y(idle) * 57.2958, 0)
+
+    se sm_mouse_grabbed():
+        dx = sm_mouse_dx()
+        dy = sm_mouse_dy()
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - sm_mouse_scroll()
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+    sm_camera_follow_update(cam)
+
+    sm_physics_update(janela)
+    sm_display(janela)

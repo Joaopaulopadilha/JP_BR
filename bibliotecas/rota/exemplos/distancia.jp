@@ -1,7 +1,7 @@
 importar rota
 
-cidade_a = "Cascavel, Parana"
-cidade_b = "São Paulo, São Paulo"
+cidade_a = "Curitiba, Parana"
+cidade_b = "indaiatuba, São Paulo"
 
 resultado = rota_calcular(cidade_a, cidade_b)
 

@@ -258,34 +258,115 @@ void emit_binop_int(const BinOpExpr& node) {
 // Resultado: ponteiro para nova string em RAX
 // ======================================================================
 
+// Converte valor em RAX (int/bool) para string via sprintf
+// Resultado: ponteiro para string em RAX
+void emit_int_to_string_inplace(int32_t val_off, int32_t& out_off) {
+    // Aloca buffer de 32 bytes para o número convertido
+    std::string buf_name = "__itoa_buf_" + std::to_string(text_->pos());
+    int32_t buf_off = alloc_local(buf_name);
+
+    // malloc(32)
+    emit_mov_reg_imm32(PlatformDefs::ARG1, 32);
+    emit_call_extern("malloc");
+    emit_mov_rbp_reg(buf_off, reg::RAX);
+
+    // sprintf(buf, "%lld", valor)
+    emit_mov_reg_rbp(PlatformDefs::ARG1, buf_off);
+    emit_load_string(PlatformDefs::ARG2, "%lld");
+    emit_mov_reg_rbp(PlatformDefs::ARG3, val_off);
+    emit_call_extern("sprintf");
+
+    out_off = buf_off;
+}
+
+// Converte valor float em XMM0 para string via sprintf
+void emit_float_to_string_inplace(int32_t val_off, int32_t& out_off) {
+    std::string buf_name = "__ftoa_buf_" + std::to_string(text_->pos());
+    int32_t buf_off = alloc_local(buf_name);
+
+    // malloc(64)
+    emit_mov_reg_imm32(PlatformDefs::ARG1, 64);
+    emit_call_extern("malloc");
+    emit_mov_rbp_reg(buf_off, reg::RAX);
+
+    // sprintf(buf, "%g", valor)
+    emit_mov_reg_rbp(PlatformDefs::ARG1, buf_off);
+    emit_load_string(PlatformDefs::ARG2, "%g");
+
+    if constexpr (PlatformDefs::is_windows) {
+        // Windows: float vai no XMM2 para sprintf, mas também precisa ir no GPR (variádica)
+        emit_movsd_xmm_rbp(xmm::XMM2, val_off);
+        emit_movq_gpr_xmm(PlatformDefs::ARG3, xmm::XMM2);
+    } else {
+        // Linux System V: floats vão nos XMM regs
+        emit_movsd_xmm_rbp(xmm::XMM0, val_off);
+    }
+    emit_call_extern("sprintf");
+
+    out_off = buf_off;
+}
+
 void emit_binop_strcat(const BinOpExpr& node) {
+    RuntimeType lt = infer_expr_type(*node.left);
+    RuntimeType rt = infer_expr_type(*node.right);
+
     // 1. Avaliar left → salvar em temp
     emit_expr(*node.left);
     std::string left_tmp = "__strcat_l_" + std::to_string(text_->pos());
     int32_t left_off = alloc_local(left_tmp);
-    emit_mov_rbp_reg(left_off, reg::RAX);
+    if (lt == RuntimeType::Float) {
+        emit_movsd_rbp_xmm(left_off, xmm::XMM0);
+    } else {
+        emit_mov_rbp_reg(left_off, reg::RAX);
+    }
 
     // 2. Avaliar right → salvar em temp
     emit_expr(*node.right);
     std::string right_tmp = "__strcat_r_" + std::to_string(text_->pos());
     int32_t right_off = alloc_local(right_tmp);
-    emit_mov_rbp_reg(right_off, reg::RAX);
+    if (rt == RuntimeType::Float) {
+        emit_movsd_rbp_xmm(right_off, xmm::XMM0);
+    } else {
+        emit_mov_rbp_reg(right_off, reg::RAX);
+    }
 
-    // 3. strlen(left) → salvar
+    // 3. Converter lado esquerdo pra string se necessário
+    if (lt != RuntimeType::String) {
+        int32_t conv_off;
+        if (lt == RuntimeType::Float) {
+            emit_float_to_string_inplace(left_off, conv_off);
+        } else {
+            emit_int_to_string_inplace(left_off, conv_off);
+        }
+        left_off = conv_off;
+    }
+
+    // 4. Converter lado direito pra string se necessário
+    if (rt != RuntimeType::String) {
+        int32_t conv_off;
+        if (rt == RuntimeType::Float) {
+            emit_float_to_string_inplace(right_off, conv_off);
+        } else {
+            emit_int_to_string_inplace(right_off, conv_off);
+        }
+        right_off = conv_off;
+    }
+
+    // 5. strlen(left) → salvar
     emit_mov_reg_rbp(PlatformDefs::ARG1, left_off);
     emit_call_extern("strlen");
     std::string len1_tmp = "__strcat_len1_" + std::to_string(text_->pos());
     int32_t len1_off = alloc_local(len1_tmp);
     emit_mov_rbp_reg(len1_off, reg::RAX);
 
-    // 4. strlen(right) → salvar
+    // 6. strlen(right) → salvar
     emit_mov_reg_rbp(PlatformDefs::ARG1, right_off);
     emit_call_extern("strlen");
     std::string len2_tmp = "__strcat_len2_" + std::to_string(text_->pos());
     int32_t len2_off = alloc_local(len2_tmp);
     emit_mov_rbp_reg(len2_off, reg::RAX);
 
-    // 5. malloc(len1 + len2 + 1)
+    // 7. malloc(len1 + len2 + 1)
     emit_mov_reg_rbp(reg::RAX, len1_off);
     emit_mov_reg_rbp(reg::RCX, len2_off);
     emit_add_reg_reg(reg::RAX, reg::RCX);
@@ -300,26 +381,34 @@ void emit_binop_strcat(const BinOpExpr& node) {
     int32_t buf_off = alloc_local(buf_tmp);
     emit_mov_rbp_reg(buf_off, reg::RAX);
 
-    // 6. strcpy(buf, left)
+    // 8. strcpy(buf, left)
     emit_mov_reg_rbp(PlatformDefs::ARG1, buf_off);
     emit_mov_reg_rbp(PlatformDefs::ARG2, left_off);
     emit_call_extern("strcpy");
 
-    // 7. strcat(buf, right)
+    // 9. strcat(buf, right)
     emit_mov_reg_rbp(PlatformDefs::ARG1, buf_off);
     emit_mov_reg_rbp(PlatformDefs::ARG2, right_off);
     emit_call_extern("strcat");
 
-    // 8. Resultado em RAX = buf
+    // 10. Resultado em RAX = buf
     emit_mov_reg_rbp(reg::RAX, buf_off);
 }
 
 void emit_binop_float(const BinOpExpr& node, RuntimeType lt, RuntimeType rt) {
     (void)lt; (void)rt;
-    emit_expr_as_float(*node.left);
-    emit_movsd_xmm_xmm(xmm::XMM1, xmm::XMM0);
 
+    // Avaliar left → salvar na stack (seguro pra operações aninhadas)
+    emit_expr_as_float(*node.left);
+    std::string left_tmp = "__binop_fl_" + std::to_string(text_->pos());
+    int32_t left_off = alloc_local(left_tmp);
+    emit_movsd_rbp_xmm(left_off, xmm::XMM0);
+
+    // Avaliar right → XMM0 (pode usar XMM1 internamente sem problema)
     emit_expr_as_float(*node.right);
+
+    // Recuperar left da stack → XMM1
+    emit_movsd_xmm_rbp(xmm::XMM1, left_off);
 
     // XMM1 = left, XMM0 = right
 
@@ -525,9 +614,17 @@ void emit_chamada(const ChamadaExpr& node) {
     std::vector<int32_t> arg_offsets;
     std::vector<RuntimeType> arg_types;
 
+    // Buscar tipos de parâmetros declarados no JSON (funções externas)
+    std::vector<RuntimeType>* extern_param_types = nullptr;
+    {
+        auto ept = func_param_types_.find(node.name);
+        if (ept != func_param_types_.end()) {
+            extern_param_types = &ept->second;
+        }
+    }
+
     for (size_t i = 0; i < node.args.size(); i++) {
         RuntimeType type = infer_expr_type(*node.args[i]);
-        arg_types.push_back(type);
 
         // Registrar tipos dos argumentos na FuncInfo
         auto fit = declared_funcs_.find(node.name);
@@ -540,7 +637,26 @@ void emit_chamada(const ChamadaExpr& node) {
             }
         }
 
-        emit_expr(*node.args[i]);
+        // Verificar se o JSON espera decimal nesta posição
+        bool needs_float_conv = false;
+        if (extern_param_types && i < extern_param_types->size()) {
+            if ((*extern_param_types)[i] == RuntimeType::Float && type != RuntimeType::Float) {
+                needs_float_conv = true;
+            }
+        }
+
+        if (needs_float_conv) {
+            // Emitir expressão como float: se é int, converte RAX→XMM0
+            emit_expr(*node.args[i]);
+            if (type != RuntimeType::Float) {
+                emit_cvtsi2sd(xmm::XMM0, reg::RAX);
+            }
+            type = RuntimeType::Float;
+        } else {
+            emit_expr(*node.args[i]);
+        }
+
+        arg_types.push_back(type);
 
         std::string temp = "__arg_" + std::to_string(i) + "_" +
                            std::to_string(text_->pos());
@@ -616,6 +732,14 @@ void emit_chamada(const ChamadaExpr& node) {
     }
 
     emit_call_symbol(sym_idx);
+
+    // Se a função externa retorna decimal, o valor está em RAX como bits de double.
+    // Mover pra XMM0 pra que o resto do codegen trate como float.
+    auto ret_it = func_return_types_.find(node.name);
+    if (ret_it != func_return_types_.end() && ret_it->second == RuntimeType::Float) {
+        // MOVQ XMM0, RAX (mover bits raw, sem converter)
+        emit_movq_xmm_gpr(xmm::XMM0, reg::RAX);
+    }
 }
 
 // ======================================================================

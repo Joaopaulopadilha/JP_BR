@@ -1,6 +1,13 @@
 importar janela
+importar tempo
 
-jn_criar("titulo", 300, 300)
+janela = jn_criar("ação", 300, 300)
+
+# Parâmetros: janela, X1, Y1, X2, Y2, R, G, B
+# Exemplo: 255, 0, 0 = Linha vermelha
+linha = jn_desenhar_linha(janela, 100, 100, 200, 200, 0, 0, 0)
+linha2 = jn_desenhar_linha(janela, 100, 100, 200, 100, 0, 0, 0)
 
 enquanto verdadeiro:
-    jn_exibir()
+
+    jn_exibir(janela)

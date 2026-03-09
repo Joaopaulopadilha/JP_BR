@@ -1,0 +1,6 @@
+importar sml3d
+
+janela = sm_window("ação, utf8 suportado", 600, 600)
+
+enquanto verdadeiro:
+    sm_display(janela)

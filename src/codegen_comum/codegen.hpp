@@ -215,6 +215,7 @@ private:
     std::vector<LoopContext> loop_stack_;
     std::unordered_map<std::string, RuntimeType> var_types_;
     std::unordered_map<std::string, RuntimeType> func_return_types_;
+    std::unordered_map<std::string, std::vector<RuntimeType>> func_param_types_;
     std::vector<std::string> extra_obj_paths_;
     std::vector<std::string> extra_libs_;
     std::vector<std::string> extra_lib_paths_;

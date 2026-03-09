@@ -1,0 +1,113 @@
+importar sml3d
+
+janela = sm_window("Colisão + Gravidade", 800, 600)
+sm_background(janela, 30, 30, 50)
+
+# Câmera orbital
+cam = sm_camera(janela, 0, 5, 15, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 15)
+sm_camera_orbital_angles(cam, 0, 25)
+
+# Jogador (cubo azul) — com gravidade
+jogador = sm_cube(janela)
+sm_color(jogador, 50, 150, 255)
+sm_position(jogador, -4, 5, 0)
+sm_gravity(jogador, 1)
+
+# Obstáculos (cubos vermelhos)
+obs1 = sm_cube(janela)
+sm_color(obs1, 255, 80, 50)
+sm_position(obs1, 2, 0, 0)
+sm_solid(obs1, 1)
+
+obs2 = sm_cube(janela)
+sm_color(obs2, 255, 80, 50)
+sm_position(obs2, -1, 0, 3)
+sm_solid(obs2, 1)
+
+obs3 = sm_cube(janela)
+sm_color(obs3, 255, 80, 50)
+sm_position(obs3, 3, 0, -2)
+sm_solid(obs3, 1)
+
+# Plataforma elevada (cubo largo)
+plataforma = sm_cube(janela)
+sm_color(plataforma, 200, 180, 50)
+sm_position(plataforma, 0, 2, -4)
+sm_scale(plataforma, 3, 0.3, 3)
+sm_solid(plataforma, 1)
+
+# Chão
+plano = sm_plane(janela)
+sm_position(plano, 0, -0.5, 0)
+sm_scale(plano, 20, 1, 20)
+sm_color(plano, 60, 60, 60)
+sm_solid(plano, 1)
+
+# Variáveis do jogador
+px = -4.0
+pz = 0.0
+vel = 5.0
+
+# Câmera
+angH = 0.0
+angV = 25.0
+dist = 15.0
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    # ---- MOVER JOGADOR (WASD) ----
+    se sm_key_pressed("w"):
+        pz = pz - vel * dt
+    se sm_key_pressed("s"):
+        pz = pz + vel * dt
+    se sm_key_pressed("a"):
+        px = px - vel * dt
+    se sm_key_pressed("d"):
+        px = px + vel * dt
+
+    # Pulo com espaço
+    se sm_key_pressed("space"):
+        se sm_on_ground(jogador):
+            sm_velocity(jogador, 0, 6, 0)
+
+    # Aplicar posição horizontal (Y vem da física)
+    sm_position(jogador, px, sm_bounds_min_y(jogador) + 0.5, pz)
+
+    # ---- CÂMERA ORBITAL (mouse direito + scroll) ----
+    dx = sm_mouse_dx()
+    dy = sm_mouse_dy()
+    scr = sm_mouse_scroll()
+
+    se sm_mouse_button(1):
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - scr
+    se dist < 3.0:
+        dist = 3.0
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+
+    # ---- COLISÕES ----
+    se sm_collision(jogador, obs1):
+        sm_color(obs1, 255, 255, 50)
+    senao:
+        sm_color(obs1, 255, 80, 50)
+
+    se sm_collision(jogador, obs2):
+        sm_color(obs2, 255, 255, 50)
+    senao:
+        sm_color(obs2, 255, 80, 50)
+
+    se sm_collision(jogador, obs3):
+        sm_color(obs3, 255, 255, 50)
+    senao:
+        sm_color(obs3, 255, 80, 50)
+
+    # ---- FÍSICA E RENDER ----
+    sm_physics_update(janela)
+    sm_display(janela)

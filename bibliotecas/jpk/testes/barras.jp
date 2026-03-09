@@ -1,0 +1,26 @@
+importar imgui
+importar tempo
+
+janela1 = imgui.janela("Gráfico de Barras", 500, 400)
+
+# Etiquetas para os nomes
+imgui.etiqueta(janela1, "Candidato A:", 20, 50)
+imgui.etiqueta(janela1, "Candidato B:", 20, 100)
+imgui.etiqueta(janela1, "Candidato C:", 20, 150)
+
+# Barras horizontais
+barra1 = imgui.barra(janela1, 130, 50, 300, 25, 0, 100, "h")
+imgui.barra_cor(barra1, 0, 200, 0)
+imgui.barra_valor(barra1, 75)
+
+barra2 = imgui.barra(janela1, 130, 100, 300, 25, 0, 100, "h")
+imgui.barra_cor(barra2, 0, 0, 200)
+imgui.barra_valor(barra2, 45)
+
+barra3 = imgui.barra(janela1, 130, 150, 300, 25, 0, 100, "h")
+imgui.barra_cor(barra3, 200, 0, 0)
+imgui.barra_valor(barra3, 60)
+
+loop:
+    imgui.exibir(janela1)
+    tempo.dormir(50)

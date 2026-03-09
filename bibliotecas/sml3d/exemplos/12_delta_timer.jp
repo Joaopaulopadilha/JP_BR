@@ -1,0 +1,17 @@
+importar sml3d
+
+janela = sm_window("Timer", 800, 600)
+sm_fps_limit(240)
+
+# Cronômetro pra spawnar inimigos a cada 3 segundos
+spawn_timer = sm_timer_create()
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    # A cada 3 segundos
+    se sm_timer_elapsed(spawn_timer) > 3.0:
+        saida("Spawn! Tempo total:", sm_timer(), "FPS:", sm_fps())
+        sm_timer_reset(spawn_timer)
+
+    sm_display(janela)
