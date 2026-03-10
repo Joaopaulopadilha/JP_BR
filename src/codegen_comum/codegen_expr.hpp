@@ -670,14 +670,26 @@ void emit_chamada(const ChamadaExpr& node) {
         arg_offsets.push_back(off);
     }
 
+    // Funções externas (.jpd) recebem tudo como int64_t — decimais vão
+    // como bits de double nos registradores inteiros (GPR), não nos XMM.
+    // Funções internas do usuário e do sistema usam a ABI normal da plataforma.
+    bool is_extern_jpd = (extern_param_types != nullptr);
+
     // Carregar args nos registradores
     for (size_t i = 0; i < node.args.size(); i++) {
         if (i < MAX_REG_ARGS) {
             if (arg_types[i] == RuntimeType::Float) {
-                emit_movsd_xmm_rbp(arg_xmms[i], arg_offsets[i]);
-                // Windows variádica: float deve ir TAMBÉM no GPR
-                if constexpr (PlatformDefs::VARIADIC_FLOAT_MIRROR_GPR) {
-                    emit_movq_gpr_xmm(arg_regs[i], arg_xmms[i]);
+                if (is_extern_jpd) {
+                    // Função .jpd: float deve ir no GPR como bits de double
+                    // (a função C recebe int64_t e faz toDouble internamente)
+                    emit_movsd_xmm_rbp(xmm::XMM0, arg_offsets[i]);
+                    emit_movq_gpr_xmm(arg_regs[i], xmm::XMM0);
+                } else {
+                    emit_movsd_xmm_rbp(arg_xmms[i], arg_offsets[i]);
+                    // Windows variádica: float deve ir TAMBÉM no GPR
+                    if constexpr (PlatformDefs::VARIADIC_FLOAT_MIRROR_GPR) {
+                        emit_movq_gpr_xmm(arg_regs[i], arg_xmms[i]);
+                    }
                 }
             } else {
                 emit_mov_reg_rbp(arg_regs[i], arg_offsets[i]);

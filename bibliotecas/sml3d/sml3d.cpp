@@ -272,6 +272,12 @@ JP_EXPORT int64_t sm_camera_follow_update(int64_t camId) {
     return 1;
 }
 
+// sm_camera_collision(cam_id, ativar) -> inteiro (1=ok, 0=falha)
+// Ativa/desativa colisão de câmera (impede a câmera de atravessar meshes)
+JP_EXPORT int64_t sm_camera_collision(int64_t camId, int64_t ativar) {
+    return cameraCollision((int)camId, ativar != 0) ? 1 : 0;
+}
+
 // =============================================================================
 // INPUT — TECLADO
 // =============================================================================

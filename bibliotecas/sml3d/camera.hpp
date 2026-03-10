@@ -51,27 +51,48 @@ struct SML3DCamera {
     // Modo atual
     SML3DCameraModo modo = SML3D_CAMERA_LIVRE;
 
+    // Colisão de câmera: impede que a câmera atravesse meshes
+    bool camera_collision = true;
+    float collision_offset = 0.2f;  // Offset pra não grudar na superfície
+
+    // Posição efetiva da câmera orbital (após colisão)
+    // Atualizada por atualizarCameraCollision() antes do render
+    Vec3 pos_orbital_efetiva = {0, 0, 0};
+    bool pos_orbital_calculada = false;  // Flag: se true, usa pos_efetiva no calcularView
+
     bool ativa = true;
+
+    // -----------------------------------------------------------------
+    // Calcula posição orbital desejada (sem colisão)
+    // -----------------------------------------------------------------
+    Vec3 calcularPosOrbital() const {
+        float radYaw   = orbital_yaw   * (float)M_PI / 180.0f;
+        float radPitch = orbital_pitch * (float)M_PI / 180.0f;
+
+        float p = radPitch;
+        if (p > 1.55f) p = 1.55f;
+        if (p < -1.55f) p = -1.55f;
+
+        float cosP = cosf(p);
+        Vec3 pos;
+        pos.x = alvo.x + orbital_dist * cosP * sinf(radYaw);
+        pos.y = alvo.y + orbital_dist * sinf(p);
+        pos.z = alvo.z + orbital_dist * cosP * cosf(radYaw);
+        return pos;
+    }
 
     // -----------------------------------------------------------------
     // Calcula a view matrix baseada no modo
     // -----------------------------------------------------------------
     Mat4 calcularView() const {
         if (modo == SML3D_CAMERA_ORBITAL) {
-            // Orbital: posição calculada a partir de alvo + ângulos + distância
-            float radYaw   = orbital_yaw   * (float)M_PI / 180.0f;
-            float radPitch = orbital_pitch * (float)M_PI / 180.0f;
-
-            // Clamp pitch pra evitar gimbal lock
-            float p = radPitch;
-            if (p > 1.55f) p = 1.55f;
-            if (p < -1.55f) p = -1.55f;
-
-            float cosP = cosf(p);
             Vec3 pos;
-            pos.x = alvo.x + orbital_dist * cosP * sinf(radYaw);
-            pos.y = alvo.y + orbital_dist * sinf(p);
-            pos.z = alvo.z + orbital_dist * cosP * cosf(radYaw);
+            if (pos_orbital_calculada) {
+                // Usar posição ajustada pela colisão
+                pos = pos_orbital_efetiva;
+            } else {
+                pos = calcularPosOrbital();
+            }
 
             return Mat4::lookAt(pos, alvo, up);
         }
@@ -447,6 +468,17 @@ static void atualizarRotacaoSuave(int meshId, float velocidade) {
     float nova = atual + diff * velocidade;
 
     itMesh->second.rotacao.y = nova;
+}
+
+// =============================================================================
+// COLISÃO DE CÂMERA — toggle
+// =============================================================================
+
+static bool cameraCollision(int id, bool ativar) {
+    auto it = g_cameras.find(id);
+    if (it == g_cameras.end()) return false;
+    it->second.camera_collision = ativar;
+    return true;
 }
 
 // =============================================================================

@@ -1,0 +1,242 @@
+# 25_camera_collision.jp
+# Exemplo com camera proxima ao player e colisao de camera ativada
+
+importar sml3d
+
+janela = sm_window("Camera Collision", 800, 600)
+sm_background(janela, 100, 150, 200)
+
+cam = sm_camera(janela, 0, 5, 10, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 3)
+sm_camera_orbital_angles(cam, 0, 15)
+
+# Hitbox invisivel
+hitbox = sm_cube(janela)
+sm_scale(hitbox, 0.6, 1.8, 0.6)
+sm_position(hitbox, 0, 3, 0)
+sm_visible(hitbox, 0)
+sm_gravity(hitbox, 1)
+sm_gravity_force(-15.0)
+
+# Modelo com todas as animacoes
+jogador = sm_model(janela, "bibliotecas/sml3d/modelos/Idle.fbx")
+sm_scale(jogador, 5, 5, 5)
+sm_color(jogador, 220, 180, 150)
+
+clip_idle     = 0
+clip_walk     = sm_anim_load(jogador, "bibliotecas/sml3d/modelos/Walking.fbx")
+clip_run      = sm_anim_load(jogador, "bibliotecas/sml3d/modelos/Fast Run.fbx")
+clip_jump     = sm_anim_load(jogador, "bibliotecas/sml3d/modelos/Jump.fbx")
+clip_strafe_l = sm_anim_load(jogador, "bibliotecas/sml3d/modelos/Left Strafe Walking.fbx")
+clip_strafe_r = sm_anim_load(jogador, "bibliotecas/sml3d/modelos/Right Strafe Walking.fbx")
+
+offsetY = -0.9
+
+# Piso
+piso = sm_plane(janela)
+sm_position(piso, 0, 0, 0)
+sm_scale(piso, 40, 1, 40)
+sm_texture(piso, "bibliotecas/sml3d/imagens/textura_grama.png")
+sm_texture_tile(piso, 20, 20)
+sm_solid(piso, 1)
+
+# Escadaria
+cx1 = sm_cube(janela)
+sm_position(cx1, 3, 0.5, 0)
+sm_scale(cx1, 2, 1, 2)
+sm_color(cx1, 180, 120, 60)
+sm_solid(cx1, 1)
+
+cx2 = sm_cube(janela)
+sm_position(cx2, 6, 1.0, 0)
+sm_scale(cx2, 2, 2, 2)
+sm_color(cx2, 160, 100, 50)
+sm_solid(cx2, 1)
+
+cx3 = sm_cube(janela)
+sm_position(cx3, 9, 1.5, 0)
+sm_scale(cx3, 2, 3, 2)
+sm_color(cx3, 140, 85, 40)
+sm_solid(cx3, 1)
+
+plat = sm_cube(janela)
+sm_position(plat, 12, 2.0, 0)
+sm_scale(plat, 4, 4, 4)
+sm_color(plat, 120, 70, 35)
+sm_solid(plat, 1)
+
+# Torre
+t1 = sm_cube(janela)
+sm_position(t1, -6, 0.5, 4)
+sm_scale(t1, 2, 1, 2)
+sm_color(t1, 100, 100, 180)
+sm_solid(t1, 1)
+
+t2 = sm_cube(janela)
+sm_position(t2, -6, 1.5, 4)
+sm_scale(t2, 2, 1, 2)
+sm_color(t2, 90, 90, 170)
+sm_solid(t2, 1)
+
+t3 = sm_cube(janela)
+sm_position(t3, -6, 2.5, 4)
+sm_scale(t3, 2, 1, 2)
+sm_color(t3, 80, 80, 160)
+sm_solid(t3, 1)
+
+t4 = sm_cube(janela)
+sm_position(t4, -6, 3.5, 4)
+sm_scale(t4, 2, 1, 2)
+sm_color(t4, 70, 70, 150)
+sm_solid(t4, 1)
+
+ponte = sm_cube(janela)
+sm_position(ponte, 3, 3.5, 4)
+sm_scale(ponte, 16, 0.3, 2)
+sm_color(ponte, 200, 180, 140)
+sm_solid(ponte, 1)
+
+# Objeto do Blender
+jplang3d = sm_model(janela, "bibliotecas/sml3d/modelos/jplang3d.fbx")
+sm_position(jplang3d, 16, 1, -20)
+sm_rotation(jplang3d, 0, 45, 0)
+#sm_color(jplang3d, 0, 0, 250)
+sm_scale(jplang3d, 1, 1, 1)
+
+cubo_vm = sm_model(janela, "bibliotecas/sml3d/modelos/cubo_vm.fbx")
+sm_position(cubo_vm, 16, 1, -10)
+sm_rotation(cubo_vm, 2, 45, 0)
+#sm_color(jplang3d, 0, 0, 250)
+sm_scale(cubo_vm, 0.5, 0.5, 0.5)
+
+sm_camera_follow(cam, hitbox)
+sm_camera_collision(cam, 1)
+sm_mouse_grab(janela, 1)
+sm_mouse_grab_toggle(janela, "escape")
+
+vel = 5.0
+angH = 0.0
+angV = 15.0
+dist = 6.0
+estado = -1
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    correndo = sm_key_pressed("shift")
+    speed = vel
+    se correndo:
+        speed = vel * 2.5
+
+    frente = 0.0
+    lado = 0.0
+    se sm_key_pressed("w"):
+        frente = frente + speed * dt
+    se sm_key_pressed("s"):
+        frente = frente - speed * dt
+    se sm_key_pressed("a"):
+        lado = lado - speed * dt
+    se sm_key_pressed("d"):
+        lado = lado + speed * dt
+
+    se frente != 0.0:
+        sm_move_relative(hitbox, cam, frente, 0)
+    se lado != 0.0:
+        sm_move_relative(hitbox, cam, 0, lado)
+
+    se sm_key_pressed("space"):
+        se sm_on_ground(hitbox):
+            sm_velocity(hitbox, 0, 6, 0)
+
+    # Decidir animacao com blend
+    no_chao = sm_on_ground(hitbox)
+
+    se no_chao == 0:
+        # No ar = jump sem blend
+        se estado != clip_jump:
+            sm_anim_clip(jogador, clip_jump)
+            sm_anim_loop(jogador, 0)
+            sm_anim_blend(jogador, -1, 0)
+            estado = clip_jump
+    senao:
+        se frente != 0.0 && correndo:
+            # Correndo
+            se estado != clip_run:
+                sm_anim_clip(jogador, clip_run)
+                sm_anim_loop(jogador, 1)
+                estado = clip_run
+            # Blend com strafe se tem lado
+            se lado < 0.0:
+                sm_anim_blend(jogador, clip_strafe_l, 0.4)
+            senao:
+                se lado > 0.0:
+                    sm_anim_blend(jogador, clip_strafe_r, 0.4)
+                senao:
+                    sm_anim_blend(jogador, -1, 0)
+        senao:
+            se frente != 0.0:
+                # Andando pra frente/tras
+                se estado != clip_walk:
+                    sm_anim_clip(jogador, clip_walk)
+                    sm_anim_loop(jogador, 1)
+                    estado = clip_walk
+                # Blend com strafe se tem lado (diagonal)
+                se lado < 0.0:
+                    sm_anim_blend(jogador, clip_strafe_l, 0.5)
+                senao:
+                    se lado > 0.0:
+                        sm_anim_blend(jogador, clip_strafe_r, 0.5)
+                    senao:
+                        sm_anim_blend(jogador, -1, 0)
+            senao:
+                se lado < 0.0:
+                    # So strafe esquerda
+                    se estado != clip_strafe_l:
+                        sm_anim_clip(jogador, clip_strafe_l)
+                        sm_anim_loop(jogador, 1)
+                        sm_anim_blend(jogador, -1, 0)
+                        estado = clip_strafe_l
+                senao:
+                    se lado > 0.0:
+                        # So strafe direita
+                        se estado != clip_strafe_r:
+                            sm_anim_clip(jogador, clip_strafe_r)
+                            sm_anim_loop(jogador, 1)
+                            sm_anim_blend(jogador, -1, 0)
+                            estado = clip_strafe_r
+                    senao:
+                        # Parado
+                        se estado != clip_idle:
+                            sm_anim_clip(jogador, clip_idle)
+                            sm_anim_loop(jogador, 1)
+                            sm_anim_blend(jogador, -1, 0)
+                            estado = clip_idle
+
+    # Posicionar modelo na hitbox
+    px = sm_position_x(hitbox)
+    py = sm_position_y(hitbox) + offsetY
+    pz = sm_position_z(hitbox)
+    ry = sm_rotation_y(hitbox) * 57.2958
+    sm_position(jogador, px, py, pz)
+    sm_rotation(jogador, 0, ry, 0)
+
+    se sm_mouse_grabbed():
+        dx = sm_mouse_dx()
+        dy = sm_mouse_dy()
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - sm_mouse_scroll() * 0.5
+
+    se dist < 3.0:
+        dist = 3.0
+    se dist > 15.0:
+        dist = 15.0
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+    sm_camera_follow_update(cam)
+
+    sm_physics_update(janela)
+    sm_display(janela)

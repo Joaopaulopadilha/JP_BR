@@ -731,6 +731,9 @@ static int carregarFBXAnimado(int janelaId, const char* caminho) {
     fprintf(stdout, "[sml3d] FBX animado carregado: %s (%d verts, %d tris, %d bones, %d anims)\n",
             caminho, numVerts, numTris, num_bones, (int)anim.clips.size());
 
+    // Extrair material (cor + textura) do FBX e aplicar na mesh
+    aplicarMaterialFBX(cena, mesh_id, caminho);
+
     return mesh_id;
 }
 

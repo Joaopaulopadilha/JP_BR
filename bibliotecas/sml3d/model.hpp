@@ -15,6 +15,158 @@
 #include "ufbx.h"
 
 // =============================================================================
+// HELPER: EXTRAIR DIRETÓRIO DE UM CAMINHO DE ARQUIVO
+// Retorna tudo até a última '/' ou '\', ou "" se não tiver separador.
+// =============================================================================
+
+static std::string extrairDiretorio(const char* caminho) {
+    std::string path(caminho);
+    size_t pos_slash = path.rfind('/');
+    size_t pos_bslash = path.rfind('\\');
+
+    size_t pos = std::string::npos;
+    if (pos_slash != std::string::npos && pos_bslash != std::string::npos) {
+        pos = (pos_slash > pos_bslash) ? pos_slash : pos_bslash;
+    } else if (pos_slash != std::string::npos) {
+        pos = pos_slash;
+    } else if (pos_bslash != std::string::npos) {
+        pos = pos_bslash;
+    }
+
+    if (pos == std::string::npos) return "";
+    return path.substr(0, pos + 1);  // Inclui a barra
+}
+
+// =============================================================================
+// HELPER: EXTRAIR MATERIAL DO FBX E APLICAR NA MESH
+// Pega o primeiro material da primeira mesh do FBX.
+// Extrai: diffuse color (base_color) e textura diffuse (se houver).
+// caminhoFBX: caminho do arquivo FBX (pra resolver caminhos relativos de textura)
+// =============================================================================
+
+static void aplicarMaterialFBX(ufbx_scene* cena, int meshId, const char* caminhoFBX) {
+    if (!cena) return;
+
+    auto itMesh = g_meshes.find(meshId);
+    if (itMesh == g_meshes.end()) return;
+
+    SML3DMesh& mesh = itMesh->second;
+
+    // Procurar o primeiro material nas meshes da cena
+    ufbx_material* material = nullptr;
+
+    for (size_t mi = 0; mi < cena->meshes.count && !material; mi++) {
+        ufbx_mesh* fbx_mesh = cena->meshes.data[mi];
+        if (fbx_mesh->materials.count > 0) {
+            material = fbx_mesh->materials.data[0];
+        }
+    }
+
+    // Fallback: pegar de materials globais da cena
+    if (!material && cena->materials.count > 0) {
+        material = cena->materials.data[0];
+    }
+
+    if (!material) return;
+
+    // =========================================================================
+    // 1. EXTRAIR COR DIFFUSE (base_color do PBR, ou diffuse_color do legacy)
+    // =========================================================================
+
+    bool cor_encontrada = false;
+
+    // Tentar PBR base_color primeiro
+    if (material->pbr.base_color.has_value) {
+        ufbx_vec4 cor = material->pbr.base_color.value_vec4;
+        mesh.cor_r = (float)cor.x;
+        mesh.cor_g = (float)cor.y;
+        mesh.cor_b = (float)cor.z;
+        cor_encontrada = true;
+    }
+    // Fallback: diffuse_color do FBX legacy
+    else if (material->fbx.diffuse_color.has_value) {
+        ufbx_vec4 cor = material->fbx.diffuse_color.value_vec4;
+        mesh.cor_r = (float)cor.x;
+        mesh.cor_g = (float)cor.y;
+        mesh.cor_b = (float)cor.z;
+        cor_encontrada = true;
+    }
+
+    if (cor_encontrada) {
+        fprintf(stdout, "[sml3d] Material cor: (%.2f, %.2f, %.2f)\n",
+                mesh.cor_r, mesh.cor_g, mesh.cor_b);
+    }
+
+    // =========================================================================
+    // 2. EXTRAIR TEXTURA DIFFUSE
+    // =========================================================================
+
+    ufbx_texture* textura = nullptr;
+
+    // Tentar PBR base_color texture
+    if (material->pbr.base_color.texture) {
+        textura = material->pbr.base_color.texture;
+    }
+    // Fallback: diffuse_color texture do FBX legacy
+    else if (material->fbx.diffuse_color.texture) {
+        textura = material->fbx.diffuse_color.texture;
+    }
+
+    if (textura && textura->filename.length > 0) {
+        // Resolver caminho da textura relativo ao FBX
+        std::string dir_fbx = extrairDiretorio(caminhoFBX);
+
+        // O ufbx pode dar caminho absoluto ou relativo
+        std::string tex_filename(textura->filename.data, textura->filename.length);
+
+        // Tentar relative_filename primeiro (mais confiável)
+        if (textura->relative_filename.length > 0) {
+            tex_filename = std::string(textura->relative_filename.data,
+                                       textura->relative_filename.length);
+        }
+
+        // Substituir backslashes por forward slashes
+        for (char& c : tex_filename) {
+            if (c == '\\') c = '/';
+        }
+
+        // Se é caminho relativo, resolver em relação ao diretório do FBX
+        std::string caminho_final;
+        if (tex_filename.size() > 1 && (tex_filename[0] == '/' ||
+            (tex_filename.size() > 2 && tex_filename[1] == ':'))) {
+            // Caminho absoluto — usar direto
+            caminho_final = tex_filename;
+        } else {
+            // Caminho relativo — concatenar com diretório do FBX
+            caminho_final = dir_fbx + tex_filename;
+        }
+
+        // Tentar carregar a textura
+        int texId = carregarTextura(caminho_final.c_str());
+        if (texId > 0) {
+            aplicarTexturaMesh(meshId, texId);
+            fprintf(stdout, "[sml3d] Material textura: %s\n", caminho_final.c_str());
+        } else {
+            // Tentar só o nome do arquivo (sem path) no diretório do FBX
+            size_t last_sep = tex_filename.rfind('/');
+            if (last_sep != std::string::npos) {
+                std::string nome_arquivo = tex_filename.substr(last_sep + 1);
+                std::string tentativa = dir_fbx + nome_arquivo;
+                texId = carregarTextura(tentativa.c_str());
+                if (texId > 0) {
+                    aplicarTexturaMesh(meshId, texId);
+                    fprintf(stdout, "[sml3d] Material textura (fallback): %s\n", tentativa.c_str());
+                } else {
+                    fprintf(stderr, "[sml3d] Textura não encontrada: %s\n", caminho_final.c_str());
+                }
+            } else {
+                fprintf(stderr, "[sml3d] Textura não encontrada: %s\n", caminho_final.c_str());
+            }
+        }
+    }
+}
+
+// =============================================================================
 // PARSER OBJ
 // Suporta:
 //   - Vértices (v), normais (vn), UVs (vt)
@@ -334,10 +486,9 @@ static int carregarFBX(int janelaId, const char* caminho) {
         }
     }
 
-    ufbx_free_scene(cena);
-
     if (vertices.empty() || indices.empty()) {
         fprintf(stderr, "[sml3d] FBX vazio ou sem meshes: %s\n", caminho);
+        ufbx_free_scene(cena);
         return 0;
     }
 
@@ -371,6 +522,11 @@ static int carregarFBX(int janelaId, const char* caminho) {
     int numVerts = (int)(vertices.size() / 8);
     fprintf(stdout, "[sml3d] FBX carregado: %s (%d verts, %d tris, bounds [%.1f,%.1f,%.1f]-[%.1f,%.1f,%.1f])\n",
             caminho, numVerts, numTris, bmin_x, bmin_y, bmin_z, bmax_x, bmax_y, bmax_z);
+
+    // Extrair material (cor + textura) do FBX e aplicar na mesh
+    aplicarMaterialFBX(cena, id, caminho);
+
+    ufbx_free_scene(cena);
 
     return id;
 }

@@ -213,6 +213,11 @@ static int exibirJanela(int id) {
 
     SML3DCamera* cam = obterCameraAtivaJanela(id);
     if (cam) {
+        // Atualizar colisão de câmera antes de calcular a view
+        auto itCamAtiva = g_camera_ativa_janela.find(id);
+        if (itCamAtiva != g_camera_ativa_janela.end()) {
+            atualizarCameraCollision(itCamAtiva->second);
+        }
         view = cam->calcularView();
         projection = cam->calcularProjection(aspect);
     } else {

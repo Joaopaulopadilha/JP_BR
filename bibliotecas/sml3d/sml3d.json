@@ -35,6 +35,7 @@
         { "nome": "sm_camera_follow",  "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
         { "nome": "sm_move_relative",  "retorno": "inteiro", "params": ["inteiro", "inteiro", "decimal", "decimal"] },
         { "nome": "sm_camera_follow_update", "retorno": "inteiro", "params": ["inteiro"] },
+        { "nome": "sm_camera_collision",    "retorno": "inteiro", "params": ["inteiro", "inteiro"] },
 
         { "nome": "sm_key_pressed",      "retorno": "inteiro", "params": ["texto"] },
         { "nome": "sm_key_down",         "retorno": "inteiro", "params": ["texto"] },

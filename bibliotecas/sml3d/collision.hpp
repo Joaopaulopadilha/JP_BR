@@ -165,7 +165,158 @@ static bool rayIntersectAABB(Vec3 origin, Vec3 dir, const SML3DAABB& box,
 }
 
 // =============================================================================
-// API: RAYCAST DA CÂMERA PARA UMA MESH
+// RAYCAST: RAY vs AABB com retorno do T de entrada
+// Retorna true se intersecta, e out_t recebe a distância ao longo do raio
+// =============================================================================
+
+static bool rayIntersectAABB_t(Vec3 origin, Vec3 dir, const SML3DAABB& box,
+                               float& out_t,
+                               float tmin_limit = 0.0f, float tmax_limit = 10000.0f) {
+    float tmin = tmin_limit;
+    float tmax = tmax_limit;
+
+    // Eixo X
+    if (fabsf(dir.x) > 0.00001f) {
+        float invD = 1.0f / dir.x;
+        float t0 = (box.min_x - origin.x) * invD;
+        float t1 = (box.max_x - origin.x) * invD;
+        if (invD < 0.0f) { float tmp = t0; t0 = t1; t1 = tmp; }
+        if (t0 > tmin) tmin = t0;
+        if (t1 < tmax) tmax = t1;
+        if (tmax < tmin) return false;
+    } else {
+        if (origin.x < box.min_x || origin.x > box.max_x) return false;
+    }
+
+    // Eixo Y
+    if (fabsf(dir.y) > 0.00001f) {
+        float invD = 1.0f / dir.y;
+        float t0 = (box.min_y - origin.y) * invD;
+        float t1 = (box.max_y - origin.y) * invD;
+        if (invD < 0.0f) { float tmp = t0; t0 = t1; t1 = tmp; }
+        if (t0 > tmin) tmin = t0;
+        if (t1 < tmax) tmax = t1;
+        if (tmax < tmin) return false;
+    } else {
+        if (origin.y < box.min_y || origin.y > box.max_y) return false;
+    }
+
+    // Eixo Z
+    if (fabsf(dir.z) > 0.00001f) {
+        float invD = 1.0f / dir.z;
+        float t0 = (box.min_z - origin.z) * invD;
+        float t1 = (box.max_z - origin.z) * invD;
+        if (invD < 0.0f) { float tmp = t0; t0 = t1; t1 = tmp; }
+        if (t0 > tmin) tmin = t0;
+        if (t1 < tmax) tmax = t1;
+        if (tmax < tmin) return false;
+    } else {
+        if (origin.z < box.min_z || origin.z > box.max_z) return false;
+    }
+
+    out_t = tmin;
+    return true;
+}
+
+// =============================================================================
+// COLISÃO DE CÂMERA — atualizar posição efetiva da câmera orbital
+// Faz raycast do alvo até a posição desejada contra todas as meshes visíveis
+// da janela (excluindo a mesh seguida pela câmera).
+// Chamar todo frame ANTES do render.
+// =============================================================================
+
+static void atualizarCameraCollision(int camId) {
+    auto itCam = g_cameras.find(camId);
+    if (itCam == g_cameras.end()) return;
+
+    SML3DCamera& cam = itCam->second;
+
+    // Só funciona no modo orbital
+    if (cam.modo != SML3D_CAMERA_ORBITAL) {
+        cam.pos_orbital_calculada = false;
+        return;
+    }
+
+    // Calcular posição desejada
+    Vec3 posDesejada = cam.calcularPosOrbital();
+
+    // Se colisão está desativada, usar posição desejada direto
+    if (!cam.camera_collision) {
+        cam.pos_orbital_efetiva = posDesejada;
+        cam.pos_orbital_calculada = true;
+        return;
+    }
+
+    // Direção: do alvo até a posição desejada
+    Vec3 dir;
+    dir.x = posDesejada.x - cam.alvo.x;
+    dir.y = posDesejada.y - cam.alvo.y;
+    dir.z = posDesejada.z - cam.alvo.z;
+
+    float distTotal = sqrtf(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+    if (distTotal < 0.001f) {
+        cam.pos_orbital_efetiva = posDesejada;
+        cam.pos_orbital_calculada = true;
+        return;
+    }
+
+    // Normalizar direção
+    Vec3 dirNorm;
+    dirNorm.x = dir.x / distTotal;
+    dirNorm.y = dir.y / distTotal;
+    dirNorm.z = dir.z / distTotal;
+
+    // Descobrir qual mesh a câmera está seguindo (pra ignorar no raycast)
+    int meshSeguida = -1;
+    auto itFollow = g_camera_follow.find(camId);
+    if (itFollow != g_camera_follow.end()) {
+        meshSeguida = itFollow->second;
+    }
+
+    // Raycast contra todas as meshes visíveis da janela
+    float menorT = distTotal;  // Começa com a distância total (sem colisão)
+    bool colidiu = false;
+
+    for (auto& [meshId, mesh] : g_meshes) {
+        // Ignorar meshes de outra janela, invisíveis, e a mesh seguida
+        if (mesh.janelaId != cam.janelaId) continue;
+        if (!mesh.visivel) continue;
+        if (meshId == meshSeguida) continue;
+
+        SML3DAABB box = calcularAABB(mesh);
+
+        // Ignorar meshes cujo AABB contém o ponto de origem (alvo da câmera)
+        // Se a origem está dentro da AABB, o raio começa dentro da mesh
+        // (ex: chão gigante embaixo do player) — não deve bloquear a câmera
+        if (cam.alvo.x >= box.min_x && cam.alvo.x <= box.max_x &&
+            cam.alvo.y >= box.min_y && cam.alvo.y <= box.max_y &&
+            cam.alvo.z >= box.min_z && cam.alvo.z <= box.max_z) {
+            continue;
+        }
+
+        float t;
+        if (rayIntersectAABB_t(cam.alvo, dirNorm, box, t, 0.0f, distTotal)) {
+            if (t < menorT) {
+                menorT = t;
+                colidiu = true;
+            }
+        }
+    }
+
+    if (colidiu) {
+        // Aproximar a câmera: posicionar no ponto de colisão com offset
+        float distFinal = menorT - cam.collision_offset;
+        if (distFinal < 0.1f) distFinal = 0.1f;  // Mínimo pra não ficar dentro do alvo
+
+        cam.pos_orbital_efetiva.x = cam.alvo.x + dirNorm.x * distFinal;
+        cam.pos_orbital_efetiva.y = cam.alvo.y + dirNorm.y * distFinal;
+        cam.pos_orbital_efetiva.z = cam.alvo.z + dirNorm.z * distFinal;
+    } else {
+        cam.pos_orbital_efetiva = posDesejada;
+    }
+
+    cam.pos_orbital_calculada = true;
+}
 // Calcula a direção que a câmera está olhando e testa se o raio
 // intersecta a bounding box da mesh
 // =============================================================================
