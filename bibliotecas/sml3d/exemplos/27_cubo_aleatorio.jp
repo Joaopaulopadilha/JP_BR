@@ -1,0 +1,92 @@
+# 27_cubo_aleatorio.jp
+# Cubo girando que se move para posicoes aleatorias a cada 2 segundos
+
+importar sml3d
+importar aleatorio
+
+janela = sm_window("Cubo Aleatorio", 800, 600)
+sm_background(janela, 30, 30, 50)
+
+cam = sm_camera(janela, 0, 8, 15, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 15)
+sm_camera_orbital_angles(cam, 0, 35)
+
+# Piso
+piso = sm_plane(janela)
+sm_scale(piso, 20, 1, 20)
+sm_color(piso, 60, 60, 80)
+sm_solid(piso, 1)
+
+# Cubo que vai girar e se mover
+cubo = sm_cube(janela)
+sm_position(cubo, 0, 1, 0)
+sm_scale(cubo, 1.5, 1.5, 1.5)
+sm_color(cubo, 255, 100, 50)
+
+# Mouse grab pra camera orbital
+sm_mouse_grab(janela, 1)
+sm_mouse_grab_toggle(janela, "escape")
+
+# Angulo de rotacao
+angulo = 0.0
+
+# Timer pra controlar troca de posicao
+lugar = 2.0
+tempo_acumulado = 0.0
+
+# Posicao alvo (pra lerp suave)
+alvo_x = 0.0
+alvo_z = 0.0
+pos_x = 0.0
+pos_z = 0.0
+
+# Camera orbital
+angH = 0.0
+angV = 35.0
+dist = 15.0
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    # Girar o cubo continuamente
+    angulo = angulo + 90.0 * dt
+    sm_rotation(cubo, angulo * 0.5, angulo, angulo * 0.3)
+
+    # Acumular tempo
+    tempo_acumulado = tempo_acumulado + dt
+
+    # A cada 2 segundos, sortear nova posicao
+    se tempo_acumulado > lugar:
+        tempo_acumulado = 0.0
+        alvo_x = al_numero(-8, 8)
+        alvo_z = al_numero(-8, 8)
+
+        # Trocar cor aleatoriamente tambem
+        cr = al_numero(50, 255)
+        cg = al_numero(50, 255)
+        cb = al_numero(50, 255)
+        sm_color(cubo, cr, cg, cb)
+
+    # Mover suavemente ate a posicao alvo (lerp)
+    pos_x = pos_x + (alvo_x - pos_x) * 5.0 * dt
+    pos_z = pos_z + (alvo_z - pos_z) * 5.0 * dt
+    sm_position(cubo, pos_x, 1, pos_z)
+
+    # Camera orbital livre — mouse orbita, scroll zoom
+    se sm_mouse_grabbed():
+        dx = sm_mouse_dx()
+        dy = sm_mouse_dy()
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - sm_mouse_scroll()
+    se dist < 5.0:
+        dist = 5.0
+    se dist > 30.0:
+        dist = 70.0
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+
+    sm_display(janela)

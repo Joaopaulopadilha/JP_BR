@@ -18,6 +18,7 @@
 #include "model.hpp"
 #include "collision.hpp"
 #include "gravity.hpp"
+#include "vehicle.hpp"
 #include "timer.hpp"
 #include "animation.hpp"
 
@@ -170,6 +171,7 @@ static int exibirJanela(int id) {
         destruirShaderSkinned();
         destruirInput();
         destruirPhysicsJanela(id);
+        destruirVeiculosJanela(id);
         destruirCollisionPropsJanela(id);
         destruirTodasTexturas();
         destruirTodosTimers();

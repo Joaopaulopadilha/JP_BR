@@ -1,0 +1,187 @@
+# 26_carro.jp
+# Exemplo de carro com suspensao e inclinacao — passa por rampas
+
+importar sml3d
+
+janela = sm_window("Carro", 800, 600)
+sm_background(janela, 100, 150, 200)
+
+cam = sm_camera(janela, 0, 5, 10, 0, 0, 0)
+sm_camera_mode(cam, 1)
+sm_camera_orbital_dist(cam, 10)
+sm_camera_orbital_angles(cam, 0, 25)
+sm_camera_collision(cam, 1)
+
+# Piso
+piso = sm_plane(janela)
+sm_position(piso, 0, 0, 0)
+sm_scale(piso, 100, 1, 100)
+sm_texture(piso, "bibliotecas/sml3d/imagens/textura_grama.png")
+sm_texture_tile(piso, 50, 50)
+sm_solid(piso, 1)
+
+# Rampa (degraus)
+r1 = sm_cube(janela)
+sm_position(r1, 0, 0.15, 10)
+sm_scale(r1, 4, 0.3, 3)
+sm_color(r1, 160, 160, 160)
+sm_solid(r1, 1)
+
+r2 = sm_cube(janela)
+sm_position(r2, 0, 0.45, 13)
+sm_scale(r2, 4, 0.3, 3)
+sm_color(r2, 150, 150, 150)
+sm_solid(r2, 1)
+
+r3 = sm_cube(janela)
+sm_position(r3, 0, 0.75, 16)
+sm_scale(r3, 4, 0.3, 3)
+sm_color(r3, 140, 140, 140)
+sm_solid(r3, 1)
+
+r4 = sm_cube(janela)
+sm_position(r4, 0, 1.05, 19)
+sm_scale(r4, 4, 0.3, 3)
+sm_color(r4, 130, 130, 130)
+sm_solid(r4, 1)
+
+# Plataforma elevada
+plat = sm_cube(janela)
+sm_position(plat, 0, 1.05, 24)
+sm_scale(plat, 6, 0.3, 8)
+sm_color(plat, 120, 120, 120)
+sm_solid(plat, 1)
+
+# Corpo do carro
+corpo = sm_cube(janela)
+sm_scale(corpo, 2, 0.6, 4)
+sm_position(corpo, 0, 1.5, 0)
+sm_color(corpo, 200, 50, 50)
+
+# Cabine
+cabine = sm_cube(janela)
+sm_scale(cabine, 1.8, 0.5, 2)
+sm_position(cabine, 0, 0.55, -0.3)
+sm_color(cabine, 180, 40, 40)
+sm_parent(cabine, corpo)
+
+# 4 rodas
+roda_fe = sm_model(janela, "bibliotecas/sml3d/modelos/pneu.fbx")
+sm_scale(roda_fe, 0.3, 0.9, 0.9)
+sm_position(roda_fe, -1.1, -0.6, 1.3)
+sm_offset_rotation(roda_fe, 0, 90, 0)
+sm_parent(roda_fe, corpo)
+
+roda_fd = sm_model(janela, "bibliotecas/sml3d/modelos/pneu.fbx")
+sm_scale(roda_fd, 0.3, 0.9, 0.9)
+sm_position(roda_fd, 1.1, -0.6, 1.3)
+sm_offset_rotation(roda_fd, 180, 90, 0)
+sm_parent(roda_fd, corpo)
+
+roda_te = sm_model(janela, "bibliotecas/sml3d/modelos/pneu.fbx")
+sm_scale(roda_te, 0.3, 0.9, 0.9)
+sm_position(roda_te, -1.1, -0.6, -1.3)
+sm_offset_rotation(roda_te, 0, 90, 0)
+sm_parent(roda_te, corpo)
+
+roda_td = sm_model(janela, "bibliotecas/sml3d/modelos/pneu.fbx")
+sm_scale(roda_td, 0.3, 0.9, 0.9)
+sm_position(roda_td, 1.1, -0.6, -1.3)
+sm_offset_rotation(roda_td, 180, 90, 0)
+sm_parent(roda_td, corpo)
+
+# Registrar como veiculo
+sm_vehicle(corpo)
+sm_vehicle_wheel(corpo, roda_fe, -1.1, -0.6, 1.3)
+sm_vehicle_wheel(corpo, roda_fd, 1.1, -0.6, 1.3)
+sm_vehicle_wheel(corpo, roda_te, -1.1, -0.6, -1.3)
+sm_vehicle_wheel(corpo, roda_td, 1.1, -0.6, -1.3)
+sm_vehicle_suspension(corpo, 30.0, 12.0)
+
+# Camera segue o carro
+sm_camera_follow(cam, corpo)
+sm_mouse_grab(janela, 1)
+sm_mouse_grab_toggle(janela, "escape")
+
+vel = 0.0
+vel_max = 7.0
+re_max = 3.5
+aceleracao = 3.0
+frenagem = 12.0
+atrito = 3.0
+vel_curva = 40.0
+rot_roda = 0.0
+angH = 0.0
+angV = 25.0
+dist = 10.0
+
+enquanto verdadeiro:
+    dt = sm_delta_time()
+
+    # Aceleracao / frenagem
+    se sm_key_pressed("w"):
+        vel = vel + aceleracao * dt
+    senao:
+        se sm_key_pressed("s"):
+            vel = vel - frenagem * dt
+        senao:
+            se vel > 0.1:
+                vel = vel - atrito * dt
+            senao:
+                se 0.0 > vel:
+                    vel = vel + atrito * dt
+                    se vel > 0.0:
+                        vel = 0.0
+                senao:
+                    vel = 0.0
+
+    # Limitar velocidade
+    se vel > vel_max:
+        vel = vel_max
+    se 0.0 > vel:
+        neg_vel = 0.0 - vel
+        se neg_vel > re_max:
+            vel = 0.0 - re_max
+
+    # Curva
+    andando = 0
+    se vel > 0.5:
+        andando = 1
+    se 0.5 > vel:
+        se 0.0 > vel:
+            andando = 1
+
+    se andando == 1:
+        se sm_key_pressed("a"):
+            sm_rotate_y(corpo, 0.0 - vel_curva * dt)
+        se sm_key_pressed("d"):
+            sm_rotate_y(corpo, vel_curva * dt)
+
+    # Mover o carro (suspensao e inclinacao automaticas)
+    sm_move_forward(corpo, vel * dt)
+
+    # Girar as rodas
+    rot_roda = rot_roda + vel * dt * 3.0
+    sm_rotation(roda_fe, rot_roda * 57.2958, 0, 0)
+    sm_rotation(roda_fd, rot_roda * 57.2958, 0, 0)
+    sm_rotation(roda_te, rot_roda * 57.2958, 0, 0)
+    sm_rotation(roda_td, rot_roda * 57.2958, 0, 0)
+
+    # Camera orbital
+    se sm_mouse_grabbed():
+        dx = sm_mouse_dx()
+        dy = sm_mouse_dy()
+        angH = angH - dx * 0.3
+        angV = angV + dy * 0.3
+
+    dist = dist - sm_mouse_scroll()
+    se dist < 4.0:
+        dist = 4.0
+    se dist > 25.0:
+        dist = 25.0
+
+    sm_camera_orbital_angles(cam, angH, angV)
+    sm_camera_orbital_dist(cam, dist)
+    sm_camera_follow_pos(cam)
+
+    sm_display(janela)

@@ -939,7 +939,7 @@ static void renderizarMeshesAnimadas(int janelaId, const Mat4& view, const Mat4&
         if (mesh.janelaId != janelaId || !mesh.visivel) continue;
 
         // Model matrix
-        Mat4 model = mesh.calcularModel();
+        Mat4 model = (mesh.parentId > 0) ? calcularModelComHierarquia(id) : mesh.calcularModel();
         glUniformMatrix4fv(g_shader_skinned.loc_model, 1, GL_FALSE, model.m);
 
         // Cor

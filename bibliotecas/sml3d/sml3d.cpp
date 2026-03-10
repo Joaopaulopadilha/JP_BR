@@ -131,6 +131,77 @@ JP_EXPORT int64_t sm_scale(int64_t id, int64_t x, int64_t y, int64_t z) {
     return meshEscala((int)id, toFloat(x), toFloat(y), toFloat(z)) ? 1 : 0;
 }
 
+// sm_offset_position(mesh_id, x, y, z) -> inteiro (1=ok, 0=falha)
+// Offset local de posição — ajuste base do modelo (não afetado por rotação de gameplay)
+JP_EXPORT int64_t sm_offset_position(int64_t id, int64_t x, int64_t y, int64_t z) {
+    return meshOffsetPosicao((int)id, toFloat(x), toFloat(y), toFloat(z)) ? 1 : 0;
+}
+
+// sm_offset_rotation(mesh_id, x, y, z) -> inteiro (1=ok, 0=falha) — ângulos em graus
+// Offset local de rotação — ajuste base do modelo (ex: corrigir orientação de FBX)
+JP_EXPORT int64_t sm_offset_rotation(int64_t id, int64_t x, int64_t y, int64_t z) {
+    float rad = (float)M_PI / 180.0f;
+    return meshOffsetRotacao((int)id, toFloat(x) * rad, toFloat(y) * rad, toFloat(z) * rad) ? 1 : 0;
+}
+
+// =============================================================================
+// PARENTING
+// =============================================================================
+
+// sm_parent(filho, pai) -> inteiro (1=ok, 0=falha) — pai=0 pra desvincular
+JP_EXPORT int64_t sm_parent(int64_t filhoId, int64_t paiId) {
+    return meshParent((int)filhoId, (int)paiId) ? 1 : 0;
+}
+
+// =============================================================================
+// MOVIMENTO PRÓPRIO
+// =============================================================================
+
+// sm_move_forward(mesh_id, distancia) -> inteiro (1=ok, 0=falha)
+// Move a mesh na direção que ela aponta (baseado na rotação Y)
+// Se a mesh é um veículo, atualiza suspensão e inclinação automaticamente
+JP_EXPORT int64_t sm_move_forward(int64_t id, int64_t dist) {
+    if (!meshMoverFrente((int)id, toFloat(dist))) return 0;
+
+    // Se é veículo, atualizar física do veículo
+    if (meshEhVeiculo((int)id)) {
+        atualizarVeiculo((int)id, g_delta_time);
+    }
+
+    return 1;
+}
+
+// sm_rotate_y(mesh_id, angulo_graus) -> inteiro (1=ok, 0=falha)
+// Soma um ângulo à rotação Y atual da mesh (pra curvas)
+JP_EXPORT int64_t sm_rotate_y(int64_t id, int64_t angulo) {
+    float rad = toFloat(angulo) * (float)M_PI / 180.0f;
+    return meshRotacaoYDelta((int)id, rad) ? 1 : 0;
+}
+
+// =============================================================================
+// VEÍCULO
+// =============================================================================
+
+// sm_vehicle(corpo_id) -> inteiro (1=ok, 0=falha)
+// Registra uma mesh como veículo (ativa suspensão e inclinação)
+JP_EXPORT int64_t sm_vehicle(int64_t corpoId) {
+    return registrarVeiculo((int)corpoId) ? 1 : 0;
+}
+
+// sm_vehicle_wheel(corpo_id, roda_id, offX, offY, offZ) -> inteiro (1=ok, 0=falha)
+// Registra uma roda no veículo com posição local relativa ao corpo
+JP_EXPORT int64_t sm_vehicle_wheel(int64_t corpoId, int64_t rodaId,
+                                    int64_t offX, int64_t offY, int64_t offZ) {
+    return registrarRodaVeiculo((int)corpoId, (int)rodaId,
+                                 toFloat(offX), toFloat(offY), toFloat(offZ)) ? 1 : 0;
+}
+
+// sm_vehicle_suspension(corpo_id, forca, amortecimento) -> inteiro (1=ok, 0=falha)
+// Configura parâmetros da suspensão do veículo
+JP_EXPORT int64_t sm_vehicle_suspension(int64_t corpoId, int64_t forca, int64_t amortecimento) {
+    return configurarSuspensao((int)corpoId, toFloat(forca), toFloat(amortecimento)) ? 1 : 0;
+}
+
 // =============================================================================
 // COR
 // =============================================================================
@@ -269,6 +340,14 @@ JP_EXPORT int64_t sm_camera_follow_update(int64_t camId) {
         atualizarRotacaoSuave(itFollow->second, 0.15f);
     }
 
+    return 1;
+}
+
+// sm_camera_follow_pos(cam_id) -> inteiro (1=ok)
+// Só atualiza a posição do alvo da câmera, SEM forçar rotação do mesh
+// Usar quando o mesh tem rotação própria (ex: carro com volante)
+JP_EXPORT int64_t sm_camera_follow_pos(int64_t camId) {
+    atualizarFollow((int)camId);
     return 1;
 }
 

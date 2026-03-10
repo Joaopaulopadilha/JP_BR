@@ -150,15 +150,37 @@ struct SML3DMesh {
 
     bool visivel = true;
 
+    // Parenting: se parentId > 0, posição e rotação são locais (relativas ao pai)
+    // Escala é sempre independente (não herda do pai)
+    int parentId = 0;  // 0 = sem pai
+
+    // Offsets: ajuste base do modelo (aplicado antes da transformação normal)
+    // Útil pra corrigir orientação de modelos importados sem mexer na rotação de gameplay
+    Vec3 offset_pos = {0, 0, 0};     // Offset de posição local (antes de tudo)
+    Vec3 offset_rot = {0, 0, 0};     // Offset de rotação local em radianos (antes da rotação normal)
+
     Mat4 calcularModel() const {
         Mat4 t = Mat4::translacao(posicao.x, posicao.y, posicao.z);
         Mat4 rx = Mat4::rotacaoX(rotacao.x);
         Mat4 ry = Mat4::rotacaoY(rotacao.y);
         Mat4 rz = Mat4::rotacaoZ(rotacao.z);
         Mat4 s = Mat4::escala(escala.x, escala.y, escala.z);
-        // model = T * RY * RX * RZ * S
+
+        // Offset de rotação (ajuste base do modelo)
+        Mat4 orx = Mat4::rotacaoX(offset_rot.x);
+        Mat4 ory = Mat4::rotacaoY(offset_rot.y);
+        Mat4 orz = Mat4::rotacaoZ(offset_rot.z);
+        Mat4 offset_r = Mat4::multiplicar(ory, Mat4::multiplicar(orx, orz));
+
+        // Offset de posição
+        Mat4 offset_t = Mat4::translacao(offset_pos.x, offset_pos.y, offset_pos.z);
+
+        // model = T * RY * RX * RZ * S * OffsetRot * OffsetPos
+        // Ordem: primeiro aplica offset (ajuste do modelo), depois escala,
+        // depois rotação de gameplay, depois posição
         Mat4 rot = Mat4::multiplicar(ry, Mat4::multiplicar(rx, rz));
-        return Mat4::multiplicar(t, Mat4::multiplicar(rot, s));
+        Mat4 offset = Mat4::multiplicar(offset_r, offset_t);
+        return Mat4::multiplicar(t, Mat4::multiplicar(rot, Mat4::multiplicar(s, offset)));
     }
 };
 
@@ -171,6 +193,77 @@ static int g_prox_mesh_id = 1;
 
 // IDs de meshes animadas (renderizadas pelo shader skinned, não pelo padrão)
 static std::unordered_set<int> g_meshes_animadas;
+
+// =============================================================================
+// PARENTING — MODEL MATRIX COM HIERARQUIA
+// Calcula a model matrix final considerando a cadeia de pais.
+// Posição e rotação do filho são locais (relativas ao pai).
+// Escala é sempre independente (não herda do pai).
+// =============================================================================
+
+static Mat4 calcularModelComHierarquia(int meshId, int profundidade = 0) {
+    // Limite de profundidade pra evitar loops infinitos
+    if (profundidade > 16) return Mat4::identidade();
+
+    auto it = g_meshes.find(meshId);
+    if (it == g_meshes.end()) return Mat4::identidade();
+
+    SML3DMesh& mesh = it->second;
+
+    // Transformação local deste mesh
+    Mat4 local = mesh.calcularModel();
+
+    // Se não tem pai, retorna a transformação local
+    if (mesh.parentId <= 0) return local;
+
+    // Se tem pai, calcular: model_pai (sem escala) × local
+    auto itPai = g_meshes.find(mesh.parentId);
+    if (itPai == g_meshes.end()) return local;
+
+    SML3DMesh& pai = itPai->second;
+
+    // Model do pai SEM escala (só posição + rotação)
+    // Porque a escala do pai não deve afetar o filho
+    Mat4 t_pai = Mat4::translacao(pai.posicao.x, pai.posicao.y, pai.posicao.z);
+    Mat4 rx_pai = Mat4::rotacaoX(pai.rotacao.x);
+    Mat4 ry_pai = Mat4::rotacaoY(pai.rotacao.y);
+    Mat4 rz_pai = Mat4::rotacaoZ(pai.rotacao.z);
+    Mat4 rot_pai = Mat4::multiplicar(ry_pai, Mat4::multiplicar(rx_pai, rz_pai));
+    Mat4 model_pai_sem_escala = Mat4::multiplicar(t_pai, rot_pai);
+
+    // Se o pai também tem pai, resolver recursivamente
+    if (pai.parentId > 0) {
+        // Pegar o model completo do pai (com hierarquia), mas sem escala do pai
+        // Pra isso, calcular a hierarquia do avô e aplicar a transformação do pai sem escala
+        Mat4 hierarquia_avo = calcularModelComHierarquia(pai.parentId, profundidade + 1);
+
+        // Recompor: avô × (pos+rot do pai) — sem escala do pai
+        model_pai_sem_escala = Mat4::multiplicar(hierarquia_avo, model_pai_sem_escala);
+    }
+
+    return Mat4::multiplicar(model_pai_sem_escala, local);
+}
+
+// =============================================================================
+// VINCULAR/DESVINCULAR PARENT
+// =============================================================================
+
+static bool meshParent(int filhoId, int paiId) {
+    auto itFilho = g_meshes.find(filhoId);
+    if (itFilho == g_meshes.end()) return false;
+
+    if (paiId > 0) {
+        // Verificar se o pai existe
+        auto itPai = g_meshes.find(paiId);
+        if (itPai == g_meshes.end()) return false;
+
+        // Evitar parentar a si mesmo
+        if (filhoId == paiId) return false;
+    }
+
+    itFilho->second.parentId = paiId;
+    return true;
+}
 
 // =============================================================================
 // UPLOAD DE GEOMETRIA PARA GPU
@@ -369,6 +462,49 @@ static bool meshEscala(int id, float x, float y, float z) {
     return true;
 }
 
+static bool meshOffsetPosicao(int id, float x, float y, float z) {
+    auto it = g_meshes.find(id);
+    if (it == g_meshes.end()) return false;
+    it->second.offset_pos = {x, y, z};
+    return true;
+}
+
+static bool meshOffsetRotacao(int id, float x, float y, float z) {
+    auto it = g_meshes.find(id);
+    if (it == g_meshes.end()) return false;
+    it->second.offset_rot = {x, y, z};
+    return true;
+}
+
+// =============================================================================
+// MOVIMENTO NA DIREÇÃO PRÓPRIA DA MESH
+// Move a mesh pra frente/trás baseado na sua rotação Y atual.
+// dist > 0 = pra frente, dist < 0 = pra trás.
+// =============================================================================
+
+static bool meshMoverFrente(int id, float dist) {
+    auto it = g_meshes.find(id);
+    if (it == g_meshes.end()) return false;
+
+    SML3DMesh& mesh = it->second;
+
+    // Direção frente baseada na rotação Y (eixo Z negativo rotacionado)
+    float dx = -sinf(mesh.rotacao.y) * dist;
+    float dz =  cosf(mesh.rotacao.y) * dist;
+
+    mesh.posicao.x += dx;
+    mesh.posicao.z += dz;
+    return true;
+}
+
+// Rotacionar apenas Y (somar ângulo em radianos)
+static bool meshRotacaoYDelta(int id, float delta_rad) {
+    auto it = g_meshes.find(id);
+    if (it == g_meshes.end()) return false;
+    it->second.rotacao.y += delta_rad;
+    return true;
+}
+
 static bool meshCor(int id, int r, int g, int b) {
     auto it = g_meshes.find(id);
     if (it == g_meshes.end()) return false;
@@ -449,7 +585,7 @@ static void renderizarMeshes(int janelaId, const Mat4& view, const Mat4& project
         // Meshes animadas são renderizadas pelo shader skinned
         if (g_meshes_animadas.count(id)) continue;
 
-        Mat4 model = mesh.calcularModel();
+        Mat4 model = (mesh.parentId > 0) ? calcularModelComHierarquia(id) : mesh.calcularModel();
         shaderSetMat4(s, s->loc_model, model.m);
         shaderSetVec3(s, s->loc_color, mesh.cor_r, mesh.cor_g, mesh.cor_b);
 
