@@ -8,3 +8,16 @@ bibliotecas/opencv_jp
 bibliotecas/imgui
 gitpush.md
 testes/
+bibliotecas/lowllhama
+ggml-base.dll
+ggml-cpu.dll
+ggml-cuda.dll
+ggml.dll
+air.py
+interface_ollama.html
+llama.dll
+mtmd.dll
+bibliotecas/
+utilitarios_javascript/
+testes/
+agente_ollama/

@@ -1,15 +1,15 @@
 importar svs
 
-porta = svs.criar(8080)
-ip = svs.meu_ip()
+porta = svs_criar(8080)
+ip = svs_meu_ip()
 saidal("servidor rodando em:")
 saida_amarelo(ip + ":" + porta)
 
 enquanto verdadeiro:
-    req = svs.aguardar(porta)
-    caminho = svs.caminho(req)
+    req = svs_aguardar(porta)
+    caminho = svs_caminho(req)
     
     se caminho == "/":
-        svs.arquivo(req, "index.html")
+        svs_arquivo(req, "utilitarios_javascript\interface_ollama.html")
     senao:
-        svs.responder(req, 404, "Não encontrado")
+        svs_responder(req, 404, "Não encontrado")

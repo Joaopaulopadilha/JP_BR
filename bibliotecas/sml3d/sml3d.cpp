@@ -763,3 +763,99 @@ JP_EXPORT int64_t sm_anim_time(int64_t meshId) {
 JP_EXPORT int64_t sm_anim_root_motion(int64_t meshId, int64_t remover) {
     return animRootMotion((int)meshId, remover != 0) ? 1 : 0;
 }
+
+// =============================================================================
+// AVIÃO
+// =============================================================================
+
+// sm_airplane(mesh_id) -> inteiro (id do avião, 0=falha)
+// Associa uma mesh existente como avião
+JP_EXPORT int64_t sm_airplane(int64_t meshId) {
+    return (int64_t)criarAviao((int)meshId);
+}
+
+// sm_airplane_engine(aviao_id, ligar) -> inteiro (1=ok, 0=falha)
+// Liga/desliga o motor do avião
+JP_EXPORT int64_t sm_airplane_engine(int64_t aviaoId, int64_t ligar) {
+    return aviaoMotor((int)aviaoId, ligar != 0) ? 1 : 0;
+}
+
+// sm_airplane_thrust(aviao_id, valor) -> inteiro (1=ok, 0=falha)
+// Define thrust (0.0 a 1.0 = percentual do máximo)
+JP_EXPORT int64_t sm_airplane_thrust(int64_t aviaoId, int64_t valor) {
+    return aviaoThrust((int)aviaoId, toFloat(valor)) ? 1 : 0;
+}
+
+// sm_airplane_pitch(aviao_id, taxa) -> inteiro (1=ok, 0=falha)
+// Define taxa de pitch em rad/s (positivo = nariz pra cima)
+JP_EXPORT int64_t sm_airplane_pitch(int64_t aviaoId, int64_t taxa) {
+    return aviaoPitch((int)aviaoId, toFloat(taxa)) ? 1 : 0;
+}
+
+// sm_airplane_yaw(aviao_id, taxa) -> inteiro (1=ok, 0=falha)
+// Define taxa de yaw em rad/s
+JP_EXPORT int64_t sm_airplane_yaw(int64_t aviaoId, int64_t taxa) {
+    return aviaoYaw((int)aviaoId, toFloat(taxa)) ? 1 : 0;
+}
+
+// sm_airplane_roll(aviao_id, taxa) -> inteiro (1=ok, 0=falha)
+// Define taxa de roll em rad/s
+JP_EXPORT int64_t sm_airplane_roll(int64_t aviaoId, int64_t taxa) {
+    return aviaoRoll((int)aviaoId, toFloat(taxa)) ? 1 : 0;
+}
+
+// sm_airplane_config(aviao_id, massa, area_asa, lift, drag, stall) -> inteiro (1=ok, 0=falha)
+// Configura parâmetros aerodinâmicos
+JP_EXPORT int64_t sm_airplane_config(int64_t aviaoId, int64_t massa, int64_t area,
+                                      int64_t lift, int64_t drag, int64_t stall) {
+    return aviaoConfig((int)aviaoId, toFloat(massa), toFloat(area),
+                       toFloat(lift), toFloat(drag), toFloat(stall)) ? 1 : 0;
+}
+
+// sm_airplane_max_thrust(aviao_id, valor) -> inteiro (1=ok, 0=falha)
+// Define thrust máximo
+JP_EXPORT int64_t sm_airplane_max_thrust(int64_t aviaoId, int64_t valor) {
+    return aviaoMaxThrust((int)aviaoId, toFloat(valor)) ? 1 : 0;
+}
+
+// sm_airplane_ground(aviao_id, y) -> inteiro (1=ok, 0=falha)
+// Define altitude mínima do chão
+JP_EXPORT int64_t sm_airplane_ground(int64_t aviaoId, int64_t y) {
+    return aviaoGround((int)aviaoId, toFloat(y)) ? 1 : 0;
+}
+
+// sm_airplane_speed(aviao_id) -> decimal (velocidade atual em m/s)
+JP_EXPORT int64_t sm_airplane_speed(int64_t aviaoId) {
+    return retorna_double((double)aviaoSpeed((int)aviaoId));
+}
+
+// sm_airplane_altitude(aviao_id) -> decimal (posição Y da mesh)
+JP_EXPORT int64_t sm_airplane_altitude(int64_t aviaoId) {
+    return retorna_double((double)aviaoAltitude((int)aviaoId));
+}
+
+// sm_airplane_get_pitch(aviao_id) -> decimal (pitch atual em radianos)
+JP_EXPORT int64_t sm_airplane_get_pitch(int64_t aviaoId) {
+    return retorna_double((double)aviaoPitchAtual((int)aviaoId));
+}
+
+// sm_airplane_get_yaw(aviao_id) -> decimal (yaw atual em radianos)
+JP_EXPORT int64_t sm_airplane_get_yaw(int64_t aviaoId) {
+    return retorna_double((double)aviaoYawAtual((int)aviaoId));
+}
+
+// sm_airplane_get_roll(aviao_id) -> decimal (roll atual em radianos)
+JP_EXPORT int64_t sm_airplane_get_roll(int64_t aviaoId) {
+    return retorna_double((double)aviaoRollAtual((int)aviaoId));
+}
+
+// sm_airplane_on_ground(aviao_id) -> inteiro (1=no chão, 0=voando)
+JP_EXPORT int64_t sm_airplane_on_ground(int64_t aviaoId) {
+    return aviaoNoChao((int)aviaoId) ? 1 : 0;
+}
+
+// sm_airplane_destroy(aviao_id) -> inteiro (1=ok)
+JP_EXPORT int64_t sm_airplane_destroy(int64_t aviaoId) {
+    destruirAviao((int)aviaoId);
+    return 1;
+}

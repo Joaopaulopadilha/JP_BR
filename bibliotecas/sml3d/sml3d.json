@@ -113,7 +113,24 @@
         { "nome": "sm_anim_clips",      "retorno": "inteiro",  "params": ["inteiro"] },
         { "nome": "sm_anim_duration",   "retorno": "decimal",  "params": ["inteiro"] },
         { "nome": "sm_anim_time",       "retorno": "decimal",  "params": ["inteiro"] },
-        { "nome": "sm_anim_root_motion","retorno": "inteiro",  "params": ["inteiro", "inteiro"] }
+        { "nome": "sm_anim_root_motion","retorno": "inteiro",  "params": ["inteiro", "inteiro"] },
+
+        { "nome": "sm_airplane",            "retorno": "inteiro",  "params": ["inteiro"] },
+        { "nome": "sm_airplane_engine",     "retorno": "inteiro",  "params": ["inteiro", "inteiro"] },
+        { "nome": "sm_airplane_thrust",     "retorno": "inteiro",  "params": ["inteiro", "decimal"] },
+        { "nome": "sm_airplane_pitch",      "retorno": "inteiro",  "params": ["inteiro", "decimal"] },
+        { "nome": "sm_airplane_yaw",        "retorno": "inteiro",  "params": ["inteiro", "decimal"] },
+        { "nome": "sm_airplane_roll",       "retorno": "inteiro",  "params": ["inteiro", "decimal"] },
+        { "nome": "sm_airplane_config",     "retorno": "inteiro",  "params": ["inteiro", "decimal", "decimal", "decimal", "decimal", "decimal"] },
+        { "nome": "sm_airplane_max_thrust", "retorno": "inteiro",  "params": ["inteiro", "decimal"] },
+        { "nome": "sm_airplane_ground",     "retorno": "inteiro",  "params": ["inteiro", "decimal"] },
+        { "nome": "sm_airplane_speed",      "retorno": "decimal",  "params": ["inteiro"] },
+        { "nome": "sm_airplane_altitude",   "retorno": "decimal",  "params": ["inteiro"] },
+        { "nome": "sm_airplane_get_pitch",  "retorno": "decimal",  "params": ["inteiro"] },
+        { "nome": "sm_airplane_get_yaw",    "retorno": "decimal",  "params": ["inteiro"] },
+        { "nome": "sm_airplane_get_roll",   "retorno": "decimal",  "params": ["inteiro"] },
+        { "nome": "sm_airplane_on_ground",  "retorno": "inteiro",  "params": ["inteiro"] },
+        { "nome": "sm_airplane_destroy",    "retorno": "inteiro",  "params": ["inteiro"] }
     ],
     "libs": ["glfw3", "opengl32", "gdi32"],
     "libs_linux": ["glfw", "GL", "dl"]

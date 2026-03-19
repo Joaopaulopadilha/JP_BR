@@ -21,6 +21,7 @@
 #include "vehicle.hpp"
 #include "timer.hpp"
 #include "animation.hpp"
+#include "airplane.hpp"
 
 // =============================================================================
 // ESTRUTURAS
@@ -172,6 +173,7 @@ static int exibirJanela(int id) {
         destruirInput();
         destruirPhysicsJanela(id);
         destruirVeiculosJanela(id);
+        destruirAvioesJanela(id);
         destruirCollisionPropsJanela(id);
         destruirTodasTexturas();
         destruirTodosTimers();
@@ -229,6 +231,9 @@ static int exibirJanela(int id) {
 
     // Atualizar animações (bones) antes do render
     atualizarAnimacoes(g_delta_time);
+
+    // Atualizar física dos aviões
+    atualizarAvioes(g_delta_time);
 
     renderizarMeshes(id, view, projection);
     renderizarMeshesAnimadas(id, view, projection);
