@@ -97,6 +97,17 @@ public:
         extra_lib_paths_.clear();
         extra_dll_paths_.clear();
 
+        // Extrair nome do arquivo fonte para diagnostico
+        {
+            std::string src_name = output_path;
+            size_t sep = src_name.find_last_of("/\\");
+            if (sep != std::string::npos) src_name = src_name.substr(sep + 1);
+            // Trocar extensão .obj/.o por .jp
+            size_t dot = src_name.find_last_of('.');
+            if (dot != std::string::npos) src_name = src_name.substr(0, dot) + ".jp";
+            set_diag_source_file(src_name);
+        }
+
         // Criar seções
         emitter_.create_text_section();   // [0]
         emitter_.create_rdata_section();  // [1]
@@ -164,6 +175,9 @@ public:
             }, stmt->node);
         }
 
+        // Gerar handler de crash (após main e funções, como função separada)
+        emit_crash_handler_func();
+
         return emitter_.write(output_path);
     }
 
@@ -172,6 +186,9 @@ public:
     // ======================================================================
 
     void set_exe_dir(const std::string& dir) { exe_dir_ = dir; }
+
+    // Ativa modo debug (trace de chamadas FFI)
+    void set_debug_mode(bool enabled) { debug_mode_ = enabled; }
 
     // ======================================================================
     // ACESSORES PARA LINKAGEM
@@ -223,6 +240,7 @@ private:
     std::string base_dir_;
     std::string exe_dir_;
     LangConfig lang_config_;
+    bool debug_mode_ = false;  // ativado por "depurar"/"debug" no código fonte
     std::unordered_map<std::string, std::string> var_instance_class_;
 
     // Members de listas (usados por codegen_atribuicao e codegen_listas)
@@ -916,6 +934,8 @@ private:
     // codegen_nativo.hpp: carregamento de bibliotecas nativas via JSON
     #include "codegen_nativo.hpp"
     #include "codegen_funcoes_nativas.hpp"
+    // codegen_diagnostico.hpp: sistema de diagnostico para chamadas FFI (.jpd)
+    #include "codegen_diagnostico.hpp"
     #include "codegen_listas.hpp"
     #include "codegen_saida.hpp"
     #include "codegen_expr.hpp"

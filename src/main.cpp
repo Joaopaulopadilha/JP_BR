@@ -92,6 +92,65 @@ static std::string read_file(const std::string& path) {
 }
 
 // ============================================================================
+// CÓPIA DE DLLs DINÂMICAS PARA DIRETÓRIO DE DESTINO
+// ============================================================================
+
+static void copiar_dlls(const std::vector<std::string>& dll_paths,
+                        const fs::path& destino) {
+    if (dll_paths.empty()) return;
+
+    std::vector<std::string> dirs_processados;
+
+    for (const auto& dll : dll_paths) {
+        fs::path dll_file(dll);
+
+        // Copiar o próprio .jpd
+        if (fs::exists(dll_file)) {
+            fs::path dest = destino / dll_file.filename();
+            std::error_code ec;
+            fs::copy_file(dll_file, dest, fs::copy_options::overwrite_existing, ec);
+        }
+
+        // Obter diretório da DLL
+        fs::path dir = dll_file.parent_path();
+        if (dir.empty()) continue;
+
+        // Normalizar caminho para comparação
+        std::error_code ec_canon;
+        std::string dir_str = fs::canonical(dir, ec_canon).string();
+        if (ec_canon) {
+            dir_str = fs::absolute(dir).string();
+        }
+
+        // Evitar processar o mesmo diretório duas vezes
+        bool ja_processado = false;
+        for (const auto& d : dirs_processados) {
+            if (d == dir_str) { ja_processado = true; break; }
+        }
+        if (ja_processado) continue;
+        dirs_processados.push_back(dir_str);
+
+        // Copiar .dll/.jpd (Windows) e .so (Linux) do diretório
+        std::error_code ec_dir;
+        for (const auto& entry : fs::directory_iterator(dir, ec_dir)) {
+            if (!entry.is_regular_file()) continue;
+            std::string ext = entry.path().extension().string();
+
+            #ifdef _WIN32
+            if (ext != ".dll" && ext != ".jpd") continue;
+            #else
+            if (ext != ".so" && ext != ".jpd" &&
+                ext.find(".so.") == std::string::npos) continue;
+            #endif
+
+            fs::path dest = destino / entry.path().filename();
+            std::error_code ec2;
+            fs::copy_file(entry.path(), dest, fs::copy_options::overwrite_existing, ec2);
+        }
+    }
+}
+
+// ============================================================================
 // COMPILAÇÃO: fonte → .obj/.o
 // ============================================================================
 
@@ -102,7 +161,8 @@ static bool compile_to_obj(const std::string& source,
                            std::vector<std::string>& extra_objs,
                            std::vector<std::string>& extra_libs,
                            std::vector<std::string>& extra_lib_paths,
-                           std::vector<std::string>& extra_dlls) {
+                           std::vector<std::string>& extra_dlls,
+                           bool debug = false) {
     jplang::Lexer lexer(source, base_dir);
     jplang::Parser parser(lexer, base_dir);
 
@@ -114,6 +174,7 @@ static bool compile_to_obj(const std::string& source,
 
     jplang::Codegen codegen;
     codegen.set_exe_dir(exe_dir);
+    codegen.set_debug_mode(debug);
     if (!codegen.compile(program.value(), obj_path, base_dir, parser.lang_config())) {
         std::cerr << "Erro na geração de código." << std::endl;
         return false;
@@ -131,7 +192,7 @@ static bool compile_to_obj(const std::string& source,
 // MODO RUN: compila, linka, executa, apaga
 // ============================================================================
 
-static int mode_run(const std::string& input_path) {
+static int mode_run(const std::string& input_path, bool debug = false) {
     std::string source = read_file(input_path);
     if (source.empty()) return 1;
 
@@ -149,7 +210,7 @@ static int mode_run(const std::string& input_path) {
     std::vector<std::string> extra_lib_paths;
     std::vector<std::string> extra_dlls;
     if (!compile_to_obj(source, obj_path.string(), base_dir, g_exe_dir,
-                        extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
+                        extra_objs, extra_libs, extra_lib_paths, extra_dlls, debug)) {
         fs::remove_all(temp_dir);
         return 1;
     }
@@ -160,11 +221,25 @@ static int mode_run(const std::string& input_path) {
         return 1;
     }
 
+    // Copiar DLLs dinâmicas para temp/ (serão apagadas depois)
+    if (!extra_dlls.empty()) {
+        copiar_dlls(extra_dlls, temp_dir);
+    }
+
     #ifdef _WIN32
+    // Adicionar temp/ como diretório de busca de DLLs
+    fs::path temp_abs = fs::absolute(temp_dir);
+    SetDllDirectoryA(temp_abs.string().c_str());
     int ret = std::system(exe_path.string().c_str());
+    SetDllDirectoryA(NULL); // restaurar padrão
     #else
-    std::string run_cmd = "./" + exe_path.string();
-    int ret = std::system(run_cmd.c_str());
+    // Linux: adicionar temp/ ao LD_LIBRARY_PATH
+    fs::path temp_abs = fs::absolute(temp_dir);
+    std::string ld_path = "LD_LIBRARY_PATH=" + temp_abs.string();
+    const char* old_ld = getenv("LD_LIBRARY_PATH");
+    if (old_ld) ld_path += ":" + std::string(old_ld);
+    ld_path += " ./" + exe_path.string();
+    int ret = std::system(ld_path.c_str());
     #endif
 
     fs::remove_all(temp_dir);
@@ -175,7 +250,8 @@ static int mode_run(const std::string& input_path) {
 // MODO BUILD: compila e linka em output/
 // ============================================================================
 
-static int mode_build(const std::string& input_path, bool windowed = false) {
+static int mode_build(const std::string& input_path, bool windowed = false,
+                      bool debug = false) {
     std::string source = read_file(input_path);
     if (source.empty()) return 1;
 
@@ -193,7 +269,7 @@ static int mode_build(const std::string& input_path, bool windowed = false) {
     std::vector<std::string> extra_lib_paths;
     std::vector<std::string> extra_dlls;
     if (!compile_to_obj(source, obj_path.string(), base_dir, g_exe_dir,
-                        extra_objs, extra_libs, extra_lib_paths, extra_dlls)) {
+                        extra_objs, extra_libs, extra_lib_paths, extra_dlls, debug)) {
         return 1;
     }
 
@@ -202,6 +278,11 @@ static int mode_build(const std::string& input_path, bool windowed = false) {
     if (!jplang::link_with_ld(obj_path.string(), exe_path.string(),
                                extra_objs, extra_libs, extra_lib_paths, extra_dlls, windowed)) {
         return 1;
+    }
+
+    // Copiar DLLs dinâmicas para output/ (para distribuição)
+    if (!extra_dlls.empty()) {
+        copiar_dlls(extra_dlls, out_dir);
     }
 
     std::string modo = windowed ? " (GUI, sem console)" : "";
@@ -221,8 +302,10 @@ int main(int argc, char* argv[]) {
         std::cerr << std::endl;
         std::cerr << "Uso:" << std::endl;
         std::cerr << "  jp <arquivo.jp>             Compila, linka, executa e apaga" << std::endl;
+        std::cerr << "  jp <arquivo.jp> -debug      Executa com diagnostico de chamadas FFI" << std::endl;
         std::cerr << "  jp build <arquivo.jp>       Compila e linka em output/" << std::endl;
         std::cerr << "  jp build <arquivo.jp> -w    Compila como aplicativo GUI (sem console)" << std::endl;
+        std::cerr << "  jp build <arquivo.jp> -debug  Compila com diagnostico FFI" << std::endl;
         std::cerr << std::endl;
         std::cerr << "Gerenciador de bibliotecas:" << std::endl;
         std::cerr << "  jp instalar <nome>          Instala biblioteca do repositorio" << std::endl;
@@ -239,16 +322,20 @@ int main(int argc, char* argv[]) {
             std::cerr << "Erro: Esperado arquivo após 'build'" << std::endl;
             return 1;
         }
-        // Verifica flag -w (windowed, sem console)
+        // Verifica flags -w (windowed) e -debug
         bool windowed = false;
+        bool debug = false;
         std::string build_file = argv[2];
         for (int i = 3; i < argc; i++) {
             std::string flag = argv[i];
             if (flag == "-w" || flag == "--windowed") {
                 windowed = true;
             }
+            if (flag == "-debug" || flag == "--debug") {
+                debug = true;
+            }
         }
-        return mode_build(build_file, windowed);
+        return mode_build(build_file, windowed, debug);
     }
 
     if (first_arg == "instalar") {
@@ -273,5 +360,14 @@ int main(int argc, char* argv[]) {
         return jplang::list_libs(show_remote, g_exe_dir);
     }
 
-    return mode_run(first_arg);
+    // Modo run: verifica -debug nos args restantes
+    bool debug = false;
+    for (int i = 2; i < argc; i++) {
+        std::string flag = argv[i];
+        if (flag == "-debug" || flag == "--debug") {
+            debug = true;
+        }
+    }
+
+    return mode_run(first_arg, debug);
 }

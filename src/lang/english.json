@@ -83,5 +83,25 @@
         "divisao_por_zero": "Division by zero",
         "funcao_nao_definida": "Undefined function: {valor}",
         "funcao_colisao": "Function '{funcao}' found in: {libs}. Using: {usada}"
+    },
+    "diagnostico": {
+        "header": "[JP DIAGNOSTICS]",
+        "retorno_nulo": "Function '{funcao}' returned null pointer (NULL)",
+        "retorno_invalido": "Function '{funcao}' returned invalid value as {tipo}",
+        "esperado_tipo": "Expected: {esperado}",
+        "obtido_valor": "Got: {obtido}",
+        "ponteiro_suspeito": "Value too low to be a valid memory address",
+        "crash_acesso": "Access violation during external library call",
+        "crash_generico": "Access violation (fatal memory error)",
+        "erro_na_dll": "The error occurred INSIDE the external library",
+        "erro_nao_jp": "This is NOT a bug in your JP code — the native library crashed",
+        "erro_no_jp": "The error occurred in JP code",
+        "linha_arquivo": "Line {num} in {arquivo}",
+        "label_funcao": "Function",
+        "label_linha": "Line",
+        "label_arquivo": "File",
+        "argumento_info": "Argument {num} ({tipo}): {valor}",
+        "crash_dica": "See the last [JP FFI] line above to identify which call caused the error",
+        "ffi_label": "[JP FFI]"
     }
 }

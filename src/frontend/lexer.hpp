@@ -203,6 +203,9 @@ struct LangConfig {
     // ex (EN): "inteiro" → "integer", "texto" → "string"
     std::unordered_map<std::string, std::string> tipos;
 
+    // diagnostico: chave_msg → mensagem traduzida (para sistema de diagnostico FFI)
+    std::unordered_map<std::string, std::string> diagnostico;
+
     // Nomes de booleanos no idioma (para conversão texto→bool em runtime)
     // ex (PT): "verdadeiro" / "falso", (ES): "verdadero" / "falso", (EN): "true" / "false"
     std::string bool_true = "verdadeiro";
@@ -402,6 +405,16 @@ inline LangConfig load_lang_config(const std::string& lang_name, const std::stri
         auto tipos = json_extract_object(tipos_json, tpos);
         for (auto& [interno, traduzido] : tipos) {
             config.tipos[interno] = traduzido;
+        }
+    }
+
+    // Parsear "diagnostico" → mensagens do sistema de diagnostico FFI
+    if (root.count("diagnostico")) {
+        size_t dpos = 0;
+        std::string diag_json = root["diagnostico"];
+        auto diag = json_extract_object(diag_json, dpos);
+        for (auto& [chave, msg] : diag) {
+            config.diagnostico[chave] = msg;
         }
     }
 
@@ -881,6 +894,24 @@ private:
                         return Token(TK::STRING_INTERP, std::move(parts), line_);
                     }
                     return Token(TK::STRING, value, line_);
+                }
+
+                // Escapes: \n \t \r \\ \" \{ \}
+                if (peek() == '\\' && (pos_ + 1) < src_.size()) {
+                    advance();
+                    char ch = peek();
+                    switch (ch) {
+                        case 'n':  value += '\n'; break;
+                        case 't':  value += '\t'; break;
+                        case 'r':  value += '\r'; break;
+                        case '\\': value += '\\'; break;
+                        case '"':  value += '"';  break;
+                        case '{':  value += '{';  break;
+                        case '}':  value += '}';  break;
+                        default:   value += '\\'; value += ch; break;
+                    }
+                    advance();
+                    continue;
                 }
 
                 // Interpolação {var} - só se conteúdo for identificador válido

@@ -675,6 +675,14 @@ void emit_chamada(const ChamadaExpr& node) {
     // Funções internas do usuário e do sistema usam a ABI normal da plataforma.
     bool is_extern_jpd = (extern_param_types != nullptr);
 
+    // === DIAGNOSTICO PRE-CHAMADA FFI ===
+    // Deve ser emitido ANTES de carregar args nos registradores,
+    // pois o fprintf interno destrói RCX, RDX, R8, R9.
+    // Os args já estão salvos nos temporários (arg_offsets), então é seguro.
+    if (is_extern_jpd) {
+        emit_diag_pre_ffi(node.name, node.line, diag_source_file());
+    }
+
     // Carregar args nos registradores
     for (size_t i = 0; i < node.args.size(); i++) {
         if (i < MAX_REG_ARGS) {
@@ -744,6 +752,14 @@ void emit_chamada(const ChamadaExpr& node) {
     }
 
     emit_call_symbol(sym_idx);
+
+    // === DIAGNOSTICO POS-CHAMADA FFI ===
+    if (is_extern_jpd) {
+        auto diag_ret_it = func_return_types_.find(node.name);
+        RuntimeType diag_ret_type = (diag_ret_it != func_return_types_.end())
+                                    ? diag_ret_it->second : RuntimeType::Unknown;
+        emit_diag_pos_ffi(node.name, node.line, diag_ret_type);
+    }
 
     // Se a função externa retorna decimal, o valor está em RAX como bits de double.
     // Mover pra XMM0 pra que o resto do codegen trate como float.

@@ -78,5 +78,25 @@
         "divisao_por_zero": "Divisao por zero",
         "funcao_nao_definida": "Funcao nao definida: {valor}",
         "funcao_colisao": "Funcao '{funcao}' encontrada em: {libs}. Usando: {usada}"
+    },
+    "diagnostico": {
+        "header": "[JP DIAGNOSTICO]",
+        "retorno_nulo": "Funcao '{funcao}' retornou ponteiro nulo (NULL)",
+        "retorno_invalido": "Funcao '{funcao}' retornou valor invalido como {tipo}",
+        "esperado_tipo": "Esperado: {esperado}",
+        "obtido_valor": "Obtido: {obtido}",
+        "ponteiro_suspeito": "Valor muito baixo para ser endereco de memoria",
+        "crash_acesso": "Violacao de acesso durante chamada a biblioteca externa",
+        "crash_generico": "Violacao de acesso (erro fatal de memoria)",
+        "erro_na_dll": "O erro ocorreu DENTRO da biblioteca externa",
+        "erro_nao_jp": "Isto nao e um bug do seu codigo JP — a biblioteca nativa crashou",
+        "erro_no_jp": "O erro ocorreu no codigo JP",
+        "linha_arquivo": "Linha {num} em {arquivo}",
+        "label_funcao": "Funcao",
+        "label_linha": "Linha",
+        "label_arquivo": "Arquivo",
+        "argumento_info": "Argumento {num} ({tipo}): {valor}",
+        "crash_dica": "Veja a ultima linha [JP FFI] acima para identificar a chamada que causou o erro",
+        "ffi_label": "[JP FFI]"
     }
 }

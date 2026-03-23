@@ -1,17 +1,15 @@
-importar jpk
+importar python
 
-janela = jpk_janela("aplicação", 600, 600)
-jpk_fundo(janela, 255, 0, 0)
-botao_1 = jpk_botao(janela, "clique aqui", 300, 300, 100, 50)
-botao_2 = jpk_botao(janela, "fechar", 300, 400, 100, 50)
-entra = jpk_input(janela, "digite algo", 300, 200, 100, 50)
+python_iniciar()
 
-enquanto verdadeiro:
-    foi = jpk_input_valor(entra)
-    se jpk_clicado(botao_1) == 1:
-        saida("clicou")
-        saida(foi)
-    se jpk_clicado(botao_2) == 1:
-        saida("saindo")
-        parar
-    jpk_exibir(janela)
+python_executar("import tkinter as tk")
+python_executar("janela = tk.Tk()")
+python_executar("janela.title('Ola do JPLang')")
+python_executar("janela.geometry('400x300')")
+python_executar("janela.configure(bg='#1a1a2e')")
+python_executar("label = tk.Label(janela, text='Ola Mundo!', fg='white', bg='#1a1a2e', font=('Arial', 24))")
+python_executar("label.pack(expand=True)")
+python_executar("janela.mainloop()")
+
+python_finalizar()
+saida("Fim!")

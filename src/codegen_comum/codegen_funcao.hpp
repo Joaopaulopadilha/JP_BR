@@ -230,6 +230,8 @@ void emit_main_function(const Program& program) {
     var_types_.clear();
 
     int32_t estimated_locals = count_locals(program.statements) + 32;
+    // +24 para temporários do sistema de diagnóstico (handler de crash)
+    estimated_locals += 24;
     int32_t local_bytes = estimated_locals * 8 + PlatformDefs::MIN_STACK;
     emit_prologue(local_bytes);
 
@@ -416,6 +418,9 @@ void emit_main_function(const Program& program) {
 
 #endif
 
+    // Registrar handler de diagnostico (captura crashes em FFI)
+    emit_diag_register_handler();
+
     // Emitir statements (pular declarações de função/classe/nativo)
     for (auto& stmt : program.statements) {
         bool is_func_or_class = std::visit([](const auto& node) -> bool {
@@ -578,6 +583,8 @@ int32_t count_expr_temps(const Expr& expr) {
         if constexpr (std::is_same_v<T, ChamadaExpr>) {
             int32_t base = static_cast<int32_t>(node.args.size()) + 1;
             base += 2;
+            // Temporários do sistema de diagnóstico FFI (pre + pos)
+            base += 6;
             return base;
         }
         else if constexpr (std::is_same_v<T, MetodoChamadaExpr>) {

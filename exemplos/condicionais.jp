@@ -2,7 +2,7 @@
 x = 20
 y = 20
 massa = "joao"
-boleano ativo = verdadeiro
+ativo = verdadeiro
 
 se x > y:
     saida("x é maior que y")

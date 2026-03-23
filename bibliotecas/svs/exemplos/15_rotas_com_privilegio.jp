@@ -2,8 +2,8 @@ importar svs
 importar texto
 importar hash
 
-porta = svs.criar(8080)
-saida("Servidor RBAC rodando em: " + svs.meu_ip() + ":" + porta)
+porta = svs_criar(8080)
+saida("Servidor RBAC rodando em: " + svs_meu_ip() + ":" + porta)
 
 # ==============================================================================
 # BANCO DE DADOS SIMULADO
@@ -104,16 +104,16 @@ html_relatorios = """
 # ==============================================================================
 
 enquanto verdadeiro:
-    req = svs.aguardar(porta)
-    caminho = svs.caminho(req)
-    metodo = svs.metodo(req)
+    req = svs_aguardar(porta)
+    caminho = svs_caminho(req)
+    metodo = svs_metodo(req)
     
     # 1. Recupera Sessão
-    sid = svs.id_sessao(req)
+    sid = svs_id_sessao(req)
     
     # 2. Recupera Dados do Usuário (se existirem)
-    usuario_logado = svs.sessao_obter(sid, "usuario") # ex: "admin"
-    cargo_logado = svs.sessao_obter(sid, "cargo")     # ex: "admin" ou "basico"
+    usuario_logado = svs_sessao_obter(sid, "usuario") # ex: "admin"
+    cargo_logado = svs_sessao_obter(sid, "cargo")     # ex: "admin" ou "basico"
     esta_autenticado = (usuario_logado != "")
 
     # --------------------------------------------------------------------------
@@ -121,15 +121,15 @@ enquanto verdadeiro:
     # --------------------------------------------------------------------------
     se caminho == "/":
         se esta_autenticado:
-            svs.responder_html(req, 200, "<script>location.href='/dashboard'</script>")
+            svs_responder_html(req, 200, "<script>location.href='/dashboard'</script>")
         senao:
-            svs.responder_html(req, 200, html_login)
+            svs_responder_html(req, 200, html_login)
 
     ou_se caminho == "/login":
         se metodo == "POST":
-            dados = svs.corpo(req)
-            u = texto.dividir(dados, ":", 0)
-            s = texto.dividir(dados, ":", 1)
+            dados = svs_corpo(req)
+            u = texto_dividir(dados, ":", 0)
+            s = texto_dividir(dados, ":", 1)
             
             # Lógica de Login (Simulada)
             novo_cargo = ""
@@ -137,26 +137,26 @@ enquanto verdadeiro:
             
             # Verifica Admin
             se u == u_admin_user:
-                se hash.verificar(s, u_admin_pass):
+                se hash_verificar(s, u_admin_pass):
                     novo_cargo = u_admin_role
                     login_sucesso = verdadeiro
             
             # Verifica Funcionario
             ou_se u == u_func_user:
-                se hash.verificar(s, u_func_pass):
+                se hash_verificar(s, u_func_pass):
                     novo_cargo = u_func_role
                     login_sucesso = verdadeiro
             
             se login_sucesso:
                 # INICIA A SESSÃO E GRAVA O CARGO (ROLE)
-                sid = svs.iniciar_sessao(req)
-                svs.sessao_definir(sid, "usuario", u)
-                svs.sessao_definir(sid, "cargo", novo_cargo)
-                svs.responder(req, 200, "ok")
+                sid = svs_iniciar_sessao(req)
+                svs_sessao_definir(sid, "usuario", u)
+                svs_sessao_definir(sid, "cargo", novo_cargo)
+                svs_responder(req, 200, "ok")
             senao:
-                svs.responder(req, 401, "falha")
+                svs_responder(req, 401, "falha")
         senao:
-            svs.responder(req, 405, "metodo invalido")
+            svs_responder(req, 405, "metodo invalido")
 
     # --------------------------------------------------------------------------
     # ROTA: DASHBOARD (Acesso: Qualquer Autenticado)
@@ -166,9 +166,9 @@ enquanto verdadeiro:
             # Preenche o template com dados da sessão
             pag = texto.substituir(html_dashboard, "{USUARIO}", usuario_logado)
             pag = texto.substituir(pag, "{CARGO}", cargo_logado)
-            svs.responder_html(req, 200, pag)
+            svs_responder_html(req, 200, pag)
         senao:
-            svs.responder_html(req, 403, "Faça login primeiro. <a href='/'>Ir para Login</a>")
+            svs_responder_html(req, 403, "Faça login primeiro. <a href='/'>Ir para Login</a>")
 
     # --------------------------------------------------------------------------
     # ROTA: RELATORIOS (Acesso: Básico E Admin)
@@ -176,9 +176,9 @@ enquanto verdadeiro:
     ou_se caminho == "/relatorios":
         se esta_autenticado:
             # Aqui qualquer um entra, basta estar logado
-            svs.responder_html(req, 200, html_relatorios)
+            svs_responder_html(req, 200, html_relatorios)
         senao:
-            svs.responder_html(req, 403, "Acesso negado.")
+            svs_responder_html(req, 403, "Acesso negado.")
 
     # --------------------------------------------------------------------------
     # ROTA: FINANCEIRO (Acesso: APENAS ADMIN)
@@ -187,22 +187,22 @@ enquanto verdadeiro:
         se esta_autenticado:
             # VERIFICAÇÃO DE PRIVILÉGIO
             se cargo_logado == "admin":
-                svs.responder_html(req, 200, html_financeiro)
+                svs_responder_html(req, 200, html_financeiro)
             senao:
                 # Se for "basico", cai aqui
                 aviso = "<h1>Erro 403 - Proibido</h1><p>O usuario <b>" + usuario_logado + "</b> nao tem permissao de ADMIN.</p><a href='/dashboard'>Voltar</a>"
-                svs.responder_html(req, 403, aviso)
+                svs_responder_html(req, 403, aviso)
         senao:
-            svs.responder_html(req, 403, "Faça login.")
+            svs_responder_html(req, 403, "Faça login.")
 
     # --------------------------------------------------------------------------
     # ROTA: LOGOUT
     # --------------------------------------------------------------------------
     ou_se caminho == "/logout":
-        svs.sessao_definir(sid, "usuario", "")
-        svs.sessao_definir(sid, "cargo", "")
-        svs.definir_cookie(req, "JPSESSID", "") # Mata cookie
-        svs.responder_html(req, 200, "<script>location.href='/'</script>")
+        svs_sessao_definir(sid, "usuario", "")
+        svs_sessao_definir(sid, "cargo", "")
+        svs_definir_cookie(req, "JPSESSID", "") # Mata cookie
+        svs_responder_html(req, 200, "<script>location.href='/'</script>")
 
     senao:
-        svs.responder(req, 404, "Nao encontrado")1
+        svs_responder(req, 404, "Nao encontrado")
